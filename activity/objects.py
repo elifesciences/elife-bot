@@ -4,7 +4,15 @@ import os
 import re
 import botocore
 import dashboard_queue
-from provider import cleaner, downstream, outbox_provider, utils, yaml_provider
+from provider import (
+    cleaner,
+    downstream,
+    github_provider,
+    meca,
+    outbox_provider,
+    utils,
+    yaml_provider,
+)
 
 """
 Amazon SWF activity base class
@@ -595,3 +603,90 @@ class AcceptedBaseActivity(CleanerBaseActivity, ExpandedBaseActivity):
             + "/"
             + expanded_folder
         )
+
+
+class MecaBaseActivity(CleanerBaseActivity, ExpandedBaseActivity):
+    def __init__(self, settings, logger, client=None, token=None, activity_task=None):
+        super().__init__(settings, logger, client, token, activity_task)
+
+    def download_manifest(self, storage, resource_prefix):
+        "download manifest.xml from the bucket expanded folder"
+        manifest_xml_file_path = os.path.join(
+            self.directories.get("TEMP_DIR"), meca.MANIFEST_XML_PATH
+        )
+        manifest_storage_resource_origin = (
+            resource_prefix + "/" + meca.MANIFEST_XML_PATH
+        )
+        self.logger.info(
+            "%s, downloading %s to %s"
+            % (self.name, manifest_storage_resource_origin, manifest_xml_file_path)
+        )
+        with open(manifest_xml_file_path, "wb") as open_file:
+            storage.get_resource_to_file(manifest_storage_resource_origin, open_file)
+        return manifest_xml_file_path, manifest_storage_resource_origin
+
+    def meca_copy_expanded_folder_files(
+        self,
+        version_doi,
+        asset_file_name_map,
+        resource_prefix,
+        file_transformations,
+        storage,
+    ):
+        "copy duplicate files in the expanded folder"
+        if self.statuses["modify_xml"]:
+            try:
+                self.statuses["rename_files"] = self.copy_expanded_folder_files(
+                    asset_file_name_map,
+                    resource_prefix,
+                    file_transformations,
+                    storage,
+                )
+            except RuntimeError as exception:
+                issue_comment = (
+                    "%s, exception in copy_expanded_folder_files for version_doi %s"
+                    % (
+                        self.name,
+                        version_doi,
+                    )
+                )
+                github_provider.add_github_issue_comment(
+                    self.settings, self.logger, self.name, version_doi, issue_comment
+                )
+                self.logger.exception("%s: %s", issue_comment, str(exception))
+                self.logger.info("%s statuses: %s" % (self.name, self.statuses))
+                # do not fail the workflow at this step
+                return True
+
+    def meca_rename_expanded_folder_files(
+        self,
+        version_doi,
+        asset_file_name_map,
+        resource_prefix,
+        file_transformations,
+        storage,
+    ):
+        "rename the files in the expanded folder"
+        if self.statuses["modify_xml"]:
+            try:
+                self.statuses["rename_files"] = self.rename_expanded_folder_files(
+                    asset_file_name_map,
+                    resource_prefix,
+                    file_transformations,
+                    storage,
+                )
+            except RuntimeError as exception:
+                issue_comment = (
+                    "%s, exception in rename_expanded_folder_files for version_doi %s"
+                    % (
+                        self.name,
+                        version_doi,
+                    )
+                )
+                github_provider.add_github_issue_comment(
+                    self.settings, self.logger, self.name, version_doi, issue_comment
+                )
+                self.logger.exception("%s: %s", issue_comment, str(exception))
+                self.logger.info("%s statuses: %s" % (self.name, self.statuses))
+                # do not fail the workflow at this step
+                return True

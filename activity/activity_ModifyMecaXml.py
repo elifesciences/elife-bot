@@ -9,10 +9,10 @@ from jatsgenerator import build
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 from provider import cleaner, utils
-from activity.objects import Activity
+from activity.objects import MecaBaseActivity
 
 
-class activity_ModifyMecaXml(Activity):
+class activity_ModifyMecaXml(MecaBaseActivity):
     "ModifyMecaXml activity"
 
     def __init__(self, settings, logger, client=None, token=None, activity_task=None):
@@ -59,6 +59,9 @@ class activity_ModifyMecaXml(Activity):
 
         # configure the S3 bucket storage library
         storage = storage_context(self.settings)
+
+        # configure log files for the cleaner provider
+        self.start_cleaner_log()
 
         # local path to the article XML file
         xml_file_path = os.path.join(
@@ -212,6 +215,8 @@ class activity_ModifyMecaXml(Activity):
             "%s, statuses for version DOI %s: %s"
             % (self.name, version_doi, self.statuses)
         )
+
+        self.end_cleaner_log(session)
 
         # Clean up disk
         self.clean_tmp_dir()

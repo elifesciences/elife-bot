@@ -138,9 +138,19 @@ def generate_file_transformations(
     if transform_type == "fig":
         transform_method_name = "transform_fig"
         inline_graphic_method_name = "inline_graphic_hrefs"
+        current_hrefs_method = "graphic_hrefs"
     elif transform_type == "table":
         transform_method_name = "transform_table"
         inline_graphic_method_name = "table_inline_graphic_hrefs"
+        current_hrefs_method = "graphic_hrefs"
+    elif transform_type == "equation":
+        transform_method_name = "transform_equations"
+        inline_graphic_method_name = "equation_inline_graphic_hrefs"
+        current_hrefs_method = "graphic_hrefs"
+    elif transform_type == "inline_equation":
+        transform_method_name = "transform_inline_equations"
+        inline_graphic_method_name = "inline_equation_inline_graphic_hrefs"
+        current_hrefs_method = "inline_formula_graphic_hrefs"
 
     file_transformations = []
     for sub_article_index, sub_article_root in enumerate(
@@ -153,7 +163,9 @@ def generate_file_transformations(
         # invoke the transform_type from the cleaner module
         getattr(cleaner, transform_method_name)(sub_article_root, identifier)
         # list of new file names
-        current_hrefs = cleaner.graphic_hrefs(sub_article_root, identifier)
+        current_hrefs = getattr(cleaner, current_hrefs_method)(
+            sub_article_root, identifier
+        )
         # add to file_transformations
         logger.info(
             "%s, sub-article %s previous_hrefs: %s"
@@ -182,6 +194,22 @@ def generate_table_file_transformations(xml_root, identifier, caller_name, logge
     "collect old to new file name transformation data for tables"
     return generate_file_transformations(
         xml_root, "table", identifier, caller_name, logger
+    )
+
+
+def generate_equation_file_transformations(xml_root, identifier, caller_name, logger):
+    "collect old to new file name transformation data to disp-formula"
+    return generate_file_transformations(
+        xml_root, "equation", identifier, caller_name, logger
+    )
+
+
+def generate_inline_equation_file_transformations(
+    xml_root, identifier, caller_name, logger
+):
+    "collect old to new file name transformation data to inline-formula"
+    return generate_file_transformations(
+        xml_root, "inline_equation", identifier, caller_name, logger
     )
 
 

@@ -4,10 +4,10 @@ from elifetools import xmlio
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 from provider import cleaner
-from activity.objects import Activity
+from activity.objects import MecaBaseActivity
 
 
-class activity_MecaPeerReviews(Activity):
+class activity_MecaPeerReviews(MecaBaseActivity):
     "MecaPeerReviews activity"
 
     def __init__(self, settings, logger, client=None, token=None, activity_task=None):
@@ -30,7 +30,12 @@ class activity_MecaPeerReviews(Activity):
         }
 
         # Track the success of some steps
-        self.statuses = {"docmap_string": None, "xml_root": None, "upload": None}
+        self.statuses = {
+            "download": None,
+            "docmap_string": None,
+            "xml_root": None,
+            "upload": None,
+        }
 
     def do_activity(self, data=None):
         """
@@ -51,6 +56,9 @@ class activity_MecaPeerReviews(Activity):
 
         # configure the S3 bucket storage library
         storage = storage_context(self.settings)
+
+        # configure log files for the cleaner provider
+        self.start_cleaner_log()
 
         # local path to the article XML file
         xml_file_path = os.path.join(
@@ -125,6 +133,8 @@ class activity_MecaPeerReviews(Activity):
             "%s, statuses for version DOI %s: %s"
             % (self.name, version_doi, self.statuses)
         )
+
+        self.end_cleaner_log(session)
 
         # Clean up disk
         self.clean_tmp_dir()

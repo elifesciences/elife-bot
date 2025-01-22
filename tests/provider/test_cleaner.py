@@ -464,14 +464,22 @@ class TestChangeInlineGraphicXlinkHrefs(unittest.TestCase):
         xml_file_name = "test.xml"
         identifier = "30-01-2019-RA-eLife-45644.zip"
         href_to_file_name_map = {"https://example.org/test.jpg": "test.jpg"}
+        xml_head = (
+            '<?xml version="1.0" encoding="UTF-8" ?>'
+            '<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) Journal Archiving and'
+            ' Interchange DTD v1.3 20210610//EN"  "JATS-archivearticle1-mathml3.dtd">'
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink"'
+            ' article-type="research-article" dtd-version="1.3" xml:lang="en">'
+        )
         xml_string = (
-            '<article xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "%s"
             '<inline-graphic xlink:href="https://example.org/test.jpg" />'
             "</article>"
-        )
+        ) % xml_head
         xml_file_path = os.path.join(directory.path, xml_file_name)
         with open(xml_file_path, "w", encoding="utf-8") as open_file:
             open_file.write(xml_string)
+        expected = '%s<inline-graphic xlink:href="test.jpg"/></article>' % xml_head
         # invoke
         cleaner.change_inline_graphic_xlink_hrefs(
             xml_file_path, href_to_file_name_map, identifier
@@ -480,6 +488,7 @@ class TestChangeInlineGraphicXlinkHrefs(unittest.TestCase):
         with open(xml_file_path, "r", encoding="utf-8") as open_file:
             xml_contents = open_file.read()
         self.assertTrue(('<inline-graphic xlink:href="test.jpg"/>') in xml_contents)
+        self.assertEqual(xml_contents, expected)
 
 
 class TestExternalHrefs(unittest.TestCase):
@@ -537,6 +546,121 @@ class TestApprovedInlineGraphicHrefs(unittest.TestCase):
         ]
         expected = [good_xlink_href]
         self.assertEqual(cleaner.approved_inline_graphic_hrefs(href_list), expected)
+
+
+class TestTransformEquations(unittest.TestCase):
+    "tests for transform_equations()"
+
+    def test_transform_equations(self):
+        "test converting inline-graphic tags to disp-formula"
+        sub_article_root = ElementTree.fromstring(
+            '<sub-article id="sa1" xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            "<p>First paragraph with an inline equation"
+            ' <inline-graphic xlink:href="elife-inf1.jpg"/>.</p>'
+            "<p>Following is a display formula:</p>"
+            '<p><inline-graphic xlink:href="elife-inf2.jpg"/></p>'
+            "</body>"
+            "</sub-article>"
+        )
+        identifier = "10.7554/eLife.95901.1"
+        expected = (
+            '<sub-article xmlns:xlink="http://www.w3.org/1999/xlink" id="sa1">'
+            "<body>"
+            "<p>First paragraph with an inline equation"
+            ' <inline-graphic xlink:href="elife-inf1.jpg" />.</p>'
+            "<p>Following is a display formula:</p>"
+            '<disp-formula id="sa1equ2">'
+            '<graphic mimetype="image" mime-subtype="jpg" xlink:href="elife-sa1-equ2.jpg" />'
+            "</disp-formula>"
+            "</body>"
+            "</sub-article>"
+        )
+        # invoke
+        result = cleaner.transform_equations(sub_article_root, identifier)
+        # assert
+        self.assertEqual(ElementTree.tostring(result).decode("utf8"), expected)
+
+
+class TestEquationInlineGraphicHrefs(unittest.TestCase):
+    "tests for equation_inline_graphic_hrefs()"
+
+    def test_equation_inline_graphic_hrefs(self):
+        "test collecting href values for disp-formula"
+        sub_article_root = ElementTree.fromstring(
+            '<sub-article id="sa1" xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            "<p>First paragraph with an inline equation"
+            ' <inline-graphic xlink:href="elife-inf1.jpg"/>.</p>'
+            "<p>Following is a display formula:</p>"
+            '<p><inline-graphic xlink:href="elife-inf2.jpg"/></p>'
+            "</body>"
+            "</sub-article>"
+        )
+        identifier = "10.7554/eLife.95901.1"
+        expected = ["elife-inf2.jpg"]
+        # invoke
+        result = cleaner.equation_inline_graphic_hrefs(sub_article_root, identifier)
+        # assert
+        self.assertEqual(result, expected)
+
+
+class TestInlineEquationInlineGraphicHrefs(unittest.TestCase):
+    "tests for inline_equation_inline_graphic_hrefs()"
+
+    def test_inline_equation_inline_graphic_hrefs(self):
+        "test collecting href values for inline-formula"
+        sub_article_root = ElementTree.fromstring(
+            '<sub-article id="sa1" xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            "<p>First paragraph with an inline equation"
+            ' <inline-graphic xlink:href="elife-inf1.jpg"/>.</p>'
+            "<p>Following is a display formula:</p>"
+            '<p><inline-graphic xlink:href="elife-inf2.jpg"/></p>'
+            "</body>"
+            "</sub-article>"
+        )
+        identifier = "10.7554/eLife.95901.1"
+        expected = ["elife-inf1.jpg"]
+        # invoke
+        result = cleaner.inline_equation_inline_graphic_hrefs(
+            sub_article_root, identifier
+        )
+        # assert
+        self.assertEqual(result, expected)
+
+
+class TestTransformInlineEquations(unittest.TestCase):
+    "tests for transform_inline_equations()"
+
+    def test_transform_inline_equations(self):
+        "test converting inline-graphic tags to inline-formula"
+        sub_article_root = ElementTree.fromstring(
+            '<sub-article id="sa1" xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<body>"
+            "<p>First paragraph with an inline equation"
+            ' <inline-graphic xlink:href="elife-inf1.jpg"/>.</p>'
+            "<p>Following is a display formula:</p>"
+            '<p><inline-graphic xlink:href="elife-inf2.jpg"/></p>'
+            "</body>"
+            "</sub-article>"
+        )
+        identifier = "10.7554/eLife.95901.1"
+        expected = (
+            '<sub-article xmlns:xlink="http://www.w3.org/1999/xlink" id="sa1">'
+            "<body>"
+            '<p>First paragraph with an inline equation <inline-formula id="sa1equ1">'
+            '<inline-graphic xlink:href="elife-sa1-equ1.jpg" />'
+            "</inline-formula>.</p>"
+            "<p>Following is a display formula:</p>"
+            '<p><inline-graphic xlink:href="elife-inf2.jpg" /></p>'
+            "</body>"
+            "</sub-article>"
+        )
+        # invoke
+        result = cleaner.transform_inline_equations(sub_article_root, identifier)
+        # assert
+        self.assertEqual(ElementTree.tostring(result).decode("utf8"), expected)
 
 
 class TestAddFileTagsToXml(unittest.TestCase):
@@ -607,6 +731,242 @@ class TestAddFileTagsToXml(unittest.TestCase):
             )
             in xml_contents
         )
+
+
+class TestAddItemTag(unittest.TestCase):
+    "tests for add_item_tag()"
+
+    def test_add_item_tag(self):
+        "test adding an item tag to a manifest XML"
+        parent = ElementTree.fromstring("<manifest/>")
+        file_details = {
+            "file_type": "figure",
+            "upload_file_nm": "elife-95901-inf1.png",
+            "href": "content/elife-95901-inf1.png",
+            "id": "inf1",
+            "title": "Inline figure 1",
+        }
+        expected = (
+            "<manifest>"
+            '<item id="inf1" type="figure">'
+            "<title>Inline figure 1</title>"
+            '<instance href="content/elife-95901-inf1.png" media-type="image/png" />'
+            "</item>"
+            "</manifest>"
+        )
+        # invoke
+        cleaner.add_item_tag(parent, file_details)
+        # assert
+        self.assertEqual(ElementTree.tostring(parent).decode("utf8"), expected)
+
+
+class TestAddItemTags(unittest.TestCase):
+    "tests for add_item_tags()"
+
+    def test_add_item_tags(self):
+        "test adding multiple item tags to a manifest XML"
+        root = ElementTree.fromstring("<manifest/>")
+        file_detail_list = [
+            {
+                "file_type": "figure",
+                "upload_file_nm": "elife-95901-inf1.png",
+                "href": "content/elife-95901-inf1.png",
+                "id": "inf1",
+                "title": "Inline figure 1",
+            },
+            {
+                "file_type": "figure",
+                "upload_file_nm": "elife-95901-inf2.png",
+                "href": "content/elife-95901-inf2.png",
+                "id": "inf2",
+                "title": "Inline figure 2",
+            },
+        ]
+        expected = (
+            "<manifest>"
+            '<item id="inf1" type="figure">'
+            "<title>Inline figure 1</title>"
+            '<instance href="content/elife-95901-inf1.png" media-type="image/png" />'
+            "</item>"
+            '<item id="inf2" type="figure">'
+            "<title>Inline figure 2</title>"
+            '<instance href="content/elife-95901-inf2.png" media-type="image/png" />'
+            "</item>"
+            "</manifest>"
+        )
+        # invoke
+        cleaner.add_item_tags(root, file_detail_list)
+        # assert
+        self.assertEqual(ElementTree.tostring(root).decode("utf8"), expected)
+
+
+class TestParseManifest(unittest.TestCase):
+    "tests for parse_manifest()"
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_parse_manifest(self):
+        "test parsing manifest.xml file"
+        directory = TempDirectory()
+        xml_file_name = "test.xml"
+        identifier = "10.7554/eLife.95901.1"
+        manifest_xml_string = (
+            '<manifest xmlns="http://manuscriptexchange.org" version="1.0" />'
+        )
+        xml_string = (
+            '<?xml version="1.0" encoding="UTF-8" standalone="no"?>'
+            "<!DOCTYPE manifest SYSTEM"
+            ' "http://schema.highwire.org/public/MECA/v0.9/Manifest/Manifest.dtd">'
+            "%s"
+        ) % manifest_xml_string
+        xml_file_path = os.path.join(directory.path, xml_file_name)
+        with open(xml_file_path, "w", encoding="utf-8") as open_file:
+            open_file.write(xml_string)
+        # invoke
+        result = cleaner.parse_manifest(xml_file_path)
+        # assert
+        self.assertEqual(
+            ElementTree.tostring(result[0]).decode("utf8"), manifest_xml_string
+        )
+        self.assertEqual(
+            result[1],
+            {
+                "name": "manifest",
+                "pubid": None,
+                "system": "http://schema.highwire.org/public/MECA/v0.9/Manifest/Manifest.dtd",
+            },
+        )
+        self.assertEqual(result[2], [])
+
+
+class TestWriteManifestXmlFile(unittest.TestCase):
+    "tests for write_manifest_xml_file()"
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_write_manifest_xml_file(self):
+        "test writing manifest XML to disk"
+        directory = TempDirectory()
+        xml_file_name = "test.xml"
+        identifier = "10.7554/eLife.95901.1"
+        doctype_dict = {
+            "name": "manifest",
+            "pubid": None,
+            "system": "http://schema.highwire.org/public/MECA/v0.9/Manifest/Manifest.dtd",
+        }
+        processing_instructions = []
+        manifest_xml_string = (
+            '<manifest xmlns="http://manuscriptexchange.org" version="1.0" />'
+        )
+        root = ElementTree.fromstring(manifest_xml_string)
+        xml_file_path = os.path.join(directory.path, xml_file_name)
+        expected = (
+            '<?xml version="1.0" encoding="UTF-8" standalone="no"?>'
+            "<!DOCTYPE manifest SYSTEM"
+            ' "http://schema.highwire.org/public/MECA/v0.9/Manifest/Manifest.dtd">'
+            '<manifest xmlns="http://manuscriptexchange.org" version="1.0"/>'
+        )
+        # invoke
+        cleaner.write_manifest_xml_file(
+            root, xml_file_path, identifier, doctype_dict, processing_instructions
+        )
+        # assert
+        with open(xml_file_path, "r", encoding="utf-8") as open_file:
+            xml_string = open_file.read()
+        self.assertEqual(xml_string, expected)
+
+
+class TestAddItemTagsToManifestXml(unittest.TestCase):
+    "tests for add_item_tags_to_manifest_xml()"
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_add_item_tags_to_manifest_xml(self):
+        directory = TempDirectory()
+        xml_file_name = "test.xml"
+        identifier = "10.7554/eLife.95901.1"
+        xml_string = (
+            '<?xml version="1.0" encoding="UTF-8" standalone="no"?>'
+            "<!DOCTYPE manifest SYSTEM"
+            ' "http://schema.highwire.org/public/MECA/v0.9/Manifest/Manifest.dtd">'
+            '<manifest xmlns="http://manuscriptexchange.org" version="1.0" />'
+        )
+        xml_file_path = os.path.join(directory.path, xml_file_name)
+        with open(xml_file_path, "w", encoding="utf-8") as open_file:
+            open_file.write(xml_string)
+        file_details_list = [
+            {
+                "file_type": "figure",
+                "upload_file_nm": "elife-95901-inf1.png",
+                "href": "content/elife-95901-inf1.png",
+                "id": "inf1",
+            }
+        ]
+        # invoke
+        cleaner.add_item_tags_to_manifest_xml(
+            xml_file_path, file_details_list, identifier
+        )
+        # assert
+        with open(xml_file_path, "r", encoding="utf-8") as open_file:
+            result = open_file.read()
+        self.assertTrue(
+            (
+                '<?xml version="1.0" encoding="UTF-8" standalone="no"?>'
+                "<!DOCTYPE manifest SYSTEM"
+                ' "http://schema.highwire.org/public/MECA/v0.9/Manifest/Manifest.dtd">'
+                '<manifest xmlns="http://manuscriptexchange.org" version="1.0">'
+                '<item id="inf1" type="figure">'
+                '<instance href="content/elife-95901-inf1.png" media-type="image/png"/>'
+                "</item>"
+                "</manifest>"
+            )
+            in result
+        )
+
+
+class TestPrettyManifestXml(unittest.TestCase):
+    "tests for pretty_manifest_xml()"
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_pretty_manifest_xml(self):
+        "test formatting manifest XML with new line characters"
+        directory = TempDirectory()
+        xml_file_name = "test.xml"
+        identifier = "10.7554/eLife.95901.1"
+        xml_string = (
+            '<?xml version="1.0" encoding="UTF-8" standalone="no"?>'
+            "<!DOCTYPE manifest SYSTEM"
+            ' "http://schema.highwire.org/public/MECA/v0.9/Manifest/Manifest.dtd">'
+            '<manifest xmlns="http://manuscriptexchange.org" version="1.0">'
+            '<item id="inf1" type="figure">'
+            '<instance href="content/elife-95901-inf1.png" media-type="image/png"/>'
+            "</item>"
+            "</manifest>"
+        )
+        xml_file_path = os.path.join(directory.path, xml_file_name)
+        with open(xml_file_path, "w", encoding="utf-8") as open_file:
+            open_file.write(xml_string)
+        expected = (
+            '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n'
+            "<!DOCTYPE manifest SYSTEM"
+            ' "http://schema.highwire.org/public/MECA/v0.9/Manifest/Manifest.dtd">\n'
+            '<manifest xmlns="http://manuscriptexchange.org" version="1.0">\n'
+            '<item id="inf1" type="figure">\n'
+            '<instance href="content/elife-95901-inf1.png" media-type="image/png"/>\n'
+            "</item>\n"
+            "</manifest>"
+        )
+        # invoke
+        cleaner.pretty_manifest_xml(xml_file_path, identifier)
+        # assert
+        with open(xml_file_path, "r", encoding="utf-8") as open_file:
+            result = open_file.read()
+        self.assertEqual(result, expected)
 
 
 class TestDocmapUrl(unittest.TestCase):
