@@ -10,8 +10,10 @@ import activity.activity_MecaPeerReviews as activity_module
 from activity.activity_MecaPeerReviews import (
     activity_MecaPeerReviews as activity_object,
 )
+from provider import cleaner, github_provider
 from tests import read_fixture
 from tests.activity.classes_mock import (
+    FakeGithubIssue,
     FakeLogger,
     FakeResponse,
     FakeSession,
@@ -102,4 +104,45 @@ class TestMecaPeerReviews(unittest.TestCase):
         self.assertTrue(
             '<article-id pub-id-type="doi">10.7554/eLife.95901.1.sa2</article-id>'
             in xml_string
+        )
+
+    @patch.object(cleaner, "add_sub_article_xml")
+    @patch.object(github_provider, "find_github_issue")
+    @patch.object(activity_module, "storage_context")
+    @patch.object(activity_module, "get_session")
+    def test_xml_exception(
+        self,
+        fake_session,
+        fake_storage_context,
+        fake_find_github_issue,
+        fake_add_sub_article_xml,
+    ):
+        "test exception is raised in add_sub_article_xml()"
+        directory = TempDirectory()
+
+        fake_session.return_value = self.session
+
+        meca_file_path = "tests/files_source/95901-v1-meca.zip"
+
+        # populate the meca zip file and bucket folders for testing
+        populated_data = helpers.populate_meca_test_data(
+            meca_file_path, SESSION_DICT, {}, directory.path
+        )
+
+        dest_folder = os.path.join(directory.path, "files_dest")
+
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, populated_data.get("resources"), dest_folder=dest_folder
+        )
+        fake_find_github_issue.return_value = FakeGithubIssue()
+        exception_string = "An exception"
+        fake_add_sub_article_xml.side_effect = Exception(exception_string)
+        # do the activity
+        result = self.activity.do_activity(test_activity_data.ingest_meca_data)
+        # assertions
+        self.assertEqual(result, True)
+        self.assertEqual(
+            self.activity.logger.logexception,
+            "MecaPeerReviews, exception raised in add_sub_article_xml() for version_doi %s: %s"
+            % (self.session.get_value("version_doi"), exception_string),
         )
