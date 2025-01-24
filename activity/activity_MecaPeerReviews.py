@@ -3,7 +3,7 @@ import json
 from elifetools import xmlio
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
-from provider import cleaner
+from provider import cleaner, github_provider
 from activity.objects import MecaBaseActivity
 
 
@@ -98,13 +98,31 @@ class activity_MecaPeerReviews(MecaBaseActivity):
         terms_yaml = getattr(self.settings, "assessment_terms_yaml", None)
 
         # add sub-article XML to the ElementTree
-        xml_root = cleaner.add_sub_article_xml(
-            docmap_string,
-            xml_file_path,
-            terms_yaml,
-            version_doi=version_doi,
-            generate_dois=False,
-        )
+        try:
+            xml_root = cleaner.add_sub_article_xml(
+                docmap_string,
+                xml_file_path,
+                terms_yaml,
+                version_doi=version_doi,
+                generate_dois=False,
+            )
+        except Exception as exception:
+            log_message = (
+                "%s, exception raised in add_sub_article_xml() for version_doi %s"
+                % (
+                    self.name,
+                    version_doi,
+                )
+            )
+            self.logger.exception("%s: %s" % (log_message, str(exception)))
+            # add as a Github issue comment
+            issue_comment = "elife-bot workflow message:\n\n%s" % log_message
+            github_provider.add_github_issue_comment(
+                self.settings, self.logger, self.name, version_doi, issue_comment
+            )
+            self.end_cleaner_log(session)
+            return True
+
         self.statuses["xml_root"] = True
 
         # get the XML doctype
