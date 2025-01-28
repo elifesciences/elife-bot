@@ -21,6 +21,7 @@ class S3StorageContext:
             {
                 "aws_access_key_id": self.settings.aws_access_key_id,
                 "aws_secret_access_key": self.settings.aws_secret_access_key,
+                "aws_session_token": getattr(self.settings, "aws_session_token", None),
             },
         )
 
