@@ -305,6 +305,16 @@ def graphic_hrefs(sub_article_root, identifier):
     return fig.graphic_hrefs(sub_article_root, identifier)
 
 
+def table_graphic_hrefs(sub_article_root, identifier):
+    "return a list of inline-formula inline-graphic tag xlink:href values"
+    return table.table_graphic_hrefs(sub_article_root, identifier)
+
+
+def formula_graphic_hrefs(sub_article_root, identifier):
+    "return a list of inline-formula inline-graphic tag xlink:href values"
+    return equation.formula_graphic_hrefs(sub_article_root, identifier)
+
+
 def inline_formula_graphic_hrefs(sub_article_root, identifier):
     "return a list of inline-formula inline-graphic tag xlink:href values"
     return equation.inline_formula_graphic_hrefs(sub_article_root, identifier)
