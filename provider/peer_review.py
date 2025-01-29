@@ -142,11 +142,11 @@ def generate_file_transformations(
     elif transform_type == "table":
         transform_method_name = "transform_table"
         inline_graphic_method_name = "table_inline_graphic_hrefs"
-        current_hrefs_method = "graphic_hrefs"
+        current_hrefs_method = "table_graphic_hrefs"
     elif transform_type == "equation":
         transform_method_name = "transform_equations"
         inline_graphic_method_name = "equation_inline_graphic_hrefs"
-        current_hrefs_method = "graphic_hrefs"
+        current_hrefs_method = "formula_graphic_hrefs"
     elif transform_type == "inline_equation":
         transform_method_name = "transform_inline_equations"
         inline_graphic_method_name = "inline_equation_inline_graphic_hrefs"
