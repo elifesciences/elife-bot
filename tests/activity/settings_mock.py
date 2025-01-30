@@ -276,6 +276,10 @@ meca_bucket = "meca_bucket"
 
 preprint_issues_repo_name = "preprint-issues"
 
+external_meca_bucket_list = ["server-src-daily"]
+meca_sts_role_arn = "arn:aws:iam:1234456789012/role:foo"
+meca_sts_role_session_name = "bot"
+
 
 @mock_aws
 def aws_conn(service, service_creation_kwargs):
