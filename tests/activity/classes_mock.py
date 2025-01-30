@@ -82,6 +82,20 @@ class FakeSQSQueue:
             self.messages = messages
 
 
+class FakeStsClient:
+    "mock AWS STS client"
+
+    def assume_role(self, *args, **kwargs):
+        "mock response of client.assume_role()"
+        return {
+            "Credentials": {
+                "AccessKeyId": "id",
+                "SecretAccessKey": "key",
+                "SessionToken": "token",
+            },
+        }
+
+
 class FakeFTP:
     def __init__(self, ftp_instance=None):
         self.ftp_instance = ftp_instance

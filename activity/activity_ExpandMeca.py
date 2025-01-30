@@ -8,7 +8,9 @@ from provider import (
     cleaner,
     docmap_provider,
     download_helper,
+    github_provider,
     meca,
+    sts,
     utils,
 )
 from activity.objects import Activity
@@ -168,11 +170,41 @@ class activity_ExpandMeca(Activity):
             % (self.name, expanded_folder, article_id, version)
         )
 
+        # get external bucket name list from the settings
+        external_meca_bucket_list = getattr(
+            self.settings, "external_meca_bucket_list", None
+        )
+
+        # Downlaod zip from external bucket
+        if external_meca_bucket_list and bucket_name in external_meca_bucket_list:
+            try:
+                # Download zip from an external S3 bucket using an STS token
+                self.logger.info(
+                    "%s, will download from external bucket %s for article_id %s, version %s"
+                    % (self.name, bucket_name, article_id, version)
+                )
+                download_settings = meca_assume_role(self.settings, self.logger)
+            except Exception as exception:
+                log_message = (
+                    "%s, exception when assuming role to access bucket %s for %s"
+                    % (self.name, bucket_name, meca_filename)
+                )
+                self.logger.exception("%s: %s" % (log_message, str(exception)))
+                # add as a Github issue comment
+                issue_comment = "elife-bot workflow message:\n\n%s" % log_message
+                github_provider.add_github_issue_comment(
+                    self.settings, self.logger, self.name, version_doi, issue_comment
+                )
+                self.clean_tmp_dir()
+                return self.ACTIVITY_PERMANENT_FAILURE
+        else:
+            download_settings = self.settings
+
         try:
             # Download zip from S3
             self.logger.info("%s downloading %s" % (self.name, meca_filename))
             local_meca_file = download_helper.download_file_from_s3(
-                self.settings,
+                download_settings,
                 meca_filename,
                 bucket_name,
                 bucket_folder,
@@ -182,6 +214,15 @@ class activity_ExpandMeca(Activity):
                 "%s downloaded %s to %s" % (self.name, meca_filename, local_meca_file)
             )
 
+        except Exception as exception:
+            self.logger.exception(
+                "%s, exception when downloading MECA file %s: %s"
+                % (self.name, meca_filename, str(exception))
+            )
+            self.clean_tmp_dir()
+            return self.ACTIVITY_PERMANENT_FAILURE
+
+        try:
             # extract zip contents
             self.logger.info("%s expanding file %s" % (self.name, local_meca_file))
             with zipfile.ZipFile(local_meca_file) as open_zip_file:
@@ -243,7 +284,7 @@ class activity_ExpandMeca(Activity):
 
         except Exception as exception:
             self.logger.exception(
-                "%s Exception when expanding MECA file %s: %s"
+                "%s, exception when expanding MECA file %s: %s"
                 % (self.name, meca_filename, str(exception))
             )
             self.clean_tmp_dir()
@@ -271,6 +312,68 @@ class activity_ExpandMeca(Activity):
         )
 
         return self.ACTIVITY_SUCCESS
+
+
+class TemporarySettings:
+    "object to hold settings from STS service"
+    aws_access_key_id = None
+    aws_secret_access_key = None
+    aws_session_token = None
+    region_name = None
+    storage_provider = None
+    _aws_conn_map = {}
+    aws_conn = None
+
+
+def meca_assume_role(settings, logger):
+    "assume role and put credentials into a stub settings object"
+    # role to assume
+    role_arn = getattr(settings, "meca_sts_role_arn", None)
+    if not role_arn:
+        logger.info("no meca_sts_role_arn found in settings")
+        return None
+    # check for required session name
+    role_session_name = getattr(settings, "meca_sts_role_session_name", None)
+    if not role_session_name:
+        logger.info("no meca_sts_role_session_name found in settings")
+        return None
+
+    # additional attributes to copy to the settings stub
+    copy_attributes = ["region_name", "storage_provider"]
+
+    # credentials to settings attribute map
+    credentials_map = {
+        "AccessKeyId": "aws_access_key_id",
+        "SecretAccessKey": "aws_secret_access_key",
+        "SessionToken": "aws_session_token",
+    }
+
+    # assume role and return response which includes new credentials
+    sts_client = sts.get_client(settings)
+    sts_response = sts.assume_role(
+        sts_client,
+        role_arn,
+        role_session_name,
+    )
+    if not sts_response:
+        logger.info("no STS response for role_arn %s" % role_arn)
+        return None
+
+    sts_credentials = sts_response.get("Credentials")
+
+    if not sts_credentials:
+        logger.info("no STS credentials for meca_sts_role_arn %s" % role_arn)
+        return None
+
+    # instantiate new settings
+    new_settings = TemporarySettings()
+    # copy settings attributes
+    for key_name in copy_attributes:
+        setattr(new_settings, key_name, getattr(settings, key_name, None))
+    # set credentials attributes
+    for cred_attr, settings_attr in credentials_map.items():
+        setattr(new_settings, settings_attr, sts_credentials.get(cred_attr))
+    return new_settings
 
 
 def steps_by_version_doi(docmap_json, version_doi, caller_name, logger):
