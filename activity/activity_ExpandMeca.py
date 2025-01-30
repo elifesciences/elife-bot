@@ -1,4 +1,5 @@
 from datetime import datetime
+from functools import partial
 import json
 import os
 import zipfile
@@ -373,6 +374,10 @@ def meca_assume_role(settings, logger):
     # set credentials attributes
     for cred_attr, settings_attr in credentials_map.items():
         setattr(new_settings, settings_attr, sts_credentials.get(cred_attr))
+    # set the aws_conn property
+    new_settings.aws_conn = partial(
+        utils.get_aws_connection, new_settings._aws_conn_map
+    )
     return new_settings
 
 
