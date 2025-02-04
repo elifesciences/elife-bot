@@ -60,6 +60,44 @@ class TestQueueWorker(unittest.TestCase):
         self.assertEqual(self.worker.logger.loginfo[-1], "graceful shutdown")
 
     @patch("boto3.client")
+    def test_work_message(self, mock_sqs_client):
+        "test if records are inside Message instead of Body"
+        directory = TempDirectory()
+        # create an S3 event message
+        records = test_data.test_s3_event_records()
+        # here is where SNS may use Message instead of Body
+        fake_queue_messages = [{"Messages": [{"Message": json.dumps(records)}]}]
+        # mock the SQS client and queues
+        fake_queues = {
+            settings_mock.S3_monitor_queue: FakeSQSQueue(
+                directory, fake_queue_messages
+            ),
+            settings_mock.workflow_starter_queue: FakeSQSQueue(directory),
+        }
+        mock_sqs_client.return_value = FakeSQSClient(directory, queues=fake_queues)
+
+        # expected queue message
+        expected_starter_message = {
+            "workflow_name": "IngestAcceptedSubmission",
+            "workflow_data": {
+                "event_name": "ObjectCreated:CompleteMultipartUpload",
+                "event_time": "2022-02-09T01:43:07.709Z",
+                "bucket_name": "continuumtest-elife-accepted-submission-cleaning",
+                "file_name": "02-09-2022-RA-eLife-99999.zip",
+                "file_etag": "28b76c025ab9bd3a967885302d413efa-3",
+                "file_size": 19464507,
+            },
+        }
+        # create a fake green flag
+        flag = FakeFlag()
+        # invoke queue worker to work
+        self.worker.work(flag)
+        # assertions, should have a message in the out_queue
+        out_queue_message = json.loads(bytes_decode(directory.read("fake_sqs_body")))
+        self.assertDictEqual(out_queue_message, expected_starter_message)
+        self.assertEqual(self.worker.logger.loginfo[-1], "graceful shutdown")
+
+    @patch("boto3.client")
     def test_work_unknown_bucket(self, mock_sqs_client):
         "test work method with an unrecognised bucket name"
         directory = TempDirectory()
@@ -148,5 +186,13 @@ class TestGetStarterName(unittest.TestCase):
         rules = test_data.queue_worker_rules
         info = S3NotificationInfo.from_dict(test_data.ingest_decision_letter_data)
         expected_starter_name = "IngestDecisionLetter"
+        starter_name = get_starter_name(rules, info)
+        self.assertEqual(starter_name, expected_starter_name)
+
+    def test_get_starter_name_silent_ingest_meca(self):
+        "test S3 notification info matching for the silent ingest meca workflow"
+        rules = test_data.queue_worker_rules
+        info = S3NotificationInfo.from_dict(test_data.silent_ingest_meca_data)
+        expected_starter_name = "SilentIngestMeca"
         starter_name = get_starter_name(rules, info)
         self.assertEqual(starter_name, expected_starter_name)

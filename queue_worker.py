@@ -37,11 +37,14 @@ class QueueWorker:
     def connect(self):
         "connect to the queue service"
         if not self.client:
-            self.client = self.settings.aws_conn('sqs', {
-                'aws_access_key_id': self.settings.aws_access_key_id,
-                'aws_secret_access_key': self.settings.aws_secret_access_key,
-                'region_name': self.settings.sqs_region,
-            })
+            self.client = self.settings.aws_conn(
+                "sqs",
+                {
+                    "aws_access_key_id": self.settings.aws_access_key_id,
+                    "aws_secret_access_key": self.settings.aws_secret_access_key,
+                    "region_name": self.settings.sqs_region,
+                },
+            )
 
     def queues(self):
         "get the queues"
@@ -67,7 +70,6 @@ class QueueWorker:
         # Poll for messages indefinitely
         if input_queue_url:
             while flag.green():
-
                 self.logger.info("reading message")
                 queue_messages = self.client.receive_message(
                     QueueUrl=input_queue_url,
@@ -83,12 +85,13 @@ class QueueWorker:
                         self.logger.info(
                             "got message id: %s" % queue_message.get("MessageId")
                         )
-                        s3_message = S3SQSMessage(queue_message.get("Body"))
+                        if queue_message.get("Body"):
+                            s3_message = S3SQSMessage(queue_message.get("Body"))
+                        else:
+                            s3_message = S3SQSMessage(queue_message.get("Message"))
                         if s3_message.notification_type == "S3Event":
                             info = S3NotificationInfo.from_S3SQSMessage(s3_message)
-                            self.logger.info(
-                                "S3NotificationInfo: %s", info.to_dict()
-                            )
+                            self.logger.info("S3NotificationInfo: %s", info.to_dict())
 
                             workflow_name = get_starter_name(rules, info)
                             if workflow_name is None:

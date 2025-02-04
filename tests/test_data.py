@@ -207,6 +207,11 @@ queue_worker_rules = {
         "file_name_pattern": r".*\.zip",
         "starter_name": "IngestAcceptedSubmission",
     },
+    "SilentIngestMecaInputFile": {
+        "bucket_name_pattern": ".*elife-epp-meca$",
+        "file_name_pattern": r"silent-corrections/.*\.zip",
+        "starter_name": "SilentIngestMeca",
+    },
 }
 
 queue_worker_article_zip_data = {
