@@ -39,6 +39,6 @@ class S3SQSMessage:
         if body and "Records" in list(self.payload.keys()):
             self.notification_type = "S3Event"
         elif body and "Message" in list(self.payload.keys()):
-            self.payload = json.loads(body.get("Message"))
+            self.payload = json.loads(self.payload.get("Message"))
             if "Records" in list(self.payload.keys()):
                 self.notification_type = "S3Event"

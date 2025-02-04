@@ -61,12 +61,12 @@ class TestQueueWorker(unittest.TestCase):
 
     @patch("boto3.client")
     def test_work_message(self, mock_sqs_client):
-        "test if records are inside Message instead of Body"
+        "test if records are inside Message"
         directory = TempDirectory()
         # create an S3 event message
-        records = test_data.test_s3_event_records()
+        records = test_data.test_s3_message_records()
         # here is where SNS may use Message instead of Body
-        fake_queue_messages = [{"Messages": [{"Message": json.dumps(records)}]}]
+        fake_queue_messages = [{"Messages": [{"Body": json.dumps(records)}]}]
         # mock the SQS client and queues
         fake_queues = {
             settings_mock.S3_monitor_queue: FakeSQSQueue(
