@@ -49,6 +49,7 @@ def start(settings):
     workflow_names.append("PostPreprintPublication")
     workflow_names.append("FindNewDocmaps")
     workflow_names.append("IngestMeca")
+    workflow_names.append("SilentIngestMeca")
 
     for workflow_name in workflow_names:
         # Import the workflow libraries

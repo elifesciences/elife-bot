@@ -124,6 +124,16 @@ silent_ingest_article_zip_data = {
     "file_size": 1097506,
 }
 
+silent_ingest_meca_data = {
+    "run": "1ee54f9a-cb28-4c8e-8232-4b317cf4beda",
+    "event_time": "2016-07-28T16:14:27.809576Z",
+    "event_name": "ObjectCreated:Put",
+    "file_name": "silent-corrections/95901-v1-meca.zip",
+    "file_etag": "e7f639f63171c097d4761e2d2efe8dc4",
+    "bucket_name": "test-elife-epp-meca",
+    "file_size": 1097506,
+}
+
 ingest_article_zip_no_vr_data = {
     "run": "1ee54f9a-cb28-4c8e-8232-4b317cf4beda",
     "article_id": "353",
