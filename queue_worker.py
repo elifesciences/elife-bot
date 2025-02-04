@@ -83,7 +83,10 @@ class QueueWorker:
                         self.logger.info(
                             "got message id: %s" % queue_message.get("MessageId")
                         )
-                        s3_message = S3SQSMessage(queue_message.get("Body"))
+                        if queue_message.get("Body"):
+                            s3_message = S3SQSMessage(queue_message.get("Body"))
+                        else:
+                            s3_message = S3SQSMessage(queue_message.get("Message"))
                         if s3_message.notification_type == "S3Event":
                             info = S3NotificationInfo.from_S3SQSMessage(s3_message)
                             self.logger.info(
