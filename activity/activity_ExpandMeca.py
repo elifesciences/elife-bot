@@ -1,4 +1,3 @@
-from datetime import datetime
 from functools import partial
 import json
 import os
@@ -6,8 +5,6 @@ import zipfile
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 from provider import (
-    cleaner,
-    docmap_provider,
     download_helper,
     github_provider,
     meca,
@@ -15,10 +12,6 @@ from provider import (
     utils,
 )
 from activity.objects import Activity
-
-
-# DOI prefix for generating DOI value
-DOI_PREFIX = "10.7554/eLife."
 
 
 class activity_ExpandMeca(Activity):
@@ -59,90 +52,13 @@ class activity_ExpandMeca(Activity):
 
         self.make_activity_directories()
 
-        # store details in session
+        # get details from session
         run = data["run"]
-        article_id = data.get("article_id")
-        version = data.get("version")
         session = get_session(self.settings, data, run)
-        session.store_value("run", run)
-        session.store_value("article_id", article_id)
-        session.store_value("version", version)
-
-        # get docmap as a string
-        self.logger.info(
-            "%s, getting docmap_string for article_id %s" % (self.name, article_id)
-        )
-        try:
-            docmap_string = cleaner.get_docmap_string_with_retry(
-                self.settings, article_id, self.name, self.logger
-            )
-            self.statuses["docmap_string"] = True
-            # save the docmap_string to the session
-            session.store_value(
-                "docmap_datetime_string",
-                datetime.strftime(utils.get_current_datetime(), utils.DATE_TIME_FORMAT),
-            )
-            session.store_value("docmap_string", docmap_string.decode("utf-8"))
-        except Exception as exception:
-            self.logger.exception(
-                "%s, exception getting a docmap for article_id %s: %s"
-                % (self.name, article_id, str(exception))
-            )
-            return self.ACTIVITY_PERMANENT_FAILURE
-
-        # parse docmap JSON
-        self.logger.info(
-            "%s, parsing docmap_string for article_id %s" % (self.name, article_id)
-        )
-        try:
-            docmap_json = json.loads(docmap_string)
-        except Exception as exception:
-            self.logger.exception(
-                "%s, exception parsing docmap_string for article_id %s: %s"
-                % (self.name, article_id, str(exception))
-            )
-            return self.ACTIVITY_PERMANENT_FAILURE
-
-        version_doi = "%s%s.%s" % (DOI_PREFIX, article_id, version)
-        session.store_value("version_doi", version_doi)
-
-        self.logger.info(
-            "%s, version_doi %s for article_id %s, version %s"
-            % (self.name, version_doi, article_id, version)
-        )
-
-        # get a version DOI step map from the docmap
-        try:
-            steps = steps_by_version_doi(
-                docmap_json, version_doi, self.name, self.logger
-            )
-        except Exception as exception:
-            self.logger.exception(
-                "%s, exception in steps_by_version_doi for version DOI %s: %s"
-                % (self.name, version_doi, str(exception))
-            )
-            return self.ACTIVITY_PERMANENT_FAILURE
-        if not steps:
-            self.logger.info(
-                "%s, found no docmap steps for version DOI %s"
-                % (self.name, version_doi)
-            )
-            return self.ACTIVITY_PERMANENT_FAILURE
-
-        # get computer-file url from the docmap
-        computer_file_url = computer_file_url_from_steps(
-            steps, version_doi, self.name, self.logger
-        )
-        if not computer_file_url:
-            self.logger.info(
-                "%s, computer_file_url not found in computer_file for version DOI %s"
-                % (self.name, version_doi)
-            )
-            return self.ACTIVITY_PERMANENT_FAILURE
-        self.logger.info(
-            "%s, computer_file_url %s for version_doi %s"
-            % (self.name, computer_file_url, version_doi)
-        )
+        article_id = session.get_value("article_id")
+        version = session.get_value("version")
+        version_doi = session.get_value("version_doi")
+        computer_file_url = session.get_value("computer_file_url")
 
         # get bucket name, path, and file name
         storage = storage_context(self.settings)
@@ -379,43 +295,3 @@ def meca_assume_role(settings, logger):
         utils.get_aws_connection, new_settings._aws_conn_map
     )
     return new_settings
-
-
-def steps_by_version_doi(docmap_json, version_doi, caller_name, logger):
-    "get steps from the docmap for the version_doi"
-    logger.info(
-        "%s, getting a step map for version DOI %s" % (caller_name, version_doi)
-    )
-    try:
-        step_map = docmap_provider.version_doi_step_map(docmap_json)
-    except Exception as exception:
-        logger.exception(
-            "%s, exception getting a step map for version DOI %s: %s"
-            % (caller_name, version_doi, str(exception))
-        )
-        raise
-
-    return step_map.get(version_doi)
-
-
-def computer_file_url_from_steps(steps, version_doi, caller_name, logger):
-    "get the url of computer-file input from docmap steps"
-    computer_file = None
-    for step in steps:
-        computer_file_list = docmap_provider.computer_files(step)
-        if computer_file_list:
-            computer_file = computer_file_list[0]
-            break
-
-    if not computer_file:
-        logger.info(
-            "%s, computer_file not found in steps for version DOI %s"
-            % (caller_name, version_doi)
-        )
-        return None
-    logger.info(
-        "%s, computer_file %s for version_doi %s"
-        % (caller_name, computer_file, version_doi)
-    )
-
-    return computer_file.get("url")

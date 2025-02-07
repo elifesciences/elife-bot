@@ -35,6 +35,7 @@ class workflow_SilentIngestMeca(Workflow):
             "start": {"requirements": None},
             "steps": [
                 define_workflow_step("PingWorker", data),
+                define_workflow_step("MecaDetails", data),
             ],
             "finish": {"requirements": None},
         }
