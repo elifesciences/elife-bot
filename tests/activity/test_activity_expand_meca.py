@@ -1,15 +1,13 @@
-from datetime import datetime
-import json
 import os
 import unittest
 from mock import patch
 from testfixtures import TempDirectory
-from provider import cleaner, docmap_provider, github_provider, meca, sts, utils
+from provider import github_provider, meca, sts
 from activity import activity_ExpandMeca as activity_module
 from activity.activity_ExpandMeca import (
     activity_ExpandMeca as activity_class,
 )
-from tests import list_files, read_fixture
+from tests import list_files
 from tests.activity import helpers, settings_mock, test_activity_data
 from tests.activity.classes_mock import (
     FakeGithubIssue,
@@ -34,28 +32,20 @@ class TestExpandMeca(unittest.TestCase):
     @patch.object(activity_module, "get_session")
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module.download_helper, "storage_context")
-    @patch.object(cleaner, "get_docmap_string_with_retry")
-    @patch.object(utils, "get_current_datetime")
     def test_do_activity(
         self,
-        fake_datetime,
-        fake_get_docmap,
         fake_download_storage_context,
         fake_storage_context,
         fake_session,
     ):
         directory = TempDirectory()
-        fake_datetime.return_value = datetime.strptime(
-            "2024-06-27 +0000", "%Y-%m-%d %z"
-        )
-        fake_get_docmap.return_value = read_fixture("sample_docmap_for_95901.json")
         fake_download_storage_context.return_value = FakeStorageContext(
             dest_folder=directory.path
         )
         fake_storage_context.return_value = FakeStorageContext(
             dest_folder=directory.path
         )
-        mock_session = FakeSession({})
+        mock_session = FakeSession(test_activity_data.meca_details_session_example())
         fake_session.return_value = mock_session
         expected_result = self.activity.ACTIVITY_SUCCESS
         expected_files = [
@@ -100,12 +90,8 @@ class TestExpandMeca(unittest.TestCase):
     @patch.object(activity_module, "get_session")
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module.download_helper, "storage_context")
-    @patch.object(cleaner, "get_docmap_string_with_retry")
-    @patch.object(utils, "get_current_datetime")
     def test_external_bucket_source(
         self,
-        fake_datetime,
-        fake_get_docmap,
         fake_download_storage_context,
         fake_storage_context,
         fake_session,
@@ -113,23 +99,22 @@ class TestExpandMeca(unittest.TestCase):
     ):
         "test downloading from an external bucket requiring an STS token"
         directory = TempDirectory()
-        fake_datetime.return_value = datetime.strptime(
-            "2024-06-27 +0000", "%Y-%m-%d %z"
-        )
-        # change the bucket name in the test fixture
-        docmap_string = read_fixture("sample_docmap_for_95901.json")
-        docmap_string = docmap_string.replace(
-            b"s3://prod-elife-epp-meca/95901-v1-meca.zip",
-            b"s3://server-src-daily/95901-v1-meca.zip",
-        )
-        fake_get_docmap.return_value = docmap_string
+        from_computer_file_url = "s3://prod-elife-epp-meca/95901-v1-meca.zip"
+        to_computer_file_url = "s3://server-src-daily/95901-v1-meca.zip"
         fake_download_storage_context.return_value = FakeStorageContext(
             dest_folder=directory.path
         )
         fake_storage_context.return_value = FakeStorageContext(
             dest_folder=directory.path
         )
-        mock_session = FakeSession({})
+        session_dict = test_activity_data.meca_details_session_example(
+            computer_file_url=to_computer_file_url
+        )
+        session_dict["docmap_string"] = session_dict["docmap_string"].replace(
+            from_computer_file_url,
+            to_computer_file_url,
+        )
+        mock_session = FakeSession(session_dict)
         fake_session.return_value = mock_session
         fake_sts_client.return_value = FakeStsClient()
         expected_result = self.activity.ACTIVITY_SUCCESS
@@ -147,12 +132,14 @@ class TestExpandMeca(unittest.TestCase):
             "mimetype",
             "transfer.xml",
         ]
-        expected_session_dict = test_activity_data.ingest_meca_session_example()
+        expected_session_dict = test_activity_data.ingest_meca_session_example(
+            computer_file_url=to_computer_file_url
+        )
         expected_session_dict["docmap_string"] = expected_session_dict[
             "docmap_string"
         ].replace(
-            "s3://prod-elife-epp-meca/95901-v1-meca.zip",
-            "s3://server-src-daily/95901-v1-meca.zip",
+            from_computer_file_url,
+            to_computer_file_url,
         )
         # do the activity
         result = self.activity.do_activity(test_activity_data.ingest_meca_data)
@@ -178,172 +165,19 @@ class TestExpandMeca(unittest.TestCase):
         self.assertTrue(loginfo_expected in self.logger.loginfo)
 
     @patch.object(activity_module, "get_session")
-    @patch.object(cleaner, "get_docmap_string_with_retry")
-    def test_get_docmap_exception(self, fake_get_docmap, fake_session):
-        "test exception is raised when getting docmap string"
-        mock_session = FakeSession({})
-        fake_session.return_value = mock_session
-        fake_get_docmap.side_effect = Exception("An exception")
-        expected_result = self.activity.ACTIVITY_PERMANENT_FAILURE
-        expected_docmap_string_status = None
-        # do the activity
-        result = self.activity.do_activity(test_activity_data.ingest_meca_data)
-        # assertions
-        self.assertEqual(result, expected_result)
-        self.assertEqual(
-            self.activity.statuses.get("docmap_string"),
-            expected_docmap_string_status,
-        )
-
-    @patch.object(activity_module, "get_session")
-    @patch.object(cleaner, "get_docmap_string_with_retry")
-    def test_parse_docmap_string_exception(self, fake_get_docmap, fake_session):
-        "test exception is raised parsing the docmap string"
-        mock_session = FakeSession({})
-        fake_session.return_value = mock_session
-        fake_get_docmap.return_value = b"{"
-        expected_result = self.activity.ACTIVITY_PERMANENT_FAILURE
-        # do the activity
-        result = self.activity.do_activity(test_activity_data.ingest_meca_data)
-        # assertions
-        self.assertEqual(result, expected_result)
-        self.assertEqual(
-            self.activity.logger.logexception,
-            (
-                "%s, exception parsing docmap_string for article_id %s: "
-                "Expecting property name enclosed in double quotes: line 1 column 2 (char 1)"
-            )
-            % (self.activity.name, mock_session.session_dict.get("article_id")),
-        )
-
-    @patch.object(activity_module, "get_session")
-    @patch.object(cleaner, "get_docmap_string_with_retry")
-    @patch.object(docmap_provider, "version_doi_step_map")
-    def test_step_map_exception(self, fake_step_map, fake_get_docmap, fake_session):
-        "test exception is raised getting a step map from the docmap"
-        mock_session = FakeSession({})
-        fake_session.return_value = mock_session
-        fake_get_docmap.return_value = read_fixture("sample_docmap_for_95901.json")
-        exception_message = "An exception"
-        fake_step_map.side_effect = Exception(exception_message)
-        expected_result = self.activity.ACTIVITY_PERMANENT_FAILURE
-        # do the activity
-        result = self.activity.do_activity(test_activity_data.ingest_meca_data)
-        # assertions
-        self.assertEqual(result, expected_result)
-        self.assertEqual(
-            self.activity.logger.logexception,
-            (
-                "%s, exception in steps_by_version_doi for version DOI 10.7554/eLife.%s.%s: %s"
-            )
-            % (
-                self.activity.name,
-                mock_session.session_dict.get("article_id"),
-                mock_session.session_dict.get("version"),
-                exception_message,
-            ),
-        )
-
-    @patch.object(activity_module, "get_session")
-    @patch.object(cleaner, "get_docmap_string_with_retry")
-    def test_no_steps(self, fake_get_docmap, fake_session):
-        "test if there are no steps for the version DOI"
-        mock_session = FakeSession({})
-        fake_session.return_value = mock_session
-        # load a docmap with a mismatched version DOI
-        fake_get_docmap.return_value = read_fixture("sample_docmap_for_87445.json")
-        expected_result = self.activity.ACTIVITY_PERMANENT_FAILURE
-        # do the activity
-        result = self.activity.do_activity(test_activity_data.ingest_meca_data)
-        # assertions
-        self.assertEqual(result, expected_result)
-        self.assertEqual(
-            self.activity.logger.loginfo[-1],
-            ("%s, found no docmap steps for version DOI 10.7554/eLife.%s.%s")
-            % (
-                self.activity.name,
-                mock_session.session_dict.get("article_id"),
-                mock_session.session_dict.get("version"),
-            ),
-        )
-
-    @patch.object(activity_module, "get_session")
-    @patch.object(cleaner, "get_docmap_string_with_retry")
-    def test_no_computer_file(self, fake_get_docmap, fake_session):
-        "test if there is no computer-file value in the docmap"
-        mock_session = FakeSession({})
-        fake_session.return_value = mock_session
-        docmap_string = read_fixture("sample_docmap_for_95901.json")
-        # modify the test fixture to have no computer-file keys
-        fake_get_docmap.return_value = docmap_string.replace(
-            b"computer-file", b"not-a-computer-file"
-        )
-        expected_result = self.activity.ACTIVITY_PERMANENT_FAILURE
-        # do the activity
-        result = self.activity.do_activity(test_activity_data.ingest_meca_data)
-        # assertions
-        self.assertEqual(result, expected_result)
-        self.assertEqual(
-            self.activity.logger.loginfo[-1],
-            (
-                (
-                    "%s, computer_file_url not found in computer_file "
-                    "for version DOI 10.7554/eLife.%s.%s"
-                )
-            )
-            % (
-                self.activity.name,
-                mock_session.session_dict.get("article_id"),
-                mock_session.session_dict.get("version"),
-            ),
-        )
-
-    @patch.object(activity_module, "get_session")
-    @patch.object(cleaner, "get_docmap_string_with_retry")
-    def test_no_computer_file_url(self, fake_get_docmap, fake_session):
-        "test if there is no computer-file url value in the docmap"
-        mock_session = FakeSession({})
-        fake_session.return_value = mock_session
-        docmap_string = read_fixture("sample_docmap_for_95901.json")
-        docmap_json = json.loads(docmap_string)
-        # modify the test fixture computer-file url value
-        del docmap_json["steps"]["_:b0"]["inputs"][0]["content"][0]["url"]
-        fake_get_docmap.return_value = bytes(json.dumps(docmap_json), encoding="utf-8")
-        expected_result = self.activity.ACTIVITY_PERMANENT_FAILURE
-        # do the activity
-        result = self.activity.do_activity(test_activity_data.ingest_meca_data)
-        # assertions
-        self.assertEqual(result, expected_result)
-        self.assertEqual(
-            self.activity.logger.loginfo[-1],
-            (
-                (
-                    "%s, computer_file_url not found in "
-                    "computer_file for version DOI 10.7554/eLife.%s.%s"
-                )
-            )
-            % (
-                self.activity.name,
-                mock_session.session_dict.get("article_id"),
-                mock_session.session_dict.get("version"),
-            ),
-        )
-
-    @patch.object(activity_module, "get_session")
     @patch.object(activity_module, "storage_context")
-    @patch.object(cleaner, "get_docmap_string_with_retry")
     @patch.object(activity_module.download_helper, "download_file_from_s3")
     def test_download_meca_activity_exception(
-        self, fake_download, fake_get_docmap, fake_storage_context, fake_session
+        self, fake_download, fake_storage_context, fake_session
     ):
         "test an exception during the download procedure"
         directory = TempDirectory()
-        mock_session = FakeSession({})
+
+        mock_session = FakeSession(test_activity_data.meca_details_session_example())
         fake_session.return_value = mock_session
         fake_storage_context.return_value = FakeStorageContext(
             dest_folder=directory.path
         )
-        fake_get_docmap.return_value = read_fixture("sample_docmap_for_95901.json")
         exception_string = "Message"
         fake_download.side_effect = Exception(exception_string)
         expected_result = self.activity.ACTIVITY_PERMANENT_FAILURE
@@ -360,12 +194,10 @@ class TestExpandMeca(unittest.TestCase):
     @patch.object(github_provider, "find_github_issue")
     @patch.object(activity_module, "get_session")
     @patch.object(activity_module, "storage_context")
-    @patch.object(cleaner, "get_docmap_string_with_retry")
     @patch.object(activity_module, "meca_assume_role")
     def test_assume_role_exception(
         self,
         fake_meca_assume_role,
-        fake_get_docmap,
         fake_storage_context,
         fake_session,
         fake_find_github_issue,
@@ -373,17 +205,15 @@ class TestExpandMeca(unittest.TestCase):
         "test an exception when assuming a role with STS"
         directory = TempDirectory()
         fake_find_github_issue.return_value = FakeGithubIssue()
-        mock_session = FakeSession({})
+        mock_session = FakeSession(
+            test_activity_data.meca_details_session_example(
+                computer_file_url="s3://server-src-daily/95901-v1-meca.zip"
+            )
+        )
         fake_session.return_value = mock_session
         fake_storage_context.return_value = FakeStorageContext(
             dest_folder=directory.path
         )
-        docmap_string = read_fixture("sample_docmap_for_95901.json")
-        docmap_string = docmap_string.replace(
-            b"s3://prod-elife-epp-meca/95901-v1-meca.zip",
-            b"s3://server-src-daily/95901-v1-meca.zip",
-        )
-        fake_get_docmap.return_value = docmap_string
         exception_string = "An exception"
         fake_meca_assume_role.side_effect = Exception(exception_string)
         expected_result = self.activity.ACTIVITY_PERMANENT_FAILURE
@@ -402,14 +232,10 @@ class TestExpandMeca(unittest.TestCase):
     @patch.object(activity_module, "get_session")
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module.download_helper, "storage_context")
-    @patch.object(cleaner, "get_docmap_string_with_retry")
-    @patch.object(utils, "get_current_datetime")
     @patch.object(FakeStorageContext, "set_resource_from_filename")
     def test_set_resource_exception(
         self,
         fake_set_resource,
-        fake_datetime,
-        fake_get_docmap,
         fake_download_storage_context,
         fake_storage_context,
         fake_session,
@@ -418,17 +244,13 @@ class TestExpandMeca(unittest.TestCase):
         directory = TempDirectory()
         exception_string = "An exception"
         fake_set_resource.side_effect = Exception(exception_string)
-        fake_datetime.return_value = datetime.strptime(
-            "2024-06-27 +0000", "%Y-%m-%d %z"
-        )
-        fake_get_docmap.return_value = read_fixture("sample_docmap_for_95901.json")
         fake_download_storage_context.return_value = FakeStorageContext(
             dest_folder=directory.path
         )
         fake_storage_context.return_value = FakeStorageContext(
             dest_folder=directory.path
         )
-        mock_session = FakeSession({})
+        mock_session = FakeSession(test_activity_data.meca_details_session_example())
         fake_session.return_value = mock_session
         expected_result = self.activity.ACTIVITY_PERMANENT_FAILURE
         # do the activity
@@ -444,19 +266,17 @@ class TestExpandMeca(unittest.TestCase):
     @patch.object(activity_module, "get_session")
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module.download_helper, "storage_context")
-    @patch.object(cleaner, "get_docmap_string_with_retry")
     @patch.object(meca, "get_meca_article_xml_path")
     def test_no_article_xml_path(
         self,
         fake_get_meca_article_xml_path,
-        fake_get_docmap,
         fake_download_storage_context,
         fake_storage_context,
         fake_session,
     ):
         "test if no article XML is found in manifest.xml"
         directory = TempDirectory()
-        mock_session = FakeSession({})
+        mock_session = FakeSession(test_activity_data.meca_details_session_example())
         fake_session.return_value = mock_session
         fake_storage_context.return_value = FakeStorageContext(
             dest_folder=directory.path
@@ -464,7 +284,6 @@ class TestExpandMeca(unittest.TestCase):
         fake_download_storage_context.return_value = FakeStorageContext(
             dest_folder=directory.path
         )
-        fake_get_docmap.return_value = read_fixture("sample_docmap_for_95901.json")
         fake_get_meca_article_xml_path.return_value = None
         expected_result = self.activity.ACTIVITY_PERMANENT_FAILURE
         # do the activity
@@ -535,92 +354,3 @@ class TestMecaAssumeRole(unittest.TestCase):
         result = activity_module.meca_assume_role(test_settings, logger)
         # assert
         self.assertEqual(result, None)
-
-
-class TestStepsByVersionDoi(unittest.TestCase):
-    "tests for steps_by_version_doi()"
-
-    def setUp(self):
-        self.caller_name = "test"
-        self.version_doi = "10.7554/eLife.95901.1"
-        self.logger = FakeLogger()
-
-    def test_steps_by_version_doi(self):
-        "test with valid docmap JSON"
-        docmap_json = json.loads(read_fixture("sample_docmap_for_95901.json"))
-        expected_len = 3
-        expected_0_keys = ["actions", "assertions", "inputs", "next-step"]
-        result = activity_module.steps_by_version_doi(
-            docmap_json, self.version_doi, self.caller_name, self.logger
-        )
-        self.assertEqual(len(result), expected_len)
-        self.assertEqual(sorted(list(result[0].keys())), sorted(expected_0_keys))
-
-    def test_exception(self):
-        "test raising an exception"
-        docmap_json = "foo"
-        with self.assertRaises(AttributeError):
-            activity_module.steps_by_version_doi(
-                docmap_json, self.version_doi, self.caller_name, self.logger
-            )
-        self.assertEqual(
-            self.logger.logexception,
-            (
-                "%s, exception getting a step map for version DOI %s: "
-                "'str' object has no attribute 'get'"
-            )
-            % (self.caller_name, self.version_doi),
-        )
-
-
-class TestComputerFileUrlFromSteps(unittest.TestCase):
-    "tests for computer_file_url_from_steps()"
-
-    def setUp(self):
-        self.caller_name = "test"
-        self.version_doi = "10.7554/eLife.95901.1"
-        self.logger = FakeLogger()
-
-    def test_computer_file_url_from_steps(self):
-        "test simple docmap steps data returning a MECA computer-file URL"
-        meca_url = "s3://example/example.meca"
-        steps = [
-            {
-                "inputs": [
-                    {
-                        "type": "preprint",
-                        "content": [{"type": "computer-file", "url": meca_url}],
-                    }
-                ]
-            }
-        ]
-        result = activity_module.computer_file_url_from_steps(
-            steps, self.version_doi, self.caller_name, self.logger
-        )
-        self.assertEqual(result, meca_url)
-
-    def test_none(self):
-        "test no computer-file URL data"
-        steps = [
-            {
-                "inputs": [
-                    {
-                        "type": "preprint",
-                        "content": [{"type": "computer-file"}],
-                    }
-                ]
-            }
-        ]
-        expected = None
-        result = activity_module.computer_file_url_from_steps(
-            steps, self.version_doi, self.caller_name, self.logger
-        )
-        self.assertEqual(result, expected)
-
-    def test_exception(self):
-        "test raising exception"
-        steps = None
-        with self.assertRaises(TypeError):
-            activity_module.computer_file_url_from_steps(
-                steps, self.version_doi, self.caller_name, self.logger
-            )

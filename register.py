@@ -165,6 +165,7 @@ def start(settings):
     activity_names.append("MecaPeerReviewFigs")
     activity_names.append("MecaPeerReviewTables")
     activity_names.append("MecaPeerReviewEquations")
+    activity_names.append("MecaDetails")
 
     for activity_name in activity_names:
         # Import the activity libraries
