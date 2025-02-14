@@ -131,6 +131,7 @@ class activity_ResetMeca(MecaBaseActivity):
         )
 
         # remove the tags in the manifest.xml for the file_paths
+        remove_file_detail_list = []
         if file_paths:
             # download manifest XML file
             (
@@ -139,7 +140,6 @@ class activity_ResetMeca(MecaBaseActivity):
             ) = self.download_manifest(storage, resource_prefix)
 
             # format file_details
-            remove_file_detail_list = []
             for path in file_paths:
                 file_details = {}
                 file_details["from_href"] = path
@@ -161,6 +161,30 @@ class activity_ResetMeca(MecaBaseActivity):
 
             self.statuses["modify_manifest_xml"] = True
 
+        # collect asset file name paths for s3 object copying routine
+        if remove_file_detail_list:
+            asset_file_name_map = {}
+            for detail in remove_file_detail_list:
+                if detail.get("from_href"):
+                    asset_file_name_map[detail.get("from_href")] = detail.get(
+                        "from_href"
+                    )
+
+            self.logger.info(
+                "%s, %s asset_file_name_map: %s"
+                % (self.name, version_doi, asset_file_name_map)
+            )
+
+            # delete the files in the expanded folder
+            self.delete_expanded_folder_files(
+                asset_file_name_map,
+                resource_prefix,
+                file_hrefs,
+                storage,
+            )
+
+            self.statuses["modify_files"] = True
+
         # remove the sub-article XML from the MECA XML
         xml_root = cleaner.parse_article_xml(xml_file_path)
         remove_sub_article_tags(xml_root)
@@ -180,27 +204,6 @@ class activity_ResetMeca(MecaBaseActivity):
         )
 
         self.statuses["modify_xml"] = True
-
-        # collect asset file name paths for s3 object copying routine
-        asset_file_name_map = {}
-        for detail in remove_file_detail_list:
-            if detail.get("from_href"):
-                asset_file_name_map[detail.get("from_href")] = detail.get("from_href")
-
-        self.logger.info(
-            "%s, %s asset_file_name_map: %s"
-            % (self.name, version_doi, asset_file_name_map)
-        )
-
-        # delete the files in the expanded folder
-        self.delete_expanded_folder_files(
-            asset_file_name_map,
-            resource_prefix,
-            file_hrefs,
-            storage,
-        )
-
-        self.statuses["modify_files"] = True
 
         # upload the XML to the bucket
         self.logger.info(
