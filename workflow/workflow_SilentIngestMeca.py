@@ -36,6 +36,15 @@ class workflow_SilentIngestMeca(Workflow):
             "steps": [
                 define_workflow_step("PingWorker", data),
                 define_workflow_step("MecaDetails", data),
+                define_workflow_step("ExpandMeca", data),
+                define_workflow_step("ResetMeca", data),
+                define_workflow_step("ModifyMecaXml", data),
+                define_workflow_step("MecaPeerReviews", data),
+                define_workflow_step("MecaPeerReviewImages", data),
+                define_workflow_step("MecaPeerReviewFigs", data),
+                define_workflow_step("MecaPeerReviewTables", data),
+                define_workflow_step("MecaPeerReviewEquations", data),
+                define_workflow_step("MecaXslt", data),
             ],
             "finish": {"requirements": None},
         }
