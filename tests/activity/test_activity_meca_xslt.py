@@ -1,6 +1,7 @@
 # coding=utf-8
 
 import unittest
+import copy
 import os
 from mock import patch
 from testfixtures import TempDirectory
@@ -148,17 +149,36 @@ class TestMissingSettings(unittest.TestCase):
         # reset the settings_mock value
         settings_mock.meca_xsl_endpoint = self.meca_xsl_endpoint
 
-    def test_missing_settings(self):
+    @patch.object(activity_module, "get_session")
+    def test_missing_settings(self, fake_session):
         "test if settings is missing a required value"
+        fake_session.return_value = FakeSession(SESSION_DICT)
         del settings_mock.meca_xsl_endpoint
         activity_object = activity_class(settings_mock, FakeLogger(), None, None, None)
         # do the activity
-        result = activity_object.do_activity()
+        result = activity_object.do_activity(test_activity_data.ingest_meca_data)
         # check assertions
         self.assertEqual(result, activity_class.ACTIVITY_SUCCESS)
         self.assertEqual(
             activity_object.logger.loginfo[-1],
             "MecaXslt, meca_xsl_endpoint in settings is missing, skipping",
+        )
+
+    @patch.object(activity_module, "get_session")
+    def test_missing_silent_settings(self, fake_session):
+        "test if settings is missing a required value for silent-correction"
+        silent_session_dict = copy.copy(SESSION_DICT)
+        silent_session_dict["run_type"] = "silent-correction"
+        fake_session.return_value = FakeSession(silent_session_dict)
+        del settings_mock.meca_xsl_silent_endpoint
+        activity_object = activity_class(settings_mock, FakeLogger(), None, None, None)
+        # do the activity
+        result = activity_object.do_activity(test_activity_data.ingest_meca_data)
+        # check assertions
+        self.assertEqual(result, activity_class.ACTIVITY_SUCCESS)
+        self.assertEqual(
+            activity_object.logger.loginfo[-1],
+            "MecaXslt, meca_xsl_silent_endpoint in settings is missing, skipping",
         )
 
 
@@ -172,15 +192,34 @@ class TestBlankSettings(unittest.TestCase):
         # reset the settings_mock value
         settings_mock.meca_xsl_endpoint = self.meca_xsl_endpoint
 
-    def test_blank_settings(self):
+    @patch.object(activity_module, "get_session")
+    def test_blank_settings(self, fake_session):
         "test if required settings value is blank"
+        fake_session.return_value = FakeSession(SESSION_DICT)
         settings_mock.meca_xsl_endpoint = ""
         activity_object = activity_class(settings_mock, FakeLogger(), None, None, None)
         # do the activity
-        result = activity_object.do_activity()
+        result = activity_object.do_activity(test_activity_data.ingest_meca_data)
         # check assertions
         self.assertEqual(result, activity_class.ACTIVITY_SUCCESS)
         self.assertEqual(
             activity_object.logger.loginfo[-1],
             "MecaXslt, meca_xsl_endpoint in settings is blank, skipping",
+        )
+
+    @patch.object(activity_module, "get_session")
+    def test_blank_silent_settings(self, fake_session):
+        "test if required settings value is blank for silent-correction"
+        silent_session_dict = copy.copy(SESSION_DICT)
+        silent_session_dict["run_type"] = "silent-correction"
+        fake_session.return_value = FakeSession(silent_session_dict)
+        settings_mock.meca_xsl_silent_endpoint = ""
+        activity_object = activity_class(settings_mock, FakeLogger(), None, None, None)
+        # do the activity
+        result = activity_object.do_activity(test_activity_data.ingest_meca_data)
+        # check assertions
+        self.assertEqual(result, activity_class.ACTIVITY_SUCCESS)
+        self.assertEqual(
+            activity_object.logger.loginfo[-1],
+            "MecaXslt, meca_xsl_silent_endpoint in settings is blank, skipping",
         )

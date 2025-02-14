@@ -31,23 +31,41 @@ class activity_MecaXslt(Activity):
     def do_activity(self, data=None):
         self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
 
+        # load session
+        run = data["run"]
+        session = get_session(self.settings, data, run)
+        run_type = session.get_value("run_type")
+
         # check for required settings
-        if not hasattr(self.settings, "meca_xsl_endpoint"):
-            self.logger.info(
-                "%s, meca_xsl_endpoint in settings is missing, skipping" % self.name
-            )
-            return self.ACTIVITY_SUCCESS
-        if not self.settings.meca_xsl_endpoint:
-            self.logger.info(
-                "%s, meca_xsl_endpoint in settings is blank, skipping" % self.name
-            )
-            return self.ACTIVITY_SUCCESS
+        if run_type == "silent-correction":
+            
+            if not hasattr(self.settings, "meca_xsl_silent_endpoint"):
+                self.logger.info(
+                    "%s, meca_xsl_silent_endpoint in settings is missing, skipping" % self.name
+                )
+                return self.ACTIVITY_SUCCESS
+            if not self.settings.meca_xsl_silent_endpoint:
+                self.logger.info(
+                    "%s, meca_xsl_silent_endpoint in settings is blank, skipping" % self.name
+                )
+                return self.ACTIVITY_SUCCESS
+            endpoint_url = self.settings.meca_xsl_silent_endpoint
+        else:
+            if not hasattr(self.settings, "meca_xsl_endpoint"):
+                self.logger.info(
+                    "%s, meca_xsl_endpoint in settings is missing, skipping" % self.name
+                )
+                return self.ACTIVITY_SUCCESS
+            if not self.settings.meca_xsl_endpoint:
+                self.logger.info(
+                    "%s, meca_xsl_endpoint in settings is blank, skipping" % self.name
+                )
+                return self.ACTIVITY_SUCCESS
+            endpoint_url = self.settings.meca_xsl_endpoint
 
         self.make_activity_directories()
 
         # load session data
-        run = data["run"]
-        session = get_session(self.settings, data, run)
         article_xml_path = session.get_value("article_xml_path")
         expanded_folder = session.get_value("expanded_folder")
         version_doi = session.get_value("version_doi")
@@ -81,7 +99,6 @@ class activity_MecaXslt(Activity):
         self.statuses["download"] = True
 
         # POST to the endpoint
-        endpoint_url = self.settings.meca_xsl_endpoint
         self.logger.info(
             "%s, posting %s to endpoint %s" % (self.name, xml_file_path, endpoint_url)
         )

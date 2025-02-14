@@ -270,6 +270,7 @@ user_agent = "user_agent/version (https://example.org)"
 
 meca_xsl_endpoint = "https://example.org/xsl"
 meca_dtd_endpoint = "https://example.org/dtd"
+meca_xsl_silent_endpoint = "https://example.org/silent-xsl"
 preprint_schematron_endpoint = "https://example.org/schematron/preprint"
 
 meca_bucket = "meca_bucket"
