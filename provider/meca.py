@@ -201,15 +201,27 @@ def rewrite_item_tags(
             and instance_tag.get("href") in href_file_detail_map
         ):
             logger.info(
-                "%s, rewriting item tag for href %s for version DOI %s"
+                "%s, modifying item tag for href %s for version DOI %s"
                 % (caller_name, instance_tag.get("href"), version_doi)
             )
             file_details = href_file_detail_map.get(instance_tag.get("href"))
-            # remove old XML data
-            item_tag.remove(instance_tag)
-            cleaner.remove_tag_attributes(item_tag)
-            # rewrite the item tag data
-            cleaner.populate_item_tag(item_tag, file_details)
+            if file_details.get("href"):
+                logger.info(
+                    "%s, rewriting item tag for href %s for version DOI %s"
+                    % (caller_name, instance_tag.get("href"), version_doi)
+                )
+                # remove old XML data
+                item_tag.remove(instance_tag)
+                cleaner.remove_tag_attributes(item_tag)
+                # rewrite the item tag data
+                cleaner.populate_item_tag(item_tag, file_details)
+            else:
+                logger.info(
+                    "%s, removing item tag for href %s for version DOI %s"
+                    % (caller_name, instance_tag.get("href"), version_doi)
+                )
+                # remove the item tag
+                root.remove(item_tag)
 
     # write XML file to disk
     cleaner.write_manifest_xml_file(
