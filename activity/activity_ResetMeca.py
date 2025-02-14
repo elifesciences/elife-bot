@@ -213,13 +213,14 @@ class activity_ResetMeca(MecaBaseActivity):
         storage.set_resource_from_filename(xml_storage_resource_origin, xml_file_path)
 
         # upload manifest to the bucket
-        self.logger.info(
-            "%s, updating manifest XML to %s"
-            % (self.name, manifest_storage_resource_origin)
-        )
-        storage.set_resource_from_filename(
-            manifest_storage_resource_origin, manifest_xml_file_path
-        )
+        if self.statuses.get("modify_manifest_xml"):
+            self.logger.info(
+                "%s, updating manifest XML to %s"
+                % (self.name, manifest_storage_resource_origin)
+            )
+            storage.set_resource_from_filename(
+                manifest_storage_resource_origin, manifest_xml_file_path
+            )
 
         self.statuses["upload_xml"] = True
 
