@@ -408,6 +408,145 @@ class TestModifyMecaXml(unittest.TestCase):
         # assert editor
         self.assertTrue('<contrib contrib-type="editor">' not in xml_string)
 
+    @patch("docmaptools.parse.get_web_content")
+    @patch.object(utils, "get_current_datetime")
+    @patch.object(activity_module, "storage_context")
+    @patch.object(activity_module, "get_session")
+    def test_silent_correction(
+        self,
+        fake_session,
+        fake_storage_context,
+        fake_datetime,
+        fake_get_web_content,
+    ):
+        "test if the run_type is silent-correction"
+        directory = TempDirectory()
+        self.session.store_value("run_type", "silent-correction")
+        fake_session.return_value = self.session
+
+        fake_datetime.return_value = datetime.strptime(
+            "2024-06-27 +0000", "%Y-%m-%d %z"
+        )
+
+        destination_path = os.path.join(
+            directory.path,
+            SESSION_DICT.get("expanded_folder"),
+            SESSION_DICT.get("article_xml_path"),
+        )
+        # create folders if they do not exist
+        meca_file_path = "tests/files_source/95901-v1-meca.zip"
+        resource_folder = os.path.join(
+            directory.path,
+            SESSION_DICT.get("expanded_folder"),
+        )
+        # create folders if they do not exist
+        os.makedirs(resource_folder, exist_ok=True)
+        # unzip the test fixture files
+        zip_file_paths = helpers.unzip_fixture(meca_file_path, resource_folder)
+        resources = [
+            os.path.join(
+                test_activity_data.ingest_meca_session_example().get("expanded_folder"),
+                file_path,
+            )
+            for file_path in zip_file_paths
+        ]
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources, dest_folder=directory.path
+        )
+        fake_get_web_content.side_effect = mock_get_web_content
+        # add XML to mirror typical silent-correction ingestion data
+        xml_file_path = os.path.join(
+            directory.path,
+            test_activity_data.ingest_meca_session_example().get("expanded_folder"),
+            "content/24301711.xml",
+        )
+        editor_xml = (
+            '<contrib-group content-type="section">\n'
+            '<contrib contrib-type="editor"></contrib>\n'
+            '<contrib contrib-type="senior_editor"></contrib>\n'
+            "</contrib-group>\n"
+        )
+        pub_history_xml = "<pub-history>\n<event>\n</event>\n</pub-history>"
+        with open(xml_file_path, "r", encoding="utf-8") as open_file:
+            xml_content = open_file.read()
+        xml_content = xml_content.replace(
+            "</contrib-group>\n<author-notes>",
+            "</contrib-group>\n%s<author-notes>" % editor_xml,
+        )
+        xml_content = xml_content.replace(
+            "</history>\n<permissions>",
+            "</history>\n%s<permissions>" % pub_history_xml,
+        )
+        with open(xml_file_path, "w", encoding="utf-8") as open_file:
+            open_file.write(xml_content)
+
+        # do the activity
+        result = self.activity.do_activity(test_activity_data.ingest_meca_data)
+        # assertions
+        self.assertEqual(result, True)
+        # assertions on XML content
+        with open(destination_path, "r", encoding="utf-8") as open_file:
+            xml_string = open_file.read()
+        # assert pub-history
+        self.assertTrue(
+            (
+                "<pub-history>\n"
+                "<event>\n"
+                "<event-desc>Preprint posted</event-desc>\n"
+                '<date date-type="preprint" iso-8601-date="2024-01-24">\n'
+                "<day>24</day>\n"
+                "<month>01</month>\n"
+                "<year>2024</year>\n"
+                "</date>\n"
+                '<self-uri content-type="preprint"'
+                ' xlink:href="https://doi.org/10.1101/2024.01.24.24301711"/>\n'
+                "</event>\n"
+                "</pub-history>"
+            )
+            in xml_string
+        )
+
+        # assert editor XML
+        self.assertTrue(
+            (
+                "</aff>\n"
+                "</contrib-group>\n"
+                '<contrib-group content-type="section">\n'
+                '<contrib contrib-type="editor">\n'
+                "<name>\n"
+                "<surname>Lamptey</surname>\n"
+                "<given-names>Emmanuel</given-names>\n"
+                "</name>\n"
+                "<role>Reviewing Editor</role>\n"
+                "<aff>\n"
+                "<institution-wrap>\n"
+                "<institution>KAAF University College</institution>\n"
+                "</institution-wrap>\n"
+                '<addr-line><named-content content-type="city">'
+                "Buduburam</named-content></addr-line>\n"
+                "<country>Ghana</country>\n"
+                "</aff>\n"
+                "</contrib>\n"
+                '<contrib contrib-type="senior_editor">\n'
+                "<name>\n"
+                "<surname>Ajijola</surname>\n"
+                "<given-names>Olujimi A</given-names>\n"
+                "</name>\n"
+                "<role>Senior Editor</role>\n"
+                "<aff>\n"
+                "<institution-wrap>\n"
+                "<institution>University of California, Los Angeles</institution>\n"
+                "</institution-wrap>\n"
+                '<addr-line><named-content content-type="city">'
+                "Los Angeles</named-content></addr-line>\n"
+                "<country>United States of America</country>\n"
+                "</aff>\n"
+                "</contrib>\n"
+                "</contrib-group>\n"
+            )
+            in xml_string
+        )
+
 
 class TestClearArticleId(unittest.TestCase):
     "tests for clear_article_id()"
@@ -770,6 +909,28 @@ class TestModifyHistory(unittest.TestCase):
         self.assertEqual(xml_string, expected)
 
 
+class TestClearPubHistory(unittest.TestCase):
+    "test for clear_pub_history()"
+
+    def test_clear_pub_history(self):
+        "test removing pub-history tags"
+        xml_root = ElementTree.fromstring(
+            "<article>"
+            "<front>"
+            "<article-meta>"
+            "<pub-history><event /></pub-history>"
+            "</article-meta>"
+            "</front>"
+            "</article>"
+        )
+        expected = "<article>" "<front>" "<article-meta />" "</front>" "</article>"
+        # invoke
+        activity_module.clear_pub_history(xml_root)
+        # assert
+        xml_string = ElementTree.tostring(xml_root).decode("utf-8")
+        self.assertEqual(xml_string, expected)
+
+
 class TestModifyPermissions(unittest.TestCase):
     "tests for modify_permissions()"
 
@@ -915,6 +1076,47 @@ class TestModifyPermissions(unittest.TestCase):
         activity_module.modify_permissions(
             xml_root, license_data_dict, copyright_year, copyright_holder
         )
+        # assert
+        xml_string = ElementTree.tostring(xml_root).decode("utf-8")
+        self.assertEqual(xml_string, expected)
+
+
+class TestClearEditors(unittest.TestCase):
+    "test for clear_editors()"
+
+    def test_clear_editors(self):
+        "test removing contrib-group tags holding editor contrib tags"
+        xml_root = ElementTree.fromstring(
+            "<article>"
+            "<front>"
+            "<article-meta>"
+            "<contrib-group>"
+            '<contrib contrib-type="author" />'
+            "</contrib-group>"
+            '<contrib-group content-type="section">'
+            '<contrib contrib-type="editor">'
+            "<name>"
+            "<surname>Editor</surname>"
+            "</name>"
+            "</contrib>"
+            "</contrib-group>"
+            "</article-meta>"
+            "</front>"
+            "</article>"
+        )
+        expected = (
+            "<article>"
+            "<front>"
+            "<article-meta>"
+            "<contrib-group>"
+            '<contrib contrib-type="author" />'
+            "</contrib-group>"
+            "</article-meta>"
+            "</front>"
+            "</article>"
+        )
+        # invoke
+        activity_module.clear_editors(xml_root)
         # assert
         xml_string = ElementTree.tostring(xml_root).decode("utf-8")
         self.assertEqual(xml_string, expected)

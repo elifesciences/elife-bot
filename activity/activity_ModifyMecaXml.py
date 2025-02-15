@@ -165,6 +165,10 @@ class activity_ModifyMecaXml(MecaBaseActivity):
             # remove current version_doi data from history data
             history_data = cleaner.prune_history_data(history_data, doi, version)
 
+            # if silent correction, remove pub-history if present
+            if session.get_value("run_type") == "silent-correction":
+                clear_pub_history(xml_root)
+
             xml_root = cleaner.add_pub_history_meca(
                 xml_root,
                 history_data,
@@ -195,6 +199,10 @@ class activity_ModifyMecaXml(MecaBaseActivity):
         editors = cleaner.editor_contributors(docmap_string, version_doi)
         article_meta_tag = xml_root.find(".//front/article-meta")
         if editors:
+            # if silent correction, remove editor contrib-group if present
+            if session.get_value("run_type") == "silent-correction":
+                clear_editors(xml_root)
+
             cleaner.set_editors(article_meta_tag, editors)
 
         # finally, improve whitespace
@@ -299,6 +307,13 @@ def modify_history(xml_root, review_date_struct, identifier):
         )
 
 
+def clear_pub_history(xml_root):
+    "remove pub-history tags"
+    for parent_tag in xml_root.findall(".//pub-history/.."):
+        for pub_history_tag in parent_tag.findall("./pub-history"):
+            parent_tag.remove(pub_history_tag)
+
+
 def clear_permissions(xml_root):
     "remove tags inside the permissions tag"
     article_meta_tag = xml_root.find(".//front/article-meta")
@@ -314,3 +329,16 @@ def modify_permissions(xml_root, license_data_dict, copyright_year, copyright_ho
     cleaner.set_permissions(
         xml_root, license_data_dict, copyright_year, copyright_holder
     )
+
+
+def clear_editors(xml_root):
+    "remove contrib-group tag containing editor contrib"
+    contrib_types = ["editor", "senior_editor"]
+    for contrib_type in contrib_types:
+        for parent_tag in xml_root.findall(
+            './/contrib-group/contrib[@contrib-type="%s"]/../..' % contrib_type
+        ):
+            for contrib_group_tag in parent_tag.findall(
+                './contrib-group/contrib[@contrib-type="%s"]/..' % contrib_type
+            ):
+                parent_tag.remove(contrib_group_tag)
