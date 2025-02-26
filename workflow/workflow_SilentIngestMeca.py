@@ -45,6 +45,8 @@ class workflow_SilentIngestMeca(Workflow):
                 define_workflow_step("MecaPeerReviewTables", data),
                 define_workflow_step("MecaPeerReviewEquations", data),
                 define_workflow_step("MecaXslt", data),
+                define_workflow_step("OutputMeca", data),
+                define_workflow_step("SilentPublishPreprint", data),
             ],
             "finish": {"requirements": None},
         }

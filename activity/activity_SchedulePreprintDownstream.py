@@ -59,8 +59,7 @@ class activity_SchedulePreprintDownstream(Activity):
 
         status = "preprint"
         first_by_status = bool(int(version) == 1)
-        # note: support for silent-correction run_type is not added yet
-        run_type = None
+        run_type = data.get("run_type")
 
         try:
             bucket_resource = preprint.expanded_folder_bucket_resource(
