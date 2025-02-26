@@ -18,6 +18,7 @@ class starter_PostPreprintPublication(Starter):
         version=None,
         run=None,
         standalone=False,
+        run_type=None,
     ):
         if article_id is None:
             raise NullRequiredDataException("Did not get an article id. Required.")
@@ -32,6 +33,7 @@ class starter_PostPreprintPublication(Starter):
             "article_id": article_id,
             "version": version,
             "standalone": standalone,
+            "run_type": run_type,
         }
         workflow_params["input"] = json.dumps(info, default=lambda ob: None)
         return workflow_params
@@ -43,6 +45,7 @@ class starter_PostPreprintPublication(Starter):
         version=None,
         run=None,
         standalone=False,
+        run_type=None,
     ):
         """method for backwards compatibility"""
         self.settings = settings
@@ -52,6 +55,7 @@ class starter_PostPreprintPublication(Starter):
             version,
             run,
             standalone,
+            run_type,
         )
 
     def start_workflow(
@@ -60,11 +64,14 @@ class starter_PostPreprintPublication(Starter):
         version=None,
         run=None,
         standalone=False,
+        run_type=None,
     ):
         if run is None:
             run = str(uuid.uuid4())
 
-        workflow_params = self.get_workflow_params(article_id, version, run, standalone)
+        workflow_params = self.get_workflow_params(
+            article_id, version, run, standalone, run_type
+        )
 
         self.start_workflow_execution(workflow_params)
 
