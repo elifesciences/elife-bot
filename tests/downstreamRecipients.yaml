@@ -60,6 +60,7 @@ PreprintPublicationEmail:
   activity_name: PublicationEmail
   s3_bucket_folder: publication_email
   schedule_downstream: true
+  schedule_silent_correction: false
   schedule_first_version_only: false
   schedule_article_types:
     - preprint
