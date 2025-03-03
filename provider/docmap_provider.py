@@ -78,14 +78,34 @@ def get_docmap_index_json(settings, caller_name, logger):
     )
 
 
+def content_computer_files(step_dict):
+    "find computer-file data in docmap content steps"
+    computer_file_list = []
+    for content in step_dict.get("content", []):
+        if content.get("type") == "computer-file":
+            computer_file_list.append(content)
+    return computer_file_list
+
+
 def computer_files(step):
     "return preprint computer-file from step input"
     computer_file_list = []
     for input_dict in parse.step_inputs(step):
         if input_dict.get("type") == "preprint":
-            for input_content in input_dict.get("content", []):
-                if input_content.get("type") == "computer-file":
-                    computer_file_list.append(input_content)
+            computer_file_list = content_computer_files(input_dict)
+    return computer_file_list
+
+
+def output_computer_files(step):
+    "return preprint computer-file from step outputs"
+    computer_file_list = []
+    actions = parse.step_actions(step)
+    if actions:
+        for action in actions:
+            outputs = parse.action_outputs(action)
+            for output_dict in outputs:
+                if output_dict.get("type") == "preprint":
+                    computer_file_list = content_computer_files(output_dict)
     return computer_file_list
 
 
@@ -209,3 +229,46 @@ def changed_version_doi_data(docmap_index_json, prev_docmap_index_json, logger):
         "new_version_doi_list": new_version_doi_list,
         "no_computer_file_version_doi_list": no_computer_file_version_doi_list,
     }
+
+
+def computer_file_url_from_steps(method_name, steps, version_doi, caller_name, logger):
+    "get computer-file data from docmap steps invoking the method_name"
+    computer_file = None
+    for step in steps:
+        # switch based on the method name
+        computer_file_list = []
+        if method_name == "computer_files":
+            computer_file_list = computer_files(step)
+        elif method_name == "output_computer_files":
+            computer_file_list = output_computer_files(step)
+
+        if computer_file_list:
+            computer_file = computer_file_list[0]
+            break
+
+    if not computer_file:
+        logger.info(
+            "%s, computer_file not found in steps for version DOI %s"
+            % (caller_name, version_doi)
+        )
+        return None
+    logger.info(
+        "%s, computer_file %s for version_doi %s"
+        % (caller_name, computer_file, version_doi)
+    )
+
+    return computer_file.get("url")
+
+
+def input_computer_file_url_from_steps(steps, version_doi, caller_name, logger):
+    "get the url of computer-file input from docmap steps"
+    return computer_file_url_from_steps(
+        "computer_files", steps, version_doi, caller_name, logger
+    )
+
+
+def output_computer_file_url_from_steps(steps, version_doi, caller_name, logger):
+    "get the url of computer-file input from docmap steps"
+    return computer_file_url_from_steps(
+        "output_computer_files", steps, version_doi, caller_name, logger
+    )
