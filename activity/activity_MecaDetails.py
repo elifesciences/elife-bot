@@ -53,7 +53,11 @@ class activity_MecaDetails(Activity):
         session.store_value("run", run)
         session.store_value("run_type", data.get("run_type"))
 
-        if data.get("run_type") == "silent-correction":
+        if (
+            data.get("run_type") == "silent-correction"
+            and data.get("bucket_name")
+            and data.get("file_name")
+        ):
             # get computer_file_url, article_id, and version from the S3 notification data
             computer_file_url = "%s://%s" % (
                 self.settings.storage_provider,
@@ -66,6 +70,7 @@ class activity_MecaDetails(Activity):
             # store details in session
             article_id = data.get("article_id")
             version = data.get("version")
+            computer_file_url = None
 
         # store details in session
         session.store_value("article_id", article_id)
@@ -114,7 +119,7 @@ class activity_MecaDetails(Activity):
             % (self.name, version_doi, article_id, version)
         )
 
-        if data.get("run_type") != "silent-correction":
+        if not computer_file_url:
             # get a version DOI step map from the docmap
             try:
                 steps = steps_by_version_doi(
@@ -134,9 +139,7 @@ class activity_MecaDetails(Activity):
                 return self.ACTIVITY_PERMANENT_FAILURE
 
             # get computer-file url from the docmap
-            computer_file_url = computer_file_url_from_steps(
-                steps, version_doi, self.name, self.logger
-            )
+            computer_file_url = self.get_computer_file_url(steps, version_doi)
 
         if not computer_file_url:
             self.logger.info(
@@ -159,6 +162,12 @@ class activity_MecaDetails(Activity):
         )
 
         return self.ACTIVITY_SUCCESS
+
+    def get_computer_file_url(self, steps, version_doi):
+        "return computer_file_url from the docmap for the original input MECA"
+        return docmap_provider.input_computer_file_url_from_steps(
+            steps, version_doi, self.name, self.logger
+        )
 
 
 def meca_file_parts(file_name):
@@ -184,26 +193,3 @@ def steps_by_version_doi(docmap_json, version_doi, caller_name, logger):
         raise
 
     return step_map.get(version_doi)
-
-
-def computer_file_url_from_steps(steps, version_doi, caller_name, logger):
-    "get the url of computer-file input from docmap steps"
-    computer_file = None
-    for step in steps:
-        computer_file_list = docmap_provider.computer_files(step)
-        if computer_file_list:
-            computer_file = computer_file_list[0]
-            break
-
-    if not computer_file:
-        logger.info(
-            "%s, computer_file not found in steps for version DOI %s"
-            % (caller_name, version_doi)
-        )
-        return None
-    logger.info(
-        "%s, computer_file %s for version_doi %s"
-        % (caller_name, computer_file, version_doi)
-    )
-
-    return computer_file.get("url")

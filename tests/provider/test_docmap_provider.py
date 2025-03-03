@@ -181,7 +181,26 @@ class TestComputerFiles(unittest.TestCase):
                 ),
             }
         ]
-        result = docmap_provider.computer_files(docmap_steps_value[0])
+        result = docmap_provider.computer_files(step)
+        self.assertEqual(result, expected)
+
+
+class TestOutputComputerFiles(unittest.TestCase):
+    "tests for output_computer_files()"
+
+    def test_output_computer_files(self):
+        "test get list of computer-file from docmap output steps"
+        docmap_json = json.loads(read_fixture("sample_docmap_for_95901.json"))
+        step_map = parse.preprint_version_doi_step_map(docmap_json)
+        docmap_steps_value = step_map.get("10.7554/eLife.95901.1")
+        step = docmap_steps_value[1]
+        expected = [
+            {
+                "type": "computer-file",
+                "url": "s3://prod-elife-epp-meca/reviewed-preprints/95901-v1-meca.zip",
+            }
+        ]
+        result = docmap_provider.output_computer_files(step)
         self.assertEqual(result, expected)
 
 
@@ -518,3 +537,196 @@ class TestCheckPublishedDate(unittest.TestCase):
         "test for a non-date string value"
         result = docmap_provider.check_published_date(None)
         self.assertEqual(result, True)
+
+
+class TestInputComputerFileUrlFromSteps(unittest.TestCase):
+    "tests for input_computer_file_url_from_steps()"
+
+    def setUp(self):
+        self.caller_name = "test"
+        self.version_doi = "10.7554/eLife.95901.1"
+        self.logger = FakeLogger()
+
+    def test_input_computer_file_url_from_steps(self):
+        "test simple docmap steps data returning a MECA computer-file URL"
+        meca_url = "s3://example/example.meca"
+        steps = [
+            {
+                "inputs": [
+                    {
+                        "type": "preprint",
+                        "content": [{"type": "computer-file", "url": meca_url}],
+                    }
+                ]
+            }
+        ]
+        result = docmap_provider.input_computer_file_url_from_steps(
+            steps, self.version_doi, self.caller_name, self.logger
+        )
+        self.assertEqual(result, meca_url)
+
+    def test_url_missing(self):
+        "test no computer-file URL data"
+        steps = [
+            {
+                "inputs": [
+                    {
+                        "type": "preprint",
+                        "content": [{"type": "computer-file"}],
+                    }
+                ]
+            }
+        ]
+        expected = None
+        result = docmap_provider.input_computer_file_url_from_steps(
+            steps, self.version_doi, self.caller_name, self.logger
+        )
+        self.assertEqual(result, expected)
+
+    def test_content_missing(self):
+        "test no content data present"
+        steps = [
+            {
+                "inputs": [
+                    {
+                        "type": "preprint",
+                    }
+                ]
+            }
+        ]
+        expected = None
+        result = docmap_provider.input_computer_file_url_from_steps(
+            steps, self.version_doi, self.caller_name, self.logger
+        )
+        self.assertEqual(result, expected)
+
+    def test_exception(self):
+        "test raising exception"
+        steps = None
+        with self.assertRaises(TypeError):
+            docmap_provider.input_computer_file_url_from_steps(
+                steps, self.version_doi, self.caller_name, self.logger
+            )
+
+
+class TestOutputComputerFileUrlFromSteps(unittest.TestCase):
+    "tests for output_computer_file_url_from_steps()"
+
+    def setUp(self):
+        self.caller_name = "test"
+        self.version_doi = "10.7554/eLife.95901.1"
+        self.logger = FakeLogger()
+
+    def test_output_computer_file_url_from_steps(self):
+        "test simple docmap steps data returning a MECA computer-file URL"
+        meca_url = "s3://example/reviewed-preprints/example.meca"
+        steps = [
+            {
+                "inputs": [
+                    {
+                        "type": "preprint",
+                        "content": [
+                            {
+                                "type": "computer-file",
+                                "url": "s3://example/example.meca",
+                            }
+                        ],
+                    }
+                ]
+            },
+            {
+                "actions": [
+                    {
+                        "outputs": [
+                            {
+                                "type": "preprint",
+                                "identifier": "95901",
+                                "doi": "10.7554/eLife.95901.1",
+                                "versionIdentifier": "1",
+                                "license": "http://creativecommons.org/licenses/by/4.0/",
+                                "content": [
+                                    {
+                                        "type": "computer-file",
+                                        "url": meca_url,
+                                    }
+                                ],
+                            }
+                        ]
+                    }
+                ]
+            },
+        ]
+        result = docmap_provider.output_computer_file_url_from_steps(
+            steps, self.version_doi, self.caller_name, self.logger
+        )
+        self.assertEqual(result, meca_url)
+
+    def test_url_missing(self):
+        "test no computer-file URL data"
+        steps = [
+            {
+                "inputs": [
+                    {
+                        "type": "preprint",
+                        "content": [
+                            {
+                                "type": "computer-file",
+                                "url": "s3://example/example.meca",
+                            }
+                        ],
+                    }
+                ]
+            },
+            {
+                "actions": [
+                    {
+                        "outputs": [
+                            {
+                                "type": "preprint",
+                                "identifier": "95901",
+                                "doi": "10.7554/eLife.95901.1",
+                                "versionIdentifier": "1",
+                                "license": "http://creativecommons.org/licenses/by/4.0/",
+                                "content": [{"type": "computer-file"}],
+                            }
+                        ]
+                    }
+                ]
+            },
+        ]
+        expected = None
+        result = docmap_provider.output_computer_file_url_from_steps(
+            steps, self.version_doi, self.caller_name, self.logger
+        )
+        self.assertEqual(result, expected)
+
+    def test_content_missing(self):
+        "test no output content step"
+        steps = [
+            {
+                "inputs": [
+                    {
+                        "type": "preprint",
+                        "content": [
+                            {
+                                "type": "computer-file",
+                                "url": "s3://example/example.meca",
+                            }
+                        ],
+                    }
+                ]
+            },
+        ]
+        expected = None
+        result = docmap_provider.output_computer_file_url_from_steps(
+            steps, self.version_doi, self.caller_name, self.logger
+        )
+        self.assertEqual(result, expected)
+
+    def test_exception(self):
+        "test raising exception"
+        steps = None
+        with self.assertRaises(TypeError):
+            docmap_provider.output_computer_file_url_from_steps(
+                steps, self.version_doi, self.caller_name, self.logger
+            )
