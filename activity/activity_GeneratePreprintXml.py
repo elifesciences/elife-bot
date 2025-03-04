@@ -52,7 +52,7 @@ class activity_GeneratePreprintXml(Activity):
 
         # set the S3 bucket path to hold files
         bucket_folder_name = "preprint.%s.%s/%s" % (article_id, version, run)
-        session.store_value("expanded_folder", bucket_folder_name)
+        session.store_value("preprint_expanded_folder", bucket_folder_name)
         # bucket which holds files
         bucket_name = (
             self.settings.publishing_buckets_prefix + self.settings.expanded_bucket
