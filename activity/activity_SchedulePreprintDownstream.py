@@ -42,7 +42,7 @@ class activity_SchedulePreprintDownstream(Activity):
             session = get_session(self.settings, data, run)
             article_id = session.get_value("article_id")
             version = session.get_value("version")
-            expanded_folder_name = session.get_value("expanded_folder")
+            expanded_folder_name = session.get_value("preprint_expanded_folder")
             expanded_bucket_name = (
                 self.settings.publishing_buckets_prefix + self.settings.expanded_bucket
             )

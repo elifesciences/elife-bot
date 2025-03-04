@@ -32,7 +32,7 @@ def input_data(article_id=None, version=None, standalone=None, run_type=None):
 
 def session_data(article_id=None, version=None):
     sess_data = input_data(article_id, version)
-    sess_data["expanded_folder"] = "preprint.%s.%s/%s" % (
+    sess_data["preprint_expanded_folder"] = "preprint.%s.%s/%s" % (
         article_id,
         version,
         sess_data.get("run"),
