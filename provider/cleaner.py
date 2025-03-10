@@ -1013,6 +1013,18 @@ def set_volume(root, volume):
     return prc.set_volume(root, volume)
 
 
+def modify_volume(xml_root, volume):
+    "modify volume tag"
+    if volume:
+        set_volume(xml_root, volume)
+    else:
+        # remove volume tag
+        article_meta_tag = xml_root.find(".//front/article-meta")
+        if article_meta_tag:
+            for tag in article_meta_tag.findall("volume"):
+                article_meta_tag.remove(tag)
+
+
 def set_elocation_id(root, elocation_id):
     return prc.set_elocation_id(root, elocation_id)
 
@@ -1025,6 +1037,21 @@ def set_permissions(xml_root, license_data_dict, copyright_year, copyright_holde
     return prc.set_permissions(
         xml_root, license_data_dict, copyright_year, copyright_holder
     )
+
+
+def clear_permissions(xml_root):
+    "remove tags inside the permissions tag"
+    article_meta_tag = xml_root.find(".//front/article-meta")
+    permissions_tag = article_meta_tag.find("./permissions")
+    if permissions_tag is not None:
+        for tag in permissions_tag.findall("*"):
+            permissions_tag.remove(tag)
+
+
+def modify_permissions(xml_root, license_data_dict, copyright_year, copyright_holder):
+    "modify the permissions tag including the license"
+    clear_permissions(xml_root)
+    set_permissions(xml_root, license_data_dict, copyright_year, copyright_holder)
 
 
 def editor_contributors(docmap_string, version_doi):

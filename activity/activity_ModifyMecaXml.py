@@ -146,7 +146,7 @@ class activity_ModifyMecaXml(MecaBaseActivity):
         if not volume and copyright_year:
             # if not volume, calculate from the copyright year
             volume = utils.volume_from_year(copyright_year)
-        modify_volume(xml_root, volume)
+        cleaner.modify_volume(xml_root, volume)
 
         # 4. add or set elocation-id tag
         elocation_id = cleaner.elocation_id_from_docmap(
@@ -191,7 +191,7 @@ class activity_ModifyMecaXml(MecaBaseActivity):
                 preprint_article.contributors
             )
 
-        modify_permissions(
+        cleaner.modify_permissions(
             xml_root, license_data_dict, copyright_year, copyright_holder
         )
 
@@ -244,18 +244,6 @@ def modify_article_id(xml_root, article_id, doi, version_doi):
     "modify the article-id tags"
     clear_article_id(xml_root)
     cleaner.set_article_id(xml_root, article_id, doi, version_doi)
-
-
-def modify_volume(xml_root, volume):
-    "modify volume tag"
-    if volume:
-        cleaner.set_volume(xml_root, volume)
-    else:
-        # remove volume tag
-        article_meta_tag = xml_root.find(".//front/article-meta")
-        if article_meta_tag:
-            for tag in article_meta_tag.findall("volume"):
-                article_meta_tag.remove(tag)
 
 
 def modify_elocation_id(xml_root, elocation_id):
@@ -312,23 +300,6 @@ def clear_pub_history(xml_root):
     for parent_tag in xml_root.findall(".//pub-history/.."):
         for pub_history_tag in parent_tag.findall("./pub-history"):
             parent_tag.remove(pub_history_tag)
-
-
-def clear_permissions(xml_root):
-    "remove tags inside the permissions tag"
-    article_meta_tag = xml_root.find(".//front/article-meta")
-    permissions_tag = article_meta_tag.find("./permissions")
-    if permissions_tag is not None:
-        for tag in permissions_tag.findall("*"):
-            permissions_tag.remove(tag)
-
-
-def modify_permissions(xml_root, license_data_dict, copyright_year, copyright_holder):
-    "modify the permissions tag including the license"
-    clear_permissions(xml_root)
-    cleaner.set_permissions(
-        xml_root, license_data_dict, copyright_year, copyright_holder
-    )
 
 
 def clear_editors(xml_root):
