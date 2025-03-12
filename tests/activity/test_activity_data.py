@@ -69,7 +69,6 @@ def meca_details_session_example(
         "version_doi": "10.7554/eLife.95901.1",
         "docmap_datetime_string": "2024-06-27T00:00:00.000Z",
         "docmap_string": read_fixture("sample_docmap_for_95901.json").decode("utf-8"),
-        "version_doi": "10.7554/eLife.95901.1",
         "computer_file_url": computer_file_url,
     }
 
@@ -90,6 +89,30 @@ def ingest_meca_session_example(
         "docmap_string": read_fixture("sample_docmap_for_95901.json").decode("utf-8"),
         "article_xml_path": "content/24301711.xml",
         "version_doi": "10.7554/eLife.95901.1",
+        "computer_file_url": computer_file_url,
+    }
+
+
+# PostPreprintPublication
+
+
+def post_preprint_publication_session_example(
+    run_type=None, computer_file_url="s3://prod-elife-epp-meca/95901-v1-meca.zip"
+):
+    # session data after ExpandMeca has run
+    return {
+        "run": "1ee54f9a-cb28-4c8e-8232-4b317cf4beda",
+        "run_type": run_type,
+        "article_id": 95901,
+        "version": "2",
+        "expanded_folder": (
+            "expanded_meca/95901-v2/"
+            "1ee54f9a-cb28-4c8e-8232-4b317cf4beda/expanded_files"
+        ),
+        "docmap_datetime_string": "2024-06-27T00:00:00.000Z",
+        "docmap_string": read_fixture("sample_docmap_for_95901.json").decode("utf-8"),
+        "article_xml_path": "content/24301711.xml",
+        "version_doi": "10.7554/eLife.95901.2",
         "computer_file_url": computer_file_url,
     }
 

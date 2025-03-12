@@ -1,11 +1,7 @@
-from datetime import datetime
 import os
 import json
 import time
 from elifetools import xmlio
-from elifearticle import parse
-from elifearticle.utils import license_data_by_url
-from jatsgenerator import build
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 from provider import cleaner, utils
@@ -115,14 +111,8 @@ class activity_ModifyMecaXml(MecaBaseActivity):
 
         history_data = cleaner.docmap_preprint_history_from_docmap(docmap_string)
 
-        first_version_published_date = cleaner.published_date_from_history(
-            history_data, doi
-        )
-        # copyright year, from first version published, otherwise from the current datetime
-        if first_version_published_date:
-            copyright_year = time.strftime("%Y", first_version_published_date)
-        else:
-            copyright_year = datetime.strftime(utils.get_current_datetime(), "%Y")
+        # get copyright year
+        copyright_year = cleaner.get_copyright_year(history_data, doi)
 
         # 1. remove old DOI, add DOI and version DOI
         article_id = cleaner.article_id_from_docmap(
@@ -177,20 +167,10 @@ class activity_ModifyMecaXml(MecaBaseActivity):
             )
 
         # 7. replace <permissions>, includes copyright statement, copyright holder, license type
-        license_url = cleaner.license_from_docmap(
-            docmap_string, version_doi=version_doi, identifier=version_doi
-        )
-        license_data_dict = license_data_by_url(license_url)
+        license_data_dict = cleaner.get_license_data(docmap_string, version_doi)
         copyright_holder = None
         if license_data_dict and license_data_dict.get("copyright"):
-            # generate copyright holder
-            preprint_article, error_count = parse.build_article_from_xml(
-                xml_file_path, detail="full"
-            )
-            copyright_holder = build.generate_copyright_holder(
-                preprint_article.contributors
-            )
-
+            copyright_holder = cleaner.get_copyright_holder(xml_file_path)
         cleaner.modify_permissions(
             xml_root, license_data_dict, copyright_year, copyright_holder
         )
