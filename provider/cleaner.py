@@ -1,3 +1,4 @@
+from datetime import datetime
 import os
 import json
 import logging
@@ -8,6 +9,8 @@ from xml.etree import ElementTree
 from xml.etree.ElementTree import SubElement
 import requests
 from docmaptools import parse as docmap_parse
+from elifearticle import parse as elifearticle_parse
+from elifearticle.utils import license_data_by_url
 from elifecleaner import (
     LOGGER,
     assessment_terms,
@@ -26,6 +29,7 @@ from elifecleaner import (
     zip_lib,
 )
 from elifetools import xmlio
+from jatsgenerator import build
 from provider import utils
 from provider.storage_provider import storage_context
 from provider.article_processing import file_extension
@@ -1052,6 +1056,35 @@ def modify_permissions(xml_root, license_data_dict, copyright_year, copyright_ho
     "modify the permissions tag including the license"
     clear_permissions(xml_root)
     set_permissions(xml_root, license_data_dict, copyright_year, copyright_holder)
+
+
+def get_license_data(docmap_string, version_doi):
+    "find the license from the docmap and return a dict of license data"
+    license_url = license_from_docmap(
+        docmap_string, version_doi=version_doi, identifier=version_doi
+    )
+    return license_data_by_url(license_url)
+
+
+def get_copyright_year(history_data, doi):
+    "get a copyright year from a list of history events otherwise use current year"
+    first_version_published_date = published_date_from_history(history_data, doi)
+    copyright_year = None
+    # copyright year, from first version published, otherwise from the current datetime
+    if first_version_published_date:
+        copyright_year = time.strftime("%Y", first_version_published_date)
+    else:
+        copyright_year = datetime.strftime(utils.get_current_datetime(), "%Y")
+    return copyright_year
+
+
+def get_copyright_holder(xml_file_path):
+    "from article XML populate copyright holder data"
+    # generate copyright holder
+    preprint_article, error_count = elifearticle_parse.build_article_from_xml(
+        xml_file_path, detail="full"
+    )
+    return build.generate_copyright_holder(preprint_article.contributors)
 
 
 def editor_contributors(docmap_string, version_doi):
