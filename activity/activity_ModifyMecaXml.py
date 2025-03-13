@@ -1,6 +1,5 @@
 import os
 import json
-import time
 from elifetools import xmlio
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
@@ -125,7 +124,7 @@ class activity_ModifyMecaXml(MecaBaseActivity):
             docmap_string, version_doi=version_doi, identifier=version_doi
         )
         # todo !!! add the display channel (waiting to confirm data source)
-        modify_article_categories(
+        cleaner.modify_article_categories(
             xml_root, display_channel=None, article_categories=article_categories
         )
 
@@ -236,29 +235,6 @@ def modify_elocation_id(xml_root, elocation_id):
         if article_meta_tag:
             for tag in article_meta_tag.findall("elocation-id"):
                 article_meta_tag.remove(tag)
-
-
-def clear_article_categories(xml_root):
-    "remove tags in the article-categories tag"
-    article_meta_tag = xml_root.find(".//front/article-meta")
-    article_categories_tag = article_meta_tag.find(".//article-categories")
-    if article_categories_tag is not None:
-        # remove tags underneath it
-        for tag in article_categories_tag.findall("*"):
-            article_categories_tag.remove(tag)
-
-
-def modify_article_categories(xml_root, display_channel=None, article_categories=None):
-    "modify subj-group subject tags"
-    clear_article_categories(xml_root)
-    # remove the article-categories tag entirely if no data is to be addded
-    if not display_channel and not article_categories:
-        article_meta_tag = xml_root.find(".//front/article-meta")
-        if article_meta_tag is not None:
-            for tag in article_meta_tag.findall("article-categories"):
-                article_meta_tag.remove(tag)
-    else:
-        cleaner.set_article_categories(xml_root, display_channel, article_categories)
 
 
 def modify_history(xml_root, review_date_struct, identifier):

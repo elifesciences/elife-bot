@@ -1033,8 +1033,31 @@ def set_elocation_id(root, elocation_id):
     return prc.set_elocation_id(root, elocation_id)
 
 
+def clear_article_categories(xml_root):
+    "remove tags in the article-categories tag"
+    article_meta_tag = xml_root.find(".//front/article-meta")
+    article_categories_tag = article_meta_tag.find(".//article-categories")
+    if article_categories_tag is not None:
+        # remove tags underneath it
+        for tag in article_categories_tag.findall("*"):
+            article_categories_tag.remove(tag)
+
+
 def set_article_categories(xml_root, display_channel=None, article_categories=None):
     return prc.set_article_categories(xml_root, display_channel, article_categories)
+
+
+def modify_article_categories(xml_root, display_channel=None, article_categories=None):
+    "modify subj-group subject tags"
+    clear_article_categories(xml_root)
+    # remove the article-categories tag entirely if no data is to be addded
+    if not display_channel and not article_categories:
+        article_meta_tag = xml_root.find(".//front/article-meta")
+        if article_meta_tag is not None:
+            for tag in article_meta_tag.findall("article-categories"):
+                article_meta_tag.remove(tag)
+    else:
+        set_article_categories(xml_root, display_channel, article_categories)
 
 
 def set_permissions(xml_root, license_data_dict, copyright_year, copyright_holder):

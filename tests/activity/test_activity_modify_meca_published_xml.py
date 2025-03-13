@@ -117,6 +117,13 @@ class TestModifyMecaPublishedXml(unittest.TestCase):
 
         self.assertTrue("<article" in xml_string)
 
+        # assertions on article categories
+        self.assertTrue("<subject>Cardiovascular Medicine</subject>" not in xml_string)
+        self.assertTrue('<subj-group subj-group-type="heading">' in xml_string)
+        self.assertTrue(
+            "<subject>Epidemiology and Global Health</subject>" in xml_string
+        )
+
         # assert pub-date year tag
         self.assertTrue(
             '<pub-date pub-type="epub"><year>2024</year></pub-date>' not in xml_string

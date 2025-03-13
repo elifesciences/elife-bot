@@ -103,6 +103,15 @@ class activity_ModifyMecaPublishedXml(MecaBaseActivity):
 
         # modify the XML
 
+        # article-categories - remove old ones, add display channel, subject tags
+        article_categories = cleaner.article_categories_from_docmap(
+            docmap_string, version_doi=version_doi, identifier=version_doi
+        )
+        # todo !!! add the display channel (waiting to confirm data source)
+        cleaner.modify_article_categories(
+            xml_root, display_channel=None, article_categories=article_categories
+        )
+
         # remove pub-date tag if it has a year only
         clear_year_only_pub_date(xml_root)
 
