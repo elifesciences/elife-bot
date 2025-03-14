@@ -37,6 +37,7 @@ class workflow_IngestMeca(Workflow):
                 define_workflow_step("PingWorker", data),
                 define_workflow_step("MecaDetails", data),
                 define_workflow_step("ExpandMeca", data),
+                define_workflow_step("ModifyMecaFiles", data),
                 define_workflow_step("ModifyMecaXml", data),
                 define_workflow_step("MecaPeerReviews", data),
                 define_workflow_step("MecaPeerReviewImages", data),
