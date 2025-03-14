@@ -14,6 +14,9 @@ MECA_BUCKET_FOLDER = "/reviewed-preprints/"
 # path to the manifest file in the zip or expanded folder
 MANIFEST_XML_PATH = "manifest.xml"
 
+# path to the transfer file in the zip or expanded folder
+TRANSFER_XML_PATH = "transfer.xml"
+
 
 def meca_file_name(article_id, version):
     "name for a MECA zip file"
@@ -230,4 +233,27 @@ def rewrite_item_tags(
         version_doi,
         doctype_dict=doctype_dict,
         processing_instructions=processing_instructions,
+    )
+
+
+def transfer_xml():
+    "boilerplate content for transfer.xml"
+    return (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<!DOCTYPE transfer SYSTEM "http://schema.highwire.org/public/MECA/v0.9/Transfer/Transfer.dtd">\n'
+        '<transfer xmlns="https://www.manuscriptexchange.org/schema/transfer" version="1.0">\n'
+        "<source>\n"
+        "<publication>\n"
+        "<title>eLife</title>\n"
+        "<acronym>eLife</acronym>\n"
+        "</publication>\n"
+        "</source>\n"
+        "<destination>\n"
+        "<service-provider/>\n"
+        "<publication>\n"
+        "<title/>\n"
+        "<acronym/>\n"
+        "</publication>\n"
+        "</destination>\n"
+        "</transfer>\n"
     )

@@ -170,6 +170,7 @@ def start(settings):
     activity_names.append("SilentPublishPreprint")
     activity_names.append("MecaPostPublicationDetails")
     activity_names.append("ModifyMecaPublishedXml")
+    activity_names.append("ModifyMecaFiles")
 
     for activity_name in activity_names:
         # Import the activity libraries
