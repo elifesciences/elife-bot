@@ -142,6 +142,30 @@ class TestFTPArticle(unittest.TestCase):
         activity_data = {"data": {"elife_id": elife_id, "workflow": workflow}}
         self.assertEqual(self.activity.do_activity(activity_data), expected_result)
 
+    @patch.object(SFTP, "sftp_connect")
+    def test_sftp_to_endpoint_connection_exception(self, fake_sftp_connect):
+        fake_sftp_connect.side_effect = Exception("SFTP connect exception")
+        with self.assertRaises(Exception):
+            self.activity.sftp_to_endpoint("", "")
+        self.assertEqual(
+            self.activity.logger.logexception,
+            "Failed to connect to SFTP endpoint None: SFTP connect exception",
+        )
+
+    @patch.object(SFTP, "sftp_to_endpoint")
+    @patch.object(SFTP, "sftp_connect")
+    def test_sftp_to_endpoint_transfer_exception(
+        self, fake_sftp_connect, fake_sftp_to_endpoint
+    ):
+        fake_sftp_connect.return_value = True
+        fake_sftp_to_endpoint.side_effect = Exception("SFTP transfer exception")
+        with self.assertRaises(Exception):
+            self.activity.sftp_to_endpoint("", "")
+        self.assertEqual(
+            self.activity.logger.logexception,
+            "Failed to upload files by SFTP: SFTP transfer exception",
+        )
+
 
 class TestDownloadFilesFromS3(unittest.TestCase):
     def setUp(self):

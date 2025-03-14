@@ -188,7 +188,6 @@ class activity_FTPArticle(Activity):
             setattr(self, key, value)
 
     def download_files_from_s3(self, doi_id, workflow):
-
         # download and convert the archive zip
         archive_zip_downloaded = self.download_archive_zip_from_s3(doi_id)
         archive_zip_repackaged = None
@@ -432,14 +431,26 @@ class activity_FTPArticle(Activity):
         """
         self.logger.info("%s started sftp_to_endpoint()" % self.name)
         sftp = SFTP(logger=self.logger)
-        sftp_client = sftp.sftp_connect(
-            self.SFTP_URI, self.SFTP_USERNAME, self.SFTP_PASSWORD
-        )
 
-        if sftp_client is not None:
+        try:
+            sftp_client = sftp.sftp_connect(
+                self.SFTP_URI, self.SFTP_USERNAME, self.SFTP_PASSWORD
+            )
+        except Exception as exception:
+            self.logger.exception(
+                "Failed to connect to SFTP endpoint %s: %s"
+                % (self.SFTP_URI, str(exception))
+            )
+            raise
+
+        try:
             sftp.sftp_to_endpoint(sftp_client, uploadfiles, self.SFTP_CWD, sub_dir)
+        except Exception as exception:
+            self.logger.exception("Failed to upload files by SFTP: %s" % str(exception))
+            raise
+        finally:
+            sftp.disconnect()
 
-        sftp.disconnect()
         self.logger.info("%s finished sftp_to_endpoint()" % self.name)
 
 
