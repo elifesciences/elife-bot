@@ -152,6 +152,7 @@ def start(settings):
     activity_names.append("FindNewPreprints")
     activity_names.append("GeneratePreprintXml")
     activity_names.append("SchedulePreprintDownstream")
+    activity_names.append("DownloadDocmapIndex")
     activity_names.append("FindNewDocmaps")
     activity_names.append("ExpandMeca")
     activity_names.append("MecaXslt")

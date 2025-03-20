@@ -31,6 +31,10 @@ FindNewDocmaps:
   activity_name: FindNewDocmaps
   s3_bucket_folder: docmaps
 
+DownloadDocmapIndex:
+  activity_name: DownloadDocmapIndex
+  s3_bucket_folder: docmaps
+
 PMC:
   activity_name: PMCDeposit
   s3_bucket_folder: pmc

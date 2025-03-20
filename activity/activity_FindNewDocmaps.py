@@ -1,5 +1,4 @@
 import os
-from datetime import datetime
 import json
 import time
 from activity.objects import Activity
@@ -9,6 +8,7 @@ from provider import (
     email_provider,
     utils,
 )
+from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 
 
@@ -39,10 +39,6 @@ class activity_FindNewDocmaps(Activity):
             "INPUT_DIR": os.path.join(self.get_tmp_dir(), "input_dir"),
         }
 
-        # Bucket for published files
-        self.publish_bucket = settings.poa_packaging_bucket
-        self.bucket_folder = self.s3_bucket_folder(self.name) + "/"
-
         # Track the success of some steps
         self.statuses = {}
 
@@ -57,102 +53,49 @@ class activity_FindNewDocmaps(Activity):
         "Activity, do the work" ""
         self.logger.info("data: %s" % json.dumps(data, sort_keys=True, indent=4))
 
-        # check for required settings
-        if not hasattr(self.settings, "docmap_index_url"):
-            self.logger.info(
-                "%s, docmap_index_url in settings is missing, skipping" % self.name
-            )
-            return True
-        if not self.settings.docmap_index_url:
-            self.logger.info(
-                "%s, docmap_index_url in settings is blank, skipping" % self.name
-            )
-            return True
+        run = data["run"]
+        session = get_session(self.settings, data, run)
+        new_run_docmap_index_resource = session.get_value(
+            "new_run_docmap_index_resource"
+        )
+        prev_run_docmap_index_resource = session.get_value(
+            "prev_run_docmap_index_resource"
+        )
 
         # Create output directories
         self.make_activity_directories()
 
-        # get docmap index JSON
-        try:
-            docmap_index_json = docmap_provider.get_docmap_index_json(
-                self.settings, self.name, self.logger
-            )
-        except Exception as exception:
-            self.logger.exception(
-                "%s, exception getting a docmap index: %s" % (self.name, str(exception))
-            )
-            return True
-        if not docmap_index_json:
-            self.logger.info("%s, docmap_index_json was None" % self.name)
-            return True
-        if not docmap_index_json.get("docmaps"):
-            self.logger.info("%s, docmaps in docmap_index_json was empty" % self.name)
-            return True
-
-        docmap_index_json_path = os.path.join(
-            self.directories.get("TEMP_DIR"), "docmap_index.json"
-        )
-        self.logger.info(
-            "%s, saving docmap_index_json to %s" % (self.name, docmap_index_json_path)
-        )
-        with open(docmap_index_json_path, "w", encoding="utf-8") as open_file:
-            open_file.write(json.dumps(docmap_index_json))
-
         # get previous run folder name from S3 bucket
         storage = storage_context(self.settings)
-        run_folder_bucket_path = (
-            self.settings.storage_provider
-            + "://"
-            + self.publish_bucket
-            + "/"
-            + self.bucket_folder
-        )
 
-        prev_run_folder = previous_run_folder(storage, run_folder_bucket_path)
-        prev_run_folder_bucket_path = None
-        self.logger.info("%s, prev_run_folder: %s" % (self.name, prev_run_folder))
-        if prev_run_folder:
-            prev_run_folder_bucket_path = "%s%s/" % (
-                run_folder_bucket_path,
-                prev_run_folder,
-            )
+        # get docmap index JSON
         self.logger.info(
-            "%s, prev_run_folder_bucket_path: %s"
-            % (self.name, prev_run_folder_bucket_path)
+            "%s, getting new_run_docmap_index_resource %s as string"
+            % (
+                self.name,
+                new_run_docmap_index_resource,
+            )
+        )
+        docmap_index_json_string = storage.get_resource_as_string(
+            new_run_docmap_index_resource
+        )
+        docmap_index_json = json.loads(docmap_index_json_string)
+
+        # download previous docmap index file
+        self.logger.info(
+            "%s, getting prev_run_docmap_index_resource %s as string"
+            % (
+                self.name,
+                prev_run_docmap_index_resource,
+            )
         )
 
-        # download previous docmap index file, continue
-        prev_docmap_index_json_path = None
-        if prev_run_folder_bucket_path:
-            prev_docmap_index_json_path = os.path.join(
-                self.directories.get("INPUT_DIR"), "prev_docmap_index.json"
-            )
-            prev_run_docmap_index_resource = "%s%s" % (
-                prev_run_folder_bucket_path,
-                DOCMAP_INDEX_BUCKET_PATH,
-            )
-            self.logger.info(
-                "%s, saving %s to %s"
-                % (
-                    self.name,
-                    prev_run_docmap_index_resource,
-                    prev_docmap_index_json_path,
-                )
-            )
-            with open(prev_docmap_index_json_path, "wb") as open_file:
-                storage.get_resource_to_file(prev_run_docmap_index_resource, open_file)
-
-        # parse previous docmap index file, continue (otherwise get the next previous run folder)
         prev_docmap_index_json = None
-        if prev_docmap_index_json_path:
-            self.logger.info(
-                "%s, parsing %s into JSON" % (self.name, prev_docmap_index_json_path)
+        if prev_run_docmap_index_resource:
+            prev_docmap_index_json_content = storage.get_resource_as_string(
+                prev_run_docmap_index_resource
             )
-            with open(prev_docmap_index_json_path, "rb") as open_file:
-                prev_docmap_index_json_content = open_file.read()
-
-            if prev_docmap_index_json_content:
-                prev_docmap_index_json = json.loads(prev_docmap_index_json_content)
+            prev_docmap_index_json = json.loads(prev_docmap_index_json_content)
 
         # compare previous docmap index to new docmap index
         docmap_data = docmap_provider.changed_version_doi_data(
@@ -174,28 +117,6 @@ class activity_FindNewDocmaps(Activity):
                 doi, version = utils.version_doi_parts(version_doi)
                 article_id = utils.msid_from_doi(doi)
                 self.start_post_workflow(article_id, version)
-
-        # new run folder name, based on the immediately previous run folder name
-        new_run_folder_name = new_run_folder(storage, run_folder_bucket_path)
-        new_run_docmap_index_resource = "%s%s/%s" % (
-            run_folder_bucket_path,
-            new_run_folder_name,
-            DOCMAP_INDEX_BUCKET_PATH,
-        )
-        self.logger.info(
-            "%s, new_run_docmap_index_resource: %s"
-            % (self.name, new_run_docmap_index_resource)
-        )
-
-        # upload docmap index JSON to the new run folder name in the S3 bucket
-        self.logger.info(
-            "%s, storing %s to %s"
-            % (self.name, docmap_index_json_path, new_run_docmap_index_resource)
-        )
-        storage.set_resource_from_filename(
-            new_run_docmap_index_resource, docmap_index_json_path
-        )
-        self.statuses["upload"] = True
 
         # add Github issue commment for docmaps with no computer-file
         no_computer_file_version_doi_list = docmap_data.get(
@@ -330,98 +251,3 @@ class activity_FindNewDocmaps(Activity):
             QueueName=self.settings.workflow_starter_queue
         )
         return queue_url_response.get("QueueUrl")
-
-
-RUN_FOLDER_PREFIX = "run_"
-
-
-def date_from_run_folder(folder_name):
-    "parse a date from a run folder name"
-    try:
-        date_string = "-".join(folder_name.split("_")[1:4])
-    except AttributeError as exception:
-        raise AttributeError("No date data found in %s" % folder_name) from exception
-    try:
-        return datetime.strptime("%s +0000" % date_string, "%Y-%m-%d %z")
-    except ValueError as exception:
-        raise ValueError("Could not parse date from %s" % folder_name) from exception
-
-
-def run_folder_names(storage, resource):
-    "get list of previous run folders from the bucket"
-    # separate the bucket name from the other object path data
-    bucket_name, bucket_path_prefix = storage.s3_storage_objects(resource)
-
-    # full list of objects for the S3 prefix
-    s3_key_names = storage.list_resources(resource)
-
-    # match folder names by their start value
-    starts_with = "%s%s" % (bucket_path_prefix.lstrip("/"), RUN_FOLDER_PREFIX)
-
-    # filter by folder names only
-    # avoid any subfolders by splitting by the delimiter count
-    delimiter_count = starts_with.count("/")
-    folders = [
-        "/".join(key_name.split("/")[0 : delimiter_count + 1])
-        for key_name in s3_key_names
-        if key_name.count("/") > delimiter_count
-    ]
-
-    # list of run folder names
-    run_folder_paths = [
-        folder_path
-        for folder_path in folders
-        if folder_path.startswith(starts_with)
-        and folder_path.count("/") == delimiter_count
-    ]
-    # strip away subfolder names and extra delimiter
-    return sorted(
-        [folder_name.rstrip("/").rsplit("/", 1)[-1] for folder_name in run_folder_paths]
-    )
-
-
-def new_run_folder(storage, bucket_path):
-    "get a next run folder name"
-
-    # get latest run folder index
-    run_folders = run_folder_names(storage, bucket_path)
-    date_string = datetime.strftime(utils.get_current_datetime(), "%Y_%m_%d")
-
-    run_folder_prefix = "%s%s" % (RUN_FOLDER_PREFIX, date_string)
-    filtered_run_folders = [
-        folder_name
-        for folder_name in run_folders
-        if folder_name.startswith(run_folder_prefix)
-    ]
-
-    if filtered_run_folders:
-        latest_run_folder = filtered_run_folders[-1]
-        latest_run_index = int(latest_run_folder.rsplit("_", 1)[-1])
-    else:
-        latest_run_index = 0
-
-    # increment to get the next run folder name
-    return "%s_%s" % (run_folder_prefix, str(latest_run_index + 1).zfill(4))
-
-
-def previous_run_folder(storage, bucket_path, from_folder=None):
-    "find name of the previous run folder, previous to from_folder if specified"
-    run_folders = run_folder_names(storage, bucket_path)
-
-    if not run_folders:
-        return None
-    index = None
-    # compare by the date value in the folder names
-    if from_folder:
-        from_date = date_from_run_folder(from_folder)
-    else:
-        from_date = utils.get_current_datetime()
-    for idx, run_folder_name in enumerate(run_folders):
-        if run_folder_name == from_folder:
-            index = idx - 1
-            break
-        run_folder_date = date_from_run_folder(run_folder_name)
-        if run_folder_date <= from_date:
-            index = idx
-
-    return run_folders[index]
