@@ -155,7 +155,7 @@ class TestDownloadDocmapIndex(unittest.TestCase):
         fake_session.return_value = FakeSession({})
         fake_get_docmap_index.side_effect = Exception("")
         result = self.activity.do_activity(self.activity_data)
-        self.assertEqual(result, True)
+        self.assertEqual(result, self.activity.ACTIVITY_PERMANENT_FAILURE)
 
     @patch("provider.docmap_provider.get_docmap_index_json")
     @patch.object(activity_module, "get_session")
@@ -168,7 +168,7 @@ class TestDownloadDocmapIndex(unittest.TestCase):
         fake_session.return_value = FakeSession({})
         fake_get_docmap_index.return_value = None
         result = self.activity.do_activity(self.activity_data)
-        self.assertEqual(result, True)
+        self.assertEqual(result, self.activity.ACTIVITY_PERMANENT_FAILURE)
 
     @patch("provider.docmap_provider.get_docmap_index_json")
     @patch.object(activity_module, "get_session")
@@ -181,7 +181,7 @@ class TestDownloadDocmapIndex(unittest.TestCase):
         fake_session.return_value = FakeSession({})
         fake_get_docmap_index.return_value = {"docmaps": []}
         result = self.activity.do_activity(self.activity_data)
-        self.assertEqual(result, True)
+        self.assertEqual(result, self.activity.ACTIVITY_PERMANENT_FAILURE)
 
 
 class TestMissingSettings(unittest.TestCase):

@@ -74,13 +74,16 @@ class activity_DownloadDocmapIndex(Activity):
             self.logger.exception(
                 "%s, exception getting a docmap index: %s" % (self.name, str(exception))
             )
-            return True
+            self.logger.info("%s, ")
+            return self.ACTIVITY_PERMANENT_FAILURE
         if not docmap_index_json:
-            self.logger.info("%s, docmap_index_json was None" % self.name)
-            return True
+            self.logger.exception("%s, docmap_index_json was None" % self.name)
+            return self.ACTIVITY_PERMANENT_FAILURE
         if not docmap_index_json.get("docmaps"):
-            self.logger.info("%s, docmaps in docmap_index_json was empty" % self.name)
-            return True
+            self.logger.exception(
+                "%s, docmaps in docmap_index_json was empty" % self.name
+            )
+            return self.ACTIVITY_PERMANENT_FAILURE
 
         docmap_index_json_path = os.path.join(
             self.directories.get("TEMP_DIR"), "docmap_index.json"
