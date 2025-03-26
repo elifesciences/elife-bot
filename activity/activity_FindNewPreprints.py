@@ -1,15 +1,17 @@
 import os
+import datetime
 import json
 import time
 import glob
 from activity.objects import CleanerBaseActivity
 from provider import (
-    bigquery,
+    docmap_provider,
     email_provider,
     outbox_provider,
     preprint,
     utils,
 )
+from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 
 
@@ -68,38 +70,43 @@ class activity_FindNewPreprints(CleanerBaseActivity):
         # Create output directories
         self.make_activity_directories()
 
-        date_string = utils.get_current_datetime().strftime(utils.PUB_DATE_FORMAT)
-
-        # BigQuery
-        try:
-            bigquery_client = bigquery.get_client(self.settings, self.logger)
-            query_result = bigquery.preprint_article_result(
-                bigquery_client, date_string=date_string, day_interval=DAY_INTERVAL
-            )
-            preprints = bigquery.preprint_objects(query_result)
-        except Exception as exception:
-            self.logger.exception(
-                "%s, exception in GET request to BigQuery: %s"
-                % (self.name, str(exception))
-            )
-            return True
-
-        self.logger.info(
-            "%s, got %s preprints from BigQuery" % (self.name, len(preprints))
-        )
-
         # configure log files for the cleaner provider
         self.start_cleaner_log()
 
-        # generate preprint file names and details
-        xml_filename_detail_map = self.detail_map(preprints)
+        run = data["run"]
+        session = get_session(self.settings, data, run)
+        new_run_docmap_index_resource = session.get_value(
+            "new_run_docmap_index_resource"
+        )
+
+        storage = storage_context(self.settings)
+
+        # get docmap index JSON
+        self.logger.info(
+            "%s, getting new_run_docmap_index_resource %s as string"
+            % (
+                self.name,
+                new_run_docmap_index_resource,
+            )
+        )
+        docmap_index_json_string = storage.get_resource_as_string(
+            new_run_docmap_index_resource
+        )
+        docmap_index_json = json.loads(docmap_index_json_string)
+
+        # get list of published article_id + version from docmap index JSON
+        current_datetime = utils.get_current_datetime()
+        xml_filename_detail_map = docmap_detail_map(
+            docmap_index_json, current_datetime, DAY_INTERVAL, self.settings
+        )
+
         self.logger.info(
             "%s, looking for XML filenames: %s"
             % (self.name, xml_filename_detail_map.keys())
         )
 
         # get a list of files from the published bucket
-        new_xml_filenames = self.new_file_names(xml_filename_detail_map)
+        new_xml_filenames = self.new_file_names(xml_filename_detail_map, storage)
         self.logger.info(
             "%s, found new_xml_filenames: %s" % (self.name, new_xml_filenames)
         )
@@ -169,23 +176,8 @@ class activity_FindNewPreprints(CleanerBaseActivity):
 
         return True
 
-    def detail_map(self, preprints):
-        "for each preprint, generate the expected XML file name, return a map of it and details"
-        xml_filename_detail_map = {}
-        for preprint_object in preprints:
-            article_id = preprint_object.doi.rsplit(".", 1)[-1]
-            xml_filename = preprint.xml_filename(
-                article_id, self.settings, version=preprint_object.version
-            )
-            xml_filename_detail_map[xml_filename] = {
-                "article_id": article_id,
-                "version": preprint_object.version,
-            }
-        return xml_filename_detail_map
-
-    def existing_file_names(self):
+    def existing_file_names(self, storage):
         "get a list of files from a bucket folder"
-        storage = storage_context(self.settings)
         bucket_resource = (
             self.settings.storage_provider
             + "://"
@@ -200,12 +192,12 @@ class activity_FindNewPreprints(CleanerBaseActivity):
             for s3_key_name in s3_key_names
         ]
 
-    def new_file_names(self, xml_filename_detail_map):
+    def new_file_names(self, xml_filename_detail_map, storage):
         "return a list of file names not already found in the bucket folder"
         new_xml_filenames = [
             filename
             for filename in xml_filename_detail_map
-            if filename not in self.existing_file_names()
+            if filename not in self.existing_file_names(storage)
         ]
         return new_xml_filenames
 
@@ -365,3 +357,31 @@ class activity_FindNewPreprints(CleanerBaseActivity):
             QueueName=self.settings.workflow_starter_queue
         )
         return queue_url_response.get("QueueUrl")
+
+
+def docmap_detail_map(docmap_index_json, current_datetime, day_interval, settings):
+    "find in the docmap index preprint versions published within the specified timeframe"
+    xml_filename_detail_map = {}
+
+    step_profile = docmap_provider.docmap_profile_step_map(docmap_index_json)
+
+    for key, value in step_profile.items():
+        if not value.get("published"):
+            continue
+        published_datetime = datetime.datetime.strptime(
+            value.get("published"), "%Y-%m-%dT%H:%M:%S%z"
+        )
+        if current_datetime - published_datetime > datetime.timedelta(
+            seconds=0
+        ) and current_datetime - published_datetime < datetime.timedelta(
+            days=day_interval
+        ):
+            doi, version = utils.version_doi_parts(key)
+            article_id = utils.msid_from_doi(doi)
+            xml_filename = preprint.xml_filename(article_id, settings, version=version)
+            xml_filename_detail_map[xml_filename] = {
+                "article_id": article_id,
+                "version": version,
+            }
+
+    return xml_filename_detail_map

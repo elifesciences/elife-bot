@@ -37,6 +37,7 @@ class workflow_FindNewDocmaps(Workflow):
                 define_workflow_step("PingWorker", data),
                 define_workflow_step("DownloadDocmapIndex", data),
                 define_workflow_step("FindNewDocmaps", data),
+                define_workflow_step("FindNewPreprints", data),
             ],
             "finish": {"requirements": None},
         }
