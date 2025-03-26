@@ -194,10 +194,11 @@ class activity_FindNewPreprints(CleanerBaseActivity):
 
     def new_file_names(self, xml_filename_detail_map, storage):
         "return a list of file names not already found in the bucket folder"
+        existing_file_name_list = self.existing_file_names(storage)
         new_xml_filenames = [
             filename
             for filename in xml_filename_detail_map
-            if filename not in self.existing_file_names(storage)
+            if filename not in existing_file_name_list
         ]
         return new_xml_filenames
 
