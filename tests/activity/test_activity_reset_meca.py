@@ -71,6 +71,10 @@ class TestResetMeca(unittest.TestCase):
                 "<body>"
                 '<p><inline-graphic xlink:href="elife-99548-inf1.jpg"/></p>'
                 '<p><inline-graphic xlink:href="elife-99548-inf2.jpg"/></p>'
+                '<p><ext-link ext-link-type="uri" xlink:href="https://imgur.com/QM79SPF">'
+                '<inline-graphic xlink:href="https://i.imgur.com/QM79SPF.jpg"'
+                ' mimetype="image" mime-subtype="jpeg"/></ext-link>'
+                "</p>"
                 "</body>"
                 "</sub-article>"
                 '<sub-article id="sa1">'
@@ -121,7 +125,11 @@ class TestResetMeca(unittest.TestCase):
             ],
             "expected_activity_log_contains": [
                 "ResetMeca, found 1 graphic in sub-article XML in 10.7554/eLife.95901.1",
-                "ResetMeca, found 2 inline-graphic in sub-article XML in 10.7554/eLife.95901.1",
+                "ResetMeca, found 3 inline-graphic in sub-article XML in 10.7554/eLife.95901.1",
+                (
+                    "ResetMeca, ignoring https://i.imgur.com/QM79SPF.jpg from image file"
+                    " removal list in 10.7554/eLife.95901.1"
+                ),
             ],
             "expected_cleaner_log_contains": [
                 "10.7554/eLife.95901.1 writing xml to file tmp/"
