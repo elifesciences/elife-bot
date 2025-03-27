@@ -121,6 +121,13 @@ class activity_ResetMeca(MecaBaseActivity):
         file_paths = []
         for tag in graphic_tags + inline_graphic_tags:
             href = cleaner.tag_xlink_href(tag)
+            # skip any absolute URLs
+            if href and (href.startswith("http://") or href.startswith("https://")):
+                self.logger.info(
+                    "%s, ignoring %s from image file removal list in %s"
+                    % (self.name, href, version_doi)
+                )
+                continue
             if href:
                 file_hrefs.append(href)
                 path = "/".join([content_subfolder, href])
