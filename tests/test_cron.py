@@ -86,7 +86,6 @@ class TestCron(unittest.TestCase):
             "workflow_id": "PubRouterDeposit_HEFCE",
         },
         {"starter_name": "starter_PublishPOA", "workflow_id": "PublishPOA"},
-        {"starter_name": "starter_FindNewPreprints", "workflow_id": "FindNewPreprints"},
     )
     def test_start_workflow(self, test_data, fake_client, fake_start):
         fake_client.return_value = FakeSWFClient()
