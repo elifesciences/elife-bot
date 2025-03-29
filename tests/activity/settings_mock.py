@@ -281,6 +281,8 @@ external_meca_bucket_list = ["server-src-daily"]
 meca_sts_role_arn = "arn:aws:iam:1234456789012/role:foo"
 meca_sts_role_session_name = "bot"
 
+reviewed_preprint_api_endpoint = "https://api/path/{article_id}v{version}"
+
 
 @mock_aws
 def aws_conn(service, service_creation_kwargs):
