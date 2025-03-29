@@ -171,6 +171,7 @@ def start(settings):
     activity_names.append("MecaPostPublicationDetails")
     activity_names.append("ModifyMecaPublishedXml")
     activity_names.append("ModifyMecaFiles")
+    activity_names.append("FindPreprintPDF")
 
     for activity_name in activity_names:
         # Import the activity libraries

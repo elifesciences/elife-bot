@@ -385,6 +385,8 @@ class exp:
     meca_sts_role_arn = "arn:aws:iam:1234456789012/role:foo"
     meca_sts_role_session_name = "bot"
 
+    reviewed_preprint_api_endpoint = "https://api/path/{article_id}v{version}"
+
 
 class dev:
     # AWS settings
@@ -754,6 +756,8 @@ class dev:
     external_meca_bucket_list = ["server-src-daily"]
     meca_sts_role_arn = "arn:aws:iam:1234456789012/role:foo"
     meca_sts_role_session_name = "bot"
+
+    reviewed_preprint_api_endpoint = "https://api/path/{article_id}v{version}"
 
 
 class live:
@@ -1129,6 +1133,8 @@ class live:
     external_meca_bucket_list = ["server-src-daily"]
     meca_sts_role_arn = "arn:aws:iam:1234456789012/role:foo"
     meca_sts_role_session_name = "bot"
+
+    reviewed_preprint_api_endpoint = "https://api/path/{article_id}v{version}"
 
 
 def get_settings(ENV="dev"):

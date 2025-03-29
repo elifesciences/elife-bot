@@ -41,6 +41,7 @@ class workflow_PostPreprintPublication(Workflow):
                 define_workflow_step("ScheduleCrossrefPreprint", data),
                 define_workflow_step("SchedulePreprintDownstream", data),
                 define_workflow_step("OutputMeca", data),
+                define_workflow_step("FindPreprintPDF", data),
             ],
             "finish": {"requirements": None},
         }
