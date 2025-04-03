@@ -35,6 +35,10 @@ DownloadDocmapIndex:
   activity_name: DownloadDocmapIndex
   s3_bucket_folder: docmaps
 
+FinishPreprintPublication:
+  activity_name: FinishPreprintPublication
+  s3_bucket_folder: finish_preprint
+
 PMC:
   activity_name: PMCDeposit
   s3_bucket_folder: pmc

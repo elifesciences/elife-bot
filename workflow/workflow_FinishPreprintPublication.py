@@ -1,8 +1,8 @@
 from workflow.objects import Workflow
-from workflow.helper import define_workflow_step, define_workflow_step_medium
+from workflow.helper import define_workflow_step
 
 
-class workflow_PostPreprintPublication(Workflow):
+class workflow_FinishPreprintPublication(Workflow):
     def __init__(
         self,
         settings,
@@ -12,20 +12,21 @@ class workflow_PostPreprintPublication(Workflow):
         decision=None,
         maximum_page_size=100,
     ):
-        super(workflow_PostPreprintPublication, self).__init__(
+        super(workflow_FinishPreprintPublication, self).__init__(
             settings, logger, client, token, decision, maximum_page_size
         )
 
         # SWF Defaults
-        self.name = "PostPreprintPublication"
+        self.name = "FinishPreprintPublication"
         self.version = "1"
-        self.description = "Post-publication tasks for a preprint article"
+        self.description = "Finish a preprint publication after final PDF is available"
         self.default_execution_start_to_close_timeout = 60 * 5
         self.default_task_start_to_close_timeout = 30
 
         # Get the input from the JSON decision response
         data = self.get_input()
 
+        # JSON format workflow definition, for now
         workflow_definition = {
             "name": self.name,
             "version": self.version,
@@ -34,15 +35,6 @@ class workflow_PostPreprintPublication(Workflow):
             "start": {"requirements": None},
             "steps": [
                 define_workflow_step("PingWorker", data),
-                define_workflow_step("MecaPostPublicationDetails", data),
-                define_workflow_step("ExpandMeca", data),
-                define_workflow_step("ModifyMecaPublishedXml", data),
-                define_workflow_step("GeneratePreprintXml", data),
-                define_workflow_step("ScheduleCrossrefPreprint", data),
-                define_workflow_step("SchedulePreprintDownstream", data),
-                define_workflow_step("OutputMeca", data),
-                define_workflow_step("FindPreprintPDF", data),
-                define_workflow_step("ConfirmPreprintPDF", data),
             ],
             "finish": {"requirements": None},
         }

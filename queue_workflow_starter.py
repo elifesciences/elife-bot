@@ -135,6 +135,11 @@ def process_data_silentingestmeca(workflow_data):
     return process_data_s3_notification_default(workflow_data)
 
 
+def process_finish_preprint_publication(workflow_data):
+    data = {"info": workflow_data}
+    return data
+
+
 workflow_data_processors = {
     "IngestArticleZip": process_data_ingestarticlezip,
     "SilentCorrectionsIngest": process_data_ingestarticlezip,
@@ -144,6 +149,7 @@ workflow_data_processors = {
     "IngestDecisionLetter": process_data_ingestdecisionletter,
     "IngestAcceptedSubmission": process_data_ingestacceptedsubmission,
     "SilentIngestMeca": process_data_silentingestmeca,
+    "FinishPreprintPublication": process_finish_preprint_publication,
 }
 
 
