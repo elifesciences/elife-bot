@@ -934,3 +934,55 @@ class TestDownloadFromExpandedFolder(unittest.TestCase):
         # assert
         self.assertTrue(result.endswith(file_name))
         self.assertEqual(os.listdir(directory.path)[0], file_name)
+
+
+class TestGetPreprintPdfUrl(unittest.TestCase):
+    "tests for get_preprint_pdf_url()"
+
+    def setUp(self):
+        article_id = 95901
+        version = 1
+        self.endpoint_url = settings_mock.reviewed_preprint_api_endpoint.format(
+            article_id=article_id, version=version
+        )
+        self.caller_name = "FindPreprintPDF"
+        self.user_agent = "user-agent"
+
+    @patch("requests.get")
+    def test_200(self, fake_get):
+        "test status code 200"
+        pdf_url = "https://example.org/article.pdf"
+        fake_get.return_value = FakeResponse(
+            200,
+            response_json={"pdf": pdf_url},
+        )
+        # invoke
+        result = preprint.get_preprint_pdf_url(
+            self.endpoint_url, self.caller_name, self.user_agent
+        )
+        # assert
+        self.assertEqual(result, pdf_url)
+
+    @patch("requests.get")
+    def test_404(self, fake_get):
+        "test status code 404"
+        fake_get.return_value = FakeResponse(
+            404,
+            response_json={"title": "not found"},
+        )
+        # invoke
+        result = preprint.get_preprint_pdf_url(
+            self.endpoint_url, self.caller_name, self.user_agent
+        )
+        # assert
+        self.assertEqual(result, None)
+
+    @patch("requests.get")
+    def test_500(self, fake_get):
+        "test status code 500"
+        fake_get.return_value = FakeResponse(500)
+        # invoke and assert
+        with self.assertRaises(RuntimeError):
+            preprint.get_preprint_pdf_url(
+                self.endpoint_url, self.caller_name, self.user_agent
+            )

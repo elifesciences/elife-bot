@@ -35,6 +35,7 @@ class workflow_FinishPreprintPublication(Workflow):
             "start": {"requirements": None},
             "steps": [
                 define_workflow_step("PingWorker", data),
+                define_workflow_step("FindPreprintPDF", data),
             ],
             "finish": {"requirements": None},
         }
