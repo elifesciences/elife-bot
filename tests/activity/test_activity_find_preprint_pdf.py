@@ -1,7 +1,9 @@
 # coding=utf-8
 
 import unittest
+import copy
 from mock import patch
+from provider import preprint
 import activity.activity_FindPreprintPDF as activity_module
 from activity.activity_FindPreprintPDF import (
     activity_FindPreprintPDF as activity_class,
@@ -57,7 +59,30 @@ class TestFindPreprintPdf(unittest.TestCase):
         )
 
     @patch.object(activity_module, "get_session")
-    @patch.object(activity_module, "get_preprint_pdf_url")
+    def test_pdf_url_in_data(
+        self,
+        fake_session,
+    ):
+        "test if pdf_url is in the workflow input data"
+        pdf_url = "https://example.org/raw/master/data/95901/v1/95901-v1.pdf"
+        input_data = copy.copy(test_activity_data.ingest_meca_data)
+        input_data["pdf_url"] = pdf_url
+        fake_session.return_value = FakeSession(SESSION_DICT)
+        expected_result = activity_class.ACTIVITY_SUCCESS
+        # do the activity
+        result = self.activity.do_activity(input_data)
+        # check assertions
+        self.assertEqual(result, expected_result)
+
+        print("\nDEBUG loginfo: %s" % self.activity.logger.loginfo)
+        # assertions on log
+        self.assertTrue(
+            "FindPreprintPDF, from workflow input data got pdf_url %s" % pdf_url
+            in self.activity.logger.loginfo,
+        )
+
+    @patch.object(activity_module, "get_session")
+    @patch.object(preprint, "get_preprint_pdf_url")
     def test_do_activity_endpoint_exception(
         self,
         fake_get_preprint_pdf_url,
@@ -128,55 +153,3 @@ class TestSettings(unittest.TestCase):
             activity_object.logger.loginfo[-1],
             "FindPreprintPDF, reviewed_preprint_api_endpoint in settings is blank, skipping",
         )
-
-
-class TestGetPreprintPdfUrl(unittest.TestCase):
-    "tests for get_preprint_pdf_url()"
-
-    def setUp(self):
-        article_id = 95901
-        version = 1
-        self.endpoint_url = settings_mock.reviewed_preprint_api_endpoint.format(
-            article_id=article_id, version=version
-        )
-        self.caller_name = "FindPreprintPDF"
-        self.user_agent = "user-agent"
-
-    @patch("requests.get")
-    def test_200(self, fake_get):
-        "test status code 200"
-        pdf_url = "https://example.org/article.pdf"
-        fake_get.return_value = FakeResponse(
-            200,
-            response_json={"pdf": pdf_url},
-        )
-        # invoke
-        result = activity_module.get_preprint_pdf_url(
-            self.endpoint_url, self.caller_name, self.user_agent
-        )
-        # assert
-        self.assertEqual(result, pdf_url)
-
-    @patch("requests.get")
-    def test_404(self, fake_get):
-        "test status code 404"
-        fake_get.return_value = FakeResponse(
-            404,
-            response_json={"title": "not found"},
-        )
-        # invoke
-        result = activity_module.get_preprint_pdf_url(
-            self.endpoint_url, self.caller_name, self.user_agent
-        )
-        # assert
-        self.assertEqual(result, None)
-
-    @patch("requests.get")
-    def test_500(self, fake_get):
-        "test status code 500"
-        fake_get.return_value = FakeResponse(500)
-        # invoke and assert
-        with self.assertRaises(RuntimeError):
-            activity_module.get_preprint_pdf_url(
-                self.endpoint_url, self.caller_name, self.user_agent
-            )

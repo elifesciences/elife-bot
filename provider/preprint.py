@@ -2,6 +2,7 @@
 import os
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element, SubElement
+import requests
 from elifetools import xmlio
 from elifearticle.parse import build_article_from_xml
 from elifearticle.article import (
@@ -28,6 +29,9 @@ PREPRINT_AUTOMATION_XML_FILE_NAME_PATTERN = "article-source.xml"
 
 # DOI prefix to confirm version DOI value
 DOI_PREFIX = "10.7554"
+
+
+REQUESTS_TIMEOUT = (10, 60)
 
 
 class PreprintArticleException(Exception):
@@ -360,3 +364,23 @@ def download_from_expanded_folder(
         )
         storage.get_resource_to_file(storage_resource_origin, open_file)
     return file_path
+
+
+def get_preprint_pdf_url(endpoint_url, caller_name, user_agent=None):
+    "from the API endpoint, get the preprint PDF URL if it exists"
+    pdf_url = None
+
+    headers = None
+    if user_agent:
+        headers = {"user-agent": user_agent}
+
+    response = requests.get(endpoint_url, timeout=REQUESTS_TIMEOUT, headers=headers)
+    if response.status_code == 200:
+        data = response.json()
+        pdf_url = data.get("pdf")
+    elif response.status_code != 404:
+        raise RuntimeError(
+            "%s, got a %s status code for %s"
+            % (caller_name, response.status_code, endpoint_url)
+        )
+    return pdf_url

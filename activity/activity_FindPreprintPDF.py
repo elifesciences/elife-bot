@@ -1,11 +1,7 @@
 import json
-import requests
-from provider import utils
+from provider import preprint, utils
 from provider.execution_context import get_session
 from activity.objects import Activity
-
-
-REQUESTS_TIMEOUT = (10, 60)
 
 
 class activity_FindPreprintPDF(Activity):
@@ -51,6 +47,16 @@ class activity_FindPreprintPDF(Activity):
         article_id = session.get_value("article_id")
         version = session.get_value("version")
 
+        # take the pdf_url value from data if specified
+        if data.get("pdf_url"):
+            session.store_value("pdf_url", data.get("pdf_url"))
+            self.logger.info(
+                "%s, from workflow input data got pdf_url %s"
+                % (self.name, data.get("pdf_url"))
+            )
+            return self.ACTIVITY_SUCCESS
+        # if not, look iup the pdf_url from the API endpoint
+
         # format the API endpoint URL
         url = self.settings.reviewed_preprint_api_endpoint.format(
             article_id=utils.pad_msid(article_id), version=version
@@ -59,7 +65,7 @@ class activity_FindPreprintPDF(Activity):
 
         # check if PDF exists according to the API
         try:
-            pdf_url = get_preprint_pdf_url(
+            pdf_url = preprint.get_preprint_pdf_url(
                 url,
                 self.name,
                 user_agent=getattr(self.settings, "user_agent", None),
@@ -80,23 +86,3 @@ class activity_FindPreprintPDF(Activity):
         session.store_value("pdf_url", pdf_url)
 
         return self.ACTIVITY_SUCCESS
-
-
-def get_preprint_pdf_url(endpoint_url, caller_name, user_agent=None):
-    "from the API endpoint, get the preprint PDF URL if it exists"
-    pdf_url = None
-
-    headers = None
-    if user_agent:
-        headers = {"user-agent": user_agent}
-
-    response = requests.get(endpoint_url, timeout=REQUESTS_TIMEOUT, headers=headers)
-    if response.status_code == 200:
-        data = response.json()
-        pdf_url = data.get("pdf")
-    elif response.status_code != 404:
-        raise RuntimeError(
-            "%s, got a %s status code for %s"
-            % (caller_name, response.status_code, endpoint_url)
-        )
-    return pdf_url

@@ -125,6 +125,8 @@ meca_xsl_silent_endpoint = "https://example.org/silent-xsl"
 
 preprint_issues_repo_name = "preprint-issues"
 
+reviewed_preprint_api_endpoint = "https://api/path/{article_id}v{version}"
+
 
 @mock_aws
 def aws_conn(service, service_creation_kwargs):
