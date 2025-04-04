@@ -8,6 +8,7 @@ from xml.etree import ElementTree
 from argparse import ArgumentParser
 import arrow
 from mimetypes import guess_type
+import requests
 from elifetools import utils as etoolsutils
 import boto3
 from functools import partial
@@ -351,3 +352,22 @@ def set_envvar(key, val):
         "programming error. unsupported environment key: %s" % key
     )
     os.environ[key] = val
+
+
+REQUESTS_TIMEOUT = (10, 60)
+
+
+def download_file(from_path, to_file, user_agent=None):
+    "download file to disk using requests.get"
+    headers = None
+    if user_agent:
+        headers = {"user-agent": user_agent}
+    request = requests.get(from_path, timeout=REQUESTS_TIMEOUT, headers=headers)
+    if request.status_code == 200:
+        with open(to_file, "wb") as open_file:
+            open_file.write(request.content)
+        return to_file
+    raise RuntimeError(
+        "GET request returned a %s status code for %s"
+        % (request.status_code, from_path)
+    )
