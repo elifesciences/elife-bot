@@ -1,7 +1,6 @@
 import os
 import shutil
 from collections import OrderedDict
-import requests
 from elifecleaner.transform import ArticleZipFile
 from provider import cleaner, utils
 from provider.article_processing import file_extension
@@ -10,24 +9,6 @@ from provider.article_processing import file_extension
 INF_FILE_NAME_ID_FORMAT = "inf%s"
 
 INF_FILE_NAME_FORMAT = "elife-%s-%s.%s"
-
-REQUESTS_TIMEOUT = 10
-
-
-def download_file(from_path, to_file, user_agent=None):
-    "download file to disk"
-    headers = None
-    if user_agent:
-        headers = {"user-agent": user_agent}
-    request = requests.get(from_path, timeout=REQUESTS_TIMEOUT, headers=headers)
-    if request.status_code == 200:
-        with open(to_file, "wb") as open_file:
-            open_file.write(request.content)
-        return to_file
-    raise RuntimeError(
-        "GET request returned a %s status code for %s"
-        % (request.status_code, from_path)
-    )
 
 
 def download_images(href_list, to_dir, activity_name, logger, user_agent=None):
@@ -41,7 +22,7 @@ def download_images(href_list, to_dir, activity_name, logger, user_agent=None):
             logger.info("%s, href %s was already downloaded" % (activity_name, href))
             continue
         try:
-            file_path = download_file(href, to_file, user_agent)
+            file_path = utils.download_file(href, to_file, user_agent)
         except RuntimeError as exception:
             logger.info(str(exception))
             logger.info("%s, href %s could not be downloaded" % (activity_name, href))

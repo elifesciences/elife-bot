@@ -10,38 +10,6 @@ from tests.activity.classes_mock import FakeLogger, FakeResponse
 from provider import peer_review
 
 
-class TestDownloadFile(unittest.TestCase):
-    "tests for download_file()"
-
-    def tearDown(self):
-        TempDirectory.cleanup_all()
-
-    @patch("requests.get")
-    def test_download_file(self, fake_get):
-        "test downloading file by GET request to disk"
-        fake_get.return_value = FakeResponse(200, content=b"test")
-        directory = TempDirectory()
-        from_path = "https://example.org/from.jpg"
-        to_file = os.path.join(directory.path, "to.jpg")
-        user_agent = "test"
-        # invoke
-        result = peer_review.download_file(from_path, to_file, user_agent)
-        # assert
-        self.assertEqual(result, to_file)
-
-    @patch("requests.get")
-    def test_exception(self, fake_get):
-        "test requests raises exception"
-        fake_get.return_value = FakeResponse(404)
-        directory = TempDirectory()
-        from_path = "https://example.org/from.jpg"
-        to_file = os.path.join(directory.path, "to.jpg")
-        user_agent = "test"
-        # invoke
-        with self.assertRaises(RuntimeError):
-            peer_review.download_file(from_path, to_file, user_agent)
-
-
 class TestDownloadImages(unittest.TestCase):
     "tests for download_images()"
 
