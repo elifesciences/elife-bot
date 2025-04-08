@@ -136,8 +136,7 @@ def process_data_silentingestmeca(workflow_data):
 
 
 def process_finish_preprint_publication(workflow_data):
-    data = {"info": workflow_data}
-    return data
+    return workflow_data
 
 
 workflow_data_processors = {
