@@ -187,13 +187,11 @@ class TestConditionalStarts(unittest.TestCase):
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
                 "cron_NewS3POA",
-                "starter_FindNewDocmaps",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
                 "cron_NewS3POA",
-                "FindNewDocmaps",
             ],
         },
     )

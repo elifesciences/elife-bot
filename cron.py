@@ -211,16 +211,17 @@ def conditional_starts(current_datetime):
                 )
             )
 
-        # Check for new docmaps and preprints at 20 minutes past the hour
-        conditional_start_list.append(
-            OrderedDict(
-                [
-                    ("starter_name", "starter_FindNewDocmaps"),
-                    ("workflow_id", "FindNewDocmaps"),
-                    ("start_seconds", 60 * 31),
-                ]
+        if current_time.tm_min >= 25 and current_time.tm_min <= 29:
+            # Check for new docmaps and preprints at 25 minutes past the hour
+            conditional_start_list.append(
+                OrderedDict(
+                    [
+                        ("starter_name", "starter_FindNewDocmaps"),
+                        ("workflow_id", "FindNewDocmaps"),
+                        ("start_seconds", 60 * 31),
+                    ]
+                )
             )
-        )
 
     elif current_time.tm_min >= 30 and current_time.tm_min <= 44:
         # Jobs to start at the half past to quarter to the hour
