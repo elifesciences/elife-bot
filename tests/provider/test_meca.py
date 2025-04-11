@@ -365,3 +365,50 @@ class TestRewriteItemTags(unittest.TestCase):
             )
             not in result_xml_string
         )
+
+    def test_multiple_instance_tags(self):
+        "test rewriting item tag XML in a manifest.xml which has multiple instance tags"
+        directory = TempDirectory()
+        manifest_xml_path = os.path.join(directory.path, "manifest.xml")
+        manifest_xml_string = (
+            '<?xml version="1.0" encoding="UTF-8" standalone="no"?>'
+            "<!DOCTYPE manifest SYSTEM"
+            ' "http://schema.highwire.org/public/MECA/v0.9/Manifest/Manifest.dtd">'
+            '<manifest xmlns="http://manuscriptexchange.org" version="1.0">'
+            '<item type="article">'
+            '<instance media-type="application/xml" href="content/local.xml"/>'
+            '<instance media-type="application/pdf" href="content/local.pdf"/>'
+            "</item>"
+            "</manifest>"
+        )
+        with open(manifest_xml_path, "w", encoding="utf-8") as open_file:
+            open_file.write(manifest_xml_string)
+        file_detail_list = [
+            {
+                "file_type": "article",
+                "from_href": "content/local.pdf",
+                "href": "content/new.pdf",
+                "id": None,
+                "title": None,
+            },
+        ]
+        version_doi = "10.7554/eLife.95901.1"
+        caller_name = "test"
+        logger = FakeLogger()
+        # invoke
+        meca.rewrite_item_tags(
+            manifest_xml_path, file_detail_list, version_doi, caller_name, logger
+        )
+        # assert
+        result_xml_string = ""
+        with open(manifest_xml_path, "r", encoding="utf-8") as open_file:
+            result_xml_string = open_file.read()
+        self.assertTrue(
+            (
+                '<item type="article">'
+                '<instance media-type="application/xml" href="content/local.xml"/>'
+                '<instance href="content/new.pdf" media-type="application/pdf"/>'
+                "</item>"
+            )
+            in result_xml_string
+        )
