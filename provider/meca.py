@@ -1,5 +1,6 @@
 import os
 from xml.etree import ElementTree
+from xml.etree.ElementTree import SubElement
 import requests
 from provider import cleaner
 
@@ -227,6 +228,41 @@ def rewrite_item_tags(
                     )
                     # remove the item tag
                     root.remove(item_tag)
+
+    # write XML file to disk
+    cleaner.write_manifest_xml_file(
+        root,
+        manifest_xml_path,
+        version_doi,
+        doctype_dict=doctype_dict,
+        processing_instructions=processing_instructions,
+    )
+
+
+def add_instance_tags(
+    manifest_xml_path, file_detail_list, version_doi, caller_name, logger
+):
+    "add instance tags to existing item tags in manifest.xml file"
+    # parse XML file
+    root, doctype_dict, processing_instructions = cleaner.parse_manifest(
+        manifest_xml_path
+    )
+    file_type_detail_map = {
+        file_detail.get("file_type"): file_detail
+        for file_detail in file_detail_list
+        if file_detail.get("file_type")
+    }
+    logger.info(
+        "%s, starting to add %s instance item tags in the manifest for version DOI %s"
+        % (caller_name, len(file_type_detail_map), version_doi)
+    )
+
+    for item_tag in root.findall(".//{http://manuscriptexchange.org}item"):
+        if item_tag.get("type") in file_type_detail_map:
+            # match by type attribute
+            file_details = file_type_detail_map.get(item_tag.get("type"))
+            instance_tag = SubElement(item_tag, "instance")
+            cleaner.populate_instance_tag(instance_tag, file_details)
 
     # write XML file to disk
     cleaner.write_manifest_xml_file(

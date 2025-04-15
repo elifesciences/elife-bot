@@ -427,10 +427,15 @@ def populate_item_tag(parent, file_details):
         title_tag.text = file_details.get("title")
     if file_details.get("href"):
         instance_tag = SubElement(parent, "instance")
-        instance_tag.set("href", file_details.get("href"))
-        instance_tag.set(
-            "media-type", utils.content_type_from_file_name(file_details.get("href"))
-        )
+        populate_instance_tag(instance_tag, file_details)
+
+
+def populate_instance_tag(parent, file_details):
+    "add attributes to an item instance tag"
+    parent.set("href", file_details.get("href"))
+    parent.set(
+        "media-type", utils.content_type_from_file_name(file_details.get("href"))
+    )
 
 
 def add_item_tag(parent, file_details):
