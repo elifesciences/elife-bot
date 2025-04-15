@@ -27,6 +27,10 @@ PREPRINT_AUTOMATION_XML_PATH_PATTERN = "automation/{article_id}/v{version}"
 PREPRINT_AUTOMATION_XML_FILE_NAME_PATTERN = "article-source.xml"
 
 
+# file name for new preprint PDF file
+PREPRINT_PDF_FILE_NAME_PATTERN = "elife-preprint-{article_id}-v{version}.pdf"
+
+
 # DOI prefix to confirm version DOI value
 DOI_PREFIX = "10.7554"
 
