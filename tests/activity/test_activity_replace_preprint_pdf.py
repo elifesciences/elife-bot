@@ -488,7 +488,7 @@ class TestSetPdfSelfUri(unittest.TestCase):
             "<front><article-meta>"
             "<pub-history/>"
             "<permissions/>"
-            '<self-uri content-type="pdf" xlink:href="elife-preprint-95901-v1.pdf"/>'
+            '<self-uri content-type="pdf" xlink:href="elife-preprint-95901-v1.pdf"/>\n'
             "<related-article/>"
             "</article-meta></front></article>" % (xml_header, article_open_tag)
         )
@@ -530,7 +530,7 @@ class TestSetPdfSelfUri(unittest.TestCase):
             "<front><article-meta>"
             "<pub-history/>"
             "<permissions/>"
-            '<self-uri content-type="pdf" xlink:href="elife-preprint-95901-v1.pdf"/>'
+            '<self-uri content-type="pdf" xlink:href="elife-preprint-95901-v1.pdf"/>\n'
             "<related-article/>"
             "</article-meta></front></article>" % xml_header
         )

@@ -275,6 +275,7 @@ def set_pdf_self_uri(xml_file_path, pdf_file_name, identifier):
     self_uri_tag = Element("self-uri")
     self_uri_tag.set("content-type", "pdf")
     self_uri_tag.set("{http://www.w3.org/1999/xlink}href", pdf_file_name)
+    self_uri_tag.tail = "\n"
     article_meta_tag.insert(insert_index, self_uri_tag)
 
     # write the XML root to disk
