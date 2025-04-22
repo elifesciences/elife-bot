@@ -175,6 +175,7 @@ def start(settings):
     activity_names.append("FindPreprintPDF")
     activity_names.append("ConfirmPreprintPDF")
     activity_names.append("ReplacePreprintPDF")
+    activity_names.append("CleanOutbox")
 
     for activity_name in activity_names:
         # Import the activity libraries
