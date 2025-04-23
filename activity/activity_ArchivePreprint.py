@@ -51,7 +51,7 @@ class activity_ArchivePreprint(Activity):
         )
 
         bucket_name = (
-            self.settings.publishing_buckets_prefix + self.settings.expanded_bucket
+            self.settings.publishing_buckets_prefix + self.settings.archive_bucket
         )
 
         # copy the zip to the archive bucket
