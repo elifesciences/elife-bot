@@ -97,6 +97,14 @@ class TestArchivePreprint(unittest.TestCase):
         self.assertEqual(
             len(outbox_files(test_destination_folder)), expected_file_count
         )
+        self.assertTrue(
+            (
+                "ArchivePreprint, 10.7554/eLife.95901.2 copying"
+                " from s3://prod-elife-epp-meca/95901-v1-meca.zip"
+                " to s3://archive_bucket/elife-95901-rp-v2-20250422000000.zip"
+            )
+            in self.activity.logger.loginfo
+        )
         # should be one zip file
         zip_file_path = outbox_zip_file(test_destination_folder)
         self.zip_assertions(zip_file_path, expected_zip_file_name, expected_zip_files)
