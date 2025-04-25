@@ -288,6 +288,7 @@ class exp:
     github_token = "tokenhere"
     git_repo_name = "repository-name"
     git_repo_path = "articles/"
+    git_preprint_repo_path = "preprints/"
 
     # eLife 2.0 bot lax communication settings
     xml_info_queue = "bot-lax-exp-inc"
@@ -664,6 +665,7 @@ class dev:
     github_token = "tokenhere"
     git_repo_name = "repository-name"
     git_repo_path = "articles/"
+    git_preprint_repo_path = "preprints/"
 
     # videos
     video_url = "https://video.url.here/"
@@ -1037,6 +1039,7 @@ class live:
     github_token = "tokenhere"
     git_repo_name = "elife-articles-xml"
     git_repo_path = "articles/"
+    git_preprint_repo_path = "preprints/"
 
     # eLife 2.0 bot lax communication settings
     xml_info_queue = "bot-lax-prod-inc"

@@ -174,6 +174,7 @@ SCILIT_EMAIL = ""
 git_repo_name = "elife-article-xml-ci"
 git_repo_path = "articles/"
 github_token = "1234567890abcdef"
+git_preprint_repo_path = "preprints/"
 
 PUBMED_SFTP_URI = "pubmed.localhost:22"
 PUBMED_SFTP_USERNAME = ""
