@@ -1,13 +1,11 @@
 import unittest
 from ssl import SSLError
-from github import GithubException
 from mock import patch, MagicMock
+from provider import github_provider
 from activity.activity_UpdateRepository import activity_UpdateRepository, RetryException
 from tests.activity import settings_mock
 from tests.activity.classes_mock import (
     FakeStorageContext,
-    FakeGithub,
-    FakeGithubRepository,
     FakeLogger,
     FakeLaxProvider,
 )
@@ -17,12 +15,19 @@ from tests.activity.classes_mock import (
 @patch("activity.activity_UpdateRepository.storage_context")
 @patch("dashboard_queue.send_message")
 class TestUpdateRepository(unittest.TestCase):
+    def setUp(self):
+        self.update_github_original = github_provider.update_github
+
+    def tearDown(self):
+        # reset the mocked method
+        github_provider.update_github = self.update_github_original
+
     def test_happy_path(self, dashboard_queue, mock_storage_context, provider):
         activity_object = activity_UpdateRepository(settings_mock, FakeLogger())
         dashboard_queue.return_value = True
         mock_storage_context.return_value = FakeStorageContext()
         provider.lax_provider = FakeLaxProvider
-        activity_object.update_github = MagicMock()
+        github_provider.update_github = MagicMock()
 
         result = activity_object.do_activity(
             {
@@ -82,9 +87,9 @@ class TestUpdateRepository(unittest.TestCase):
         dashboard_queue.return_value = True
         mock_storage_context.return_value = FakeStorageContext()
         provider.lax_provider = FakeLaxProvider
-        activity_object.update_github = MagicMock()
+        github_provider.update_github = MagicMock()
 
-        activity_object.update_github.side_effect = RetryException("Retry")
+        github_provider.update_github.side_effect = RetryException("Retry")
 
         result = activity_object.do_activity(
             {
@@ -102,9 +107,9 @@ class TestUpdateRepository(unittest.TestCase):
         dashboard_queue.return_value = True
         mock_storage_context.return_value = FakeStorageContext()
         provider.lax_provider = FakeLaxProvider
-        activity_object.update_github = MagicMock()
+        github_provider.update_github = MagicMock()
 
-        activity_object.update_github.side_effect = SSLError(
+        github_provider.update_github.side_effect = SSLError(
             "The read operation timed out"
         )
 
@@ -124,9 +129,9 @@ class TestUpdateRepository(unittest.TestCase):
         dashboard_queue.return_value = True
         mock_storage_context.return_value = FakeStorageContext()
         provider.lax_provider = FakeLaxProvider
-        activity_object.update_github = MagicMock()
+        github_provider.update_github = MagicMock()
 
-        activity_object.update_github.side_effect = SSLError("Unhandled error message")
+        github_provider.update_github.side_effect = SSLError("Unhandled error message")
 
         result = activity_object.do_activity(
             {
@@ -144,9 +149,9 @@ class TestUpdateRepository(unittest.TestCase):
         dashboard_queue.return_value = True
         mock_storage_context.return_value = FakeStorageContext()
         provider.lax_provider = FakeLaxProvider
-        activity_object.update_github = MagicMock()
+        github_provider.update_github = MagicMock()
 
-        activity_object.update_github.side_effect = RuntimeError(
+        github_provider.update_github.side_effect = RuntimeError(
             "One of the cross beams has gone out askew..."
         )
 
@@ -158,104 +163,3 @@ class TestUpdateRepository(unittest.TestCase):
             }
         )
         self.assertEqual(result, "ActivityPermanentFailure")
-
-
-@patch("activity.activity_UpdateRepository.Github")
-class TestUpdateGithub(unittest.TestCase):
-    def setUp(self):
-        self.logger = FakeLogger()
-
-    def test_no_changes_to_file(self, mock_github):
-        repo_file = "file.txt"
-        content = b"<article/>"
-        mock_github.return_value = FakeGithub()
-        activity_object = activity_UpdateRepository(settings_mock, self.logger)
-        result = activity_object.update_github(repo_file, content)
-        self.assertEqual(result, "No changes in file %s" % repo_file)
-
-    def test_updated_file(self, mock_github):
-        repo_file = "file.txt"
-        content = b"<article>Updated</article>"
-        mock_github.return_value = FakeGithub()
-        activity_object = activity_UpdateRepository(settings_mock, self.logger)
-        result = activity_object.update_github(repo_file, content)
-        self.assertEqual(
-            result, "File %s successfully updated. Commit: None" % repo_file
-        )
-
-    @patch.object(FakeGithubRepository, "get_contents")
-    def test_get_contents_exception(self, fake_get_contents, mock_github):
-        repo_file = "file.txt"
-        content = b"<article>Updated</article>"
-        mock_github.return_value = FakeGithub()
-        fake_get_contents.side_effect = GithubException(
-            status="status", data="data", headers="headers"
-        )
-        activity_object = activity_UpdateRepository(settings_mock, self.logger)
-        result = activity_object.update_github(repo_file, content)
-        self.assertEqual(result, "File %s successfully added. Commit: None" % repo_file)
-
-    @patch.object(FakeGithubRepository, "get_contents")
-    def test_get_contents_unhandled_exception(self, fake_get_contents, mock_github):
-        repo_file = "file.txt"
-        content = b"<article>Updated</article>"
-        mock_github.return_value = FakeGithub()
-        fake_get_contents.side_effect = Exception("An unhanded exception")
-        activity_object = activity_UpdateRepository(settings_mock, self.logger)
-        with self.assertRaises(Exception):
-            activity_object.update_github(repo_file, content)
-        self.assertEqual(
-            self.logger.loginfo[-1],
-            "Exception: file %s. Error: An unhanded exception" % repo_file,
-        )
-
-    @patch.object(FakeGithubRepository, "create_file")
-    @patch.object(FakeGithubRepository, "get_contents")
-    def test_create_file_exception(
-        self, fake_get_contents, fake_create_file, mock_github
-    ):
-        repo_file = "file.txt"
-        content = b"<article>Updated</article>"
-        mock_github.return_value = FakeGithub()
-        fake_get_contents.side_effect = GithubException(
-            status="status", data="data", headers="headers"
-        )
-        fake_create_file.side_effect = GithubException(
-            status=409, data="data", headers="headers"
-        )
-        activity_object = activity_UpdateRepository(settings_mock, self.logger)
-        with self.assertRaises(Exception):
-            activity_object.update_github(repo_file, content)
-        self.assertEqual(
-            self.logger.logwarning, 'Retrying because of exception: 409 "data"'
-        )
-
-    @patch.object(FakeGithubRepository, "update_file")
-    def test_update_file_exception(self, fake_update_file, mock_github):
-        repo_file = "file.txt"
-        content = b"<article>Updated</article>"
-        mock_github.return_value = FakeGithub()
-        fake_update_file.side_effect = GithubException(
-            status=409, data="data", headers="headers"
-        )
-        activity_object = activity_UpdateRepository(settings_mock, self.logger)
-        with self.assertRaises(Exception):
-            activity_object.update_github(repo_file, content)
-        self.assertEqual(
-            self.logger.logwarning, 'Retrying because of exception: 409 "data"'
-        )
-
-    @patch.object(FakeGithubRepository, "update_file")
-    def test_update_file_exception_unhandled_status(
-        self, fake_update_file, mock_github
-    ):
-        "test for status 500 which currently does not result in a retry"
-        repo_file = "file.txt"
-        content = b"<article>Updated</article>"
-        mock_github.return_value = FakeGithub()
-        fake_update_file.side_effect = GithubException(
-            status=500, data="data", headers="headers"
-        )
-        activity_object = activity_UpdateRepository(settings_mock, self.logger)
-        with self.assertRaises(GithubException):
-            activity_object.update_github(repo_file, content)
