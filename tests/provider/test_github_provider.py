@@ -1,5 +1,6 @@
 import unittest
 from mock import patch
+from github import GithubException
 from provider import github_provider
 from tests import settings_mock
 from tests.activity.classes_mock import (
@@ -136,3 +137,111 @@ class TestAddGithubIssueComment(unittest.TestCase):
             )
             % (caller_name, version_doi, exception_message),
         )
+
+
+@patch.object(github_provider, "Github")
+class TestUpdateGithub(unittest.TestCase):
+    def setUp(self):
+        self.logger = FakeLogger()
+
+    def test_no_changes_to_file(self, mock_github):
+        repo_file = "file.txt"
+        content = b"<article/>"
+        mock_github.return_value = FakeGithub()
+        result = github_provider.update_github(
+            settings_mock, self.logger, repo_file, content
+        )
+        self.assertEqual(result, "No changes in file %s" % repo_file)
+
+    def test_updated_file(self, mock_github):
+        repo_file = "file.txt"
+        content = b"<article>Updated</article>"
+        mock_github.return_value = FakeGithub()
+        result = github_provider.update_github(
+            settings_mock, self.logger, repo_file, content
+        )
+        self.assertEqual(
+            result, "File %s successfully updated. Commit: None" % repo_file
+        )
+
+    @patch.object(FakeGithubRepository, "get_contents")
+    def test_get_contents_exception(self, fake_get_contents, mock_github):
+        repo_file = "file.txt"
+        content = b"<article>Updated</article>"
+        mock_github.return_value = FakeGithub()
+        fake_get_contents.side_effect = GithubException(
+            status="status", data="data", headers="headers"
+        )
+        result = github_provider.update_github(
+            settings_mock, self.logger, repo_file, content
+        )
+        self.assertEqual(result, "File %s successfully added. Commit: None" % repo_file)
+
+    @patch.object(FakeGithubRepository, "get_contents")
+    def test_get_contents_unhandled_exception(self, fake_get_contents, mock_github):
+        repo_file = "file.txt"
+        content = b"<article>Updated</article>"
+        mock_github.return_value = FakeGithub()
+        fake_get_contents.side_effect = Exception("An unhanded exception")
+        with self.assertRaises(Exception):
+            github_provider.update_github(
+                settings_mock, self.logger, repo_file, content
+            )
+        self.assertEqual(
+            self.logger.loginfo[-1],
+            "Exception: file %s. Error: An unhanded exception" % repo_file,
+        )
+
+    @patch.object(FakeGithubRepository, "create_file")
+    @patch.object(FakeGithubRepository, "get_contents")
+    def test_create_file_exception(
+        self, fake_get_contents, fake_create_file, mock_github
+    ):
+        repo_file = "file.txt"
+        content = b"<article>Updated</article>"
+        mock_github.return_value = FakeGithub()
+        fake_get_contents.side_effect = GithubException(
+            status="status", data="data", headers="headers"
+        )
+        fake_create_file.side_effect = GithubException(
+            status=409, data="data", headers="headers"
+        )
+        with self.assertRaises(Exception):
+            github_provider.update_github(
+                settings_mock, self.logger, repo_file, content
+            )
+        self.assertEqual(
+            self.logger.logwarning, 'Retrying because of exception: 409 "data"'
+        )
+
+    @patch.object(FakeGithubRepository, "update_file")
+    def test_update_file_exception(self, fake_update_file, mock_github):
+        repo_file = "file.txt"
+        content = b"<article>Updated</article>"
+        mock_github.return_value = FakeGithub()
+        fake_update_file.side_effect = GithubException(
+            status=409, data="data", headers="headers"
+        )
+        with self.assertRaises(Exception):
+            github_provider.update_github(
+                settings_mock, self.logger, repo_file, content
+            )
+        self.assertEqual(
+            self.logger.logwarning, 'Retrying because of exception: 409 "data"'
+        )
+
+    @patch.object(FakeGithubRepository, "update_file")
+    def test_update_file_exception_unhandled_status(
+        self, fake_update_file, mock_github
+    ):
+        "test for status 500 which currently does not result in a retry"
+        repo_file = "file.txt"
+        content = b"<article>Updated</article>"
+        mock_github.return_value = FakeGithub()
+        fake_update_file.side_effect = GithubException(
+            status=500, data="data", headers="headers"
+        )
+        with self.assertRaises(GithubException):
+            github_provider.update_github(
+                settings_mock, self.logger, repo_file, content
+            )

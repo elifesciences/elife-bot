@@ -62,6 +62,8 @@ crossref_login_passwd = ""
 # Logging
 setLevel = "INFO"
 
+git_repo_name = "elife-article-xml-ci"
+git_repo_path = "articles/"
 github_token = "1234567890abcdef"
 
 # PDF cover

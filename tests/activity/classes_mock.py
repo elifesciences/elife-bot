@@ -269,6 +269,7 @@ class FakeLogger:
         self.loginfo = ["First logger info"]
         self.logexception = "First logger exception"
         self.logerror = "First logger error"
+        self.logwarning = "First logger warning"
 
     def debug(self, msg, *args, **kwargs):
         self.logdebug = msg

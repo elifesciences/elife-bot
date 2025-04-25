@@ -1,6 +1,12 @@
 import re
 from github import Github
+from github import GithubException
 from provider import utils
+
+
+class RetryException(RuntimeError):
+    pass
+
 
 GITHUB_USER = "elifesciences"
 
@@ -64,3 +70,54 @@ def add_github_issue_comment(settings, logger, caller_name, version_doi, issue_c
                 )
                 % (caller_name, version_doi, str(exception))
             )
+
+
+def update_github(settings, logger, repo_file, content):
+    "add or update XML file in github repository"
+    github_object = Github(settings.github_token)
+    user = github_object.get_user(GITHUB_USER)
+    article_xml_repo = user.get_repo(settings.git_repo_name)
+    try:
+        xml_file = article_xml_repo.get_contents(repo_file)
+    except GithubException as exception:
+        logger.info("GithubException - description: " + str(exception))
+        logger.info(
+            "GithubException: file "
+            + repo_file
+            + " may not exist in github yet. We will try to add it in the repo."
+        )
+        try:
+            response = article_xml_repo.create_file(repo_file, "Creates XML", content)
+        except GithubException as inner_exception:
+            _retry_or_cancel(inner_exception, logger)
+        return "File " + repo_file + " successfully added. Commit: " + str(response)
+
+    except Exception as exception:
+        logger.info("Exception: file " + repo_file + ". Error: " + str(exception))
+        raise
+
+    try:
+        # check for changes first
+        if content == xml_file.decoded_content:
+            return "No changes in file " + repo_file
+
+        # there are changes
+        try:
+            response = article_xml_repo.update_file(
+                repo_file, "Updates xml", content, xml_file.sha
+            )
+        except GithubException as exception:
+            _retry_or_cancel(exception, logger)
+        return "File " + repo_file + " successfully updated. Commit: " + str(response)
+
+    except Exception as exception:
+        logger.info("Exception: file " + repo_file + ". Error: " + str(exception))
+        raise
+
+
+def _retry_or_cancel(exception, logger):
+    if exception.status == 409:
+        logger.warning("Retrying because of exception: %s" % exception)
+        raise RetryException(str(exception))
+
+    raise exception
