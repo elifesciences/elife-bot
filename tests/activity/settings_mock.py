@@ -11,6 +11,7 @@ expanded_bucket = "origin_bucket"
 publishing_buckets_prefix = ""
 production_bucket = "origin_bucket"
 ppp_cdn_bucket = ""
+preprint_cdn_bucket = "published/preprints"
 
 archive_bucket = "archive_bucket"
 

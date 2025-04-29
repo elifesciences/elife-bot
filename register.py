@@ -178,6 +178,7 @@ def start(settings):
     activity_names.append("CleanOutbox")
     activity_names.append("ArchivePreprint")
     activity_names.append("PreprintRepository")
+    activity_names.append("DepositPreprintAssets")
 
     for activity_name in activity_names:
         # Import the activity libraries

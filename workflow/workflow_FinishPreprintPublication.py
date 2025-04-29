@@ -42,6 +42,7 @@ class workflow_FinishPreprintPublication(Workflow):
                 define_workflow_step("OutputMeca", data),
                 define_workflow_step("ArchivePreprint", data),
                 define_workflow_step("PreprintRepository", data),
+                define_workflow_step("DepositPreprintAssets", data),
                 define_workflow_step("CleanOutbox", data),
             ],
             "finish": {"requirements": None},
