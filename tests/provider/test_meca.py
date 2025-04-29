@@ -42,6 +42,24 @@ class TestMecaContentFolder(unittest.TestCase):
         self.assertEqual(meca.meca_content_folder(article_xml_path), expected)
 
 
+def manifest_xml_string_snippet(
+    article_xml_path="content/24301711.xml",
+    article_pdf_path="content/elife-preprint-95901-v1.pdf",
+):
+    "fixture XML for testing"
+    return (
+        '<?xml version="1.0" encoding="UTF-8" standalone="no"?>'
+        "<!DOCTYPE manifest SYSTEM"
+        ' "http://schema.highwire.org/public/MECA/v0.9/Manifest/Manifest.dtd">'
+        '<manifest xmlns="http://manuscriptexchange.org" version="1.0">'
+        '<item type="article" id="elife-95901-v1">'
+        '<instance media-type="application/xml" href="%s"/>'
+        '<instance media-type="application/pdf" href="%s"/>'
+        "</item>"
+        "</manifest>" % (article_xml_path, article_pdf_path)
+    )
+
+
 class TestGetMecaArticleXmlPath(unittest.TestCase):
     "tests for get_meca_article_xml_path()"
 
@@ -52,13 +70,8 @@ class TestGetMecaArticleXmlPath(unittest.TestCase):
         "test getting the article XML path from a manifest.xml"
         directory = TempDirectory()
         article_xml_path = "content/24301711.xml"
-        manifest_xml_string = (
-            '<?xml version="1.0" encoding="UTF-8" standalone="no"?>'
-            "<!DOCTYPE manifest SYSTEM"
-            ' "http://schema.highwire.org/public/MECA/v0.9/Manifest/Manifest.dtd">'
-            '<manifest xmlns="http://manuscriptexchange.org" version="1.0">'
-            '<instance media-type="application/xml" href="%s"/></manifest>'
-            % article_xml_path
+        manifest_xml_string = manifest_xml_string_snippet(
+            article_xml_path=article_xml_path
         )
         manifest_xml_path = os.path.join(directory.path, "manifest.xml")
         with open(manifest_xml_path, "w", encoding="utf-8") as open_file:
@@ -78,6 +91,47 @@ class TestGetMecaArticleXmlPath(unittest.TestCase):
         version_doi = "10.7554/eLife.95901.1"
         logger = FakeLogger()
         result = meca.get_meca_article_xml_path(
+            directory.path, version_doi, caller_name, logger
+        )
+        self.assertEqual(result, None)
+        self.assertEqual(
+            logger.logexception,
+            ("%s, manifest_file_path %s/manifest.xml not found for version DOI %s")
+            % (caller_name, directory.path, version_doi),
+        )
+
+
+class TestGetMecaArticlePdfPath(unittest.TestCase):
+    "tests for get_meca_article_pdf_path()"
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_get_meca_article_pdf_path(self):
+        "test getting the article XML path from a manifest.xml"
+        directory = TempDirectory()
+        article_pdf_path = "content/elife-preprint-95901-v1.pdf"
+        manifest_xml_string = manifest_xml_string_snippet(
+            article_pdf_path=article_pdf_path
+        )
+        manifest_xml_path = os.path.join(directory.path, "manifest.xml")
+        with open(manifest_xml_path, "w", encoding="utf-8") as open_file:
+            open_file.write(manifest_xml_string)
+        caller_name = "test"
+        version_doi = "10.7554/eLife.95901.1"
+        logger = FakeLogger()
+        result = meca.get_meca_article_pdf_path(
+            directory.path, version_doi, caller_name, logger
+        )
+        self.assertEqual(result, article_pdf_path)
+
+    def test_no_manifest(self):
+        "test if there is no manifest.xml file"
+        directory = TempDirectory()
+        caller_name = "test"
+        version_doi = "10.7554/eLife.95901.1"
+        logger = FakeLogger()
+        result = meca.get_meca_article_pdf_path(
             directory.path, version_doi, caller_name, logger
         )
         self.assertEqual(result, None)

@@ -32,8 +32,9 @@ def meca_content_folder(article_xml_path):
         return None
 
 
-def get_meca_article_xml_path(folder_name, version_doi, caller_name, logger):
-    "find manifest.xml and get the article XML tag href"
+def get_meca_manifest(folder_name, version_doi, caller_name, logger):
+    "find manifest.xml and return its content"
+    xml_string = None
     # locate the bucket path to the manuscript XML file by reading the manifest.xml
     manifest_file_path = os.path.join(folder_name, MANIFEST_XML_PATH)
     try:
@@ -46,6 +47,14 @@ def get_meca_article_xml_path(folder_name, version_doi, caller_name, logger):
                 % (caller_name, manifest_file_path, version_doi)
             )
         return None
+    return xml_string
+
+
+def get_meca_article_xml_path(folder_name, version_doi, caller_name, logger):
+    "find manifest.xml and get the article XML tag href"
+    xml_string = get_meca_manifest(folder_name, version_doi, caller_name, logger)
+    if not xml_string:
+        return None
     xml_root = ElementTree.fromstring(xml_string)
     article_xml_path = None
     instance_tag = xml_root.find(
@@ -54,6 +63,22 @@ def get_meca_article_xml_path(folder_name, version_doi, caller_name, logger):
     if instance_tag is not None:
         article_xml_path = instance_tag.attrib.get("href")
     return article_xml_path
+
+
+def get_meca_article_pdf_path(folder_name, version_doi, caller_name, logger):
+    "find manifest.xml and get the article PDF tag href"
+    xml_string = get_meca_manifest(folder_name, version_doi, caller_name, logger)
+    if not xml_string:
+        return None
+    xml_root = ElementTree.fromstring(xml_string)
+    article_pdf_path = None
+    instance_tag = xml_root.find(
+        './/{http://manuscriptexchange.org}item[@type="article"]'
+        '/{http://manuscriptexchange.org}instance[@media-type="application/pdf"]'
+    )
+    if instance_tag is not None:
+        article_pdf_path = instance_tag.attrib.get("href")
+    return article_pdf_path
 
 
 def post_xml_file(file_path, endpoint_url, user_agent, caller_name, logger):
