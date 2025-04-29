@@ -41,6 +41,7 @@ class exp:
     expanded_bucket = "elife-publishing-expanded"
     ppp_cdn_bucket = "elife-published/articles"
     digest_cdn_bucket = "elife-published/digests"
+    preprint_cdn_bucket = "elife-published/preprints"
     archive_bucket = "elife-publishing-archive"
 
     lax_article_endpoint = "http://gateway.internal/articles/{article_id}"
@@ -418,6 +419,7 @@ class dev:
     expanded_bucket = "elife-publishing-expanded"
     ppp_cdn_bucket = "elife-published/articles"
     digest_cdn_bucket = "elife-published/digests"
+    preprint_cdn_bucket = "elife-published/preprints"
     archive_bucket = "elife-publishing-archive"
 
     lax_article_endpoint = "http://gateway.internal/articles/{article_id}"
@@ -792,6 +794,7 @@ class live:
     # since prefix is empty
     ppp_cdn_bucket = "prod-elife-published/articles"
     digest_cdn_bucket = "prod-elife-published/digests"
+    preprint_cdn_bucket = "prod-elife-published/preprints"
     archive_bucket = "prod-elife-publishing-archive"
 
     lax_article_endpoint = "http://gateway.internal/articles/{article_id}"
