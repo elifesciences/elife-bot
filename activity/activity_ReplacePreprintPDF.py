@@ -124,7 +124,12 @@ class activity_ReplacePreprintPDF(MecaBaseActivity):
         new_s3_resource = resource_prefix + "/" + new_pdf_href
         storage.set_resource_from_filename(new_s3_resource, to_file)
         # remove old PDF file
-        if old_pdf_href:
+        if old_pdf_href == new_pdf_href:
+            self.logger.info(
+                "%s, old pdf %s the same name as new pdf %s for %s"
+                % (self.name, old_pdf_href, new_pdf_href, version_doi)
+            )
+        elif old_pdf_href:
             self.logger.info(
                 "%s, removing old pdf %s from the bucket expanded folder"
                 % (self.name, old_pdf_href)
