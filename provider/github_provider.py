@@ -98,7 +98,11 @@ def update_github(settings, logger, repo_file, content):
 
     try:
         # check for changes first
-        if content == xml_file.decoded_content:
+        if isinstance(content, str):
+            # encode content to compare bytestring to bytestring
+            if content == utils.unicode_encode(xml_file.decoded_content):
+                return "No changes in file " + repo_file
+        elif content == xml_file.decoded_content:
             return "No changes in file " + repo_file
 
         # there are changes
