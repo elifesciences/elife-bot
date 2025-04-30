@@ -144,8 +144,19 @@ class TestUpdateGithub(unittest.TestCase):
     def setUp(self):
         self.logger = FakeLogger()
 
-    def test_no_changes_to_file(self, mock_github):
+    def test_no_changes_to_file_str(self, mock_github):
         repo_file = "file.txt"
+        # utf-8 string content
+        content = "<article/>"
+        mock_github.return_value = FakeGithub()
+        result = github_provider.update_github(
+            settings_mock, self.logger, repo_file, content
+        )
+        self.assertEqual(result, "No changes in file %s" % repo_file)
+
+    def test_no_changes_to_file_bytes(self, mock_github):
+        repo_file = "file.txt"
+        # bytestring content
         content = b"<article/>"
         mock_github.return_value = FakeGithub()
         result = github_provider.update_github(
