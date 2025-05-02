@@ -38,6 +38,7 @@ class workflow_SilentIngestMeca(Workflow):
                 define_workflow_step("MecaDetails", data),
                 define_workflow_step("ExpandMeca", data),
                 define_workflow_step("ResetMeca", data),
+                define_workflow_step("ModifyMecaFiles", data),
                 define_workflow_step("ModifyMecaXml", data),
                 define_workflow_step("MecaPeerReviews", data),
                 define_workflow_step("MecaPeerReviewImages", data),
