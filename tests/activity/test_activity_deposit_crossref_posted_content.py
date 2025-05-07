@@ -190,6 +190,287 @@ class TestDepositCrossrefPostedContent(unittest.TestCase):
     @patch("requests.post")
     @patch("provider.outbox_provider.storage_context")
     @patch.object(activity_DepositCrossrefPostedContent, "clean_tmp_dir")
+    def test_do_activity_original_publication_date(
+        self,
+        fake_clean_tmp_dir,
+        fake_storage_context,
+        fake_post_request,
+        fake_version_map,
+        fake_email_smtp_connect,
+        fake_get_docmap,
+    ):
+        "test an XML file having an original-publication date"
+        test_data = {
+            "comment": "Article 85111",
+            "article_xml_filenames": ["elife-preprint-85111-v1.xml"],
+            "post_status_code": 200,
+            "expected_result": True,
+            "expected_approve_status": True,
+            "expected_generate_status": True,
+            "expected_publish_status": True,
+            "expected_outbox_status": True,
+            "expected_email_status": True,
+            "expected_activity_status": True,
+            "expected_file_count": 2,
+            "expected_crossref_xml_contains": [
+                '<posted_content type="preprint">',
+                "<posted_date>",
+                "<month>01</month>",
+                "<day>25</day>",
+                "<year>2023</year>",
+                "<doi>10.7554/eLife.85111</doi>",
+                "<resource>https://elifesciences.org/reviewed-preprints/85111</resource>",
+                "</posted_content>",
+                (
+                    '<rel:intra_work_relation identifier-type="doi" relationship-type="isSameAs">'
+                    "10.7554/eLife.85111.1"
+                    "</rel:intra_work_relation>"
+                ),
+            ],
+            "expected_crossref_version_xml_contains": [
+                '<posted_content type="preprint">',
+                "<posted_date>",
+                "<month>01</month>",
+                "<day>25</day>",
+                "<year>2023</year>",
+                "<doi>10.7554/eLife.85111.1</doi>",
+                "<resource>https://elifesciences.org/reviewed-preprints/85111v1</resource>",
+                "</posted_content>",
+                (
+                    '<rel:intra_work_relation identifier-type="doi"'
+                    ' relationship-type="isVersionOf">'
+                    "10.1101/2022.11.08.515698</rel:intra_work_relation>"
+                ),
+            ],
+        }
+        directory = TempDirectory()
+        fake_clean_tmp_dir.return_value = None
+
+        # change docmap fixture data so only version 1 DOI is found
+        docmap_content = read_fixture("sample_docmap_for_85111.json")
+        docmap_content = docmap_content.replace(b"85111.2", b"85111.1")
+        fake_get_docmap.return_value = docmap_content
+
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
+        fake_version_map.return_value = {}
+        resources = helpers.populate_storage(
+            from_dir=self.outbox_folder,
+            to_dir=directory.path,
+            filenames=test_data["article_xml_filenames"],
+            sub_dir="crossref_posted_content/outbox",
+        )
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources, dest_folder=directory.path
+        )
+        # mock the POST to endpoint
+        fake_post_request.return_value = FakeResponse(test_data.get("post_status_code"))
+        # do the activity
+        result = self.activity.do_activity(self.activity_data)
+        # check assertions
+        self.assertEqual(result, test_data.get("expected_result"))
+        # check statuses assertions
+        for status_name in [
+            "approve",
+            "generate",
+            "publish",
+            "outbox",
+            "email",
+            "activity",
+        ]:
+            status_value = self.activity.statuses.get(status_name)
+            expected = test_data.get("expected_" + status_name + "_status")
+            self.assertEqual(
+                status_value,
+                expected,
+                "{expected} {status_name} status not equal to {status_value} in {comment}".format(
+                    expected=expected,
+                    status_name=status_name,
+                    status_value=status_value,
+                    comment=test_data.get("comment"),
+                ),
+            )
+        # Count crossref XML file in the tmp directory
+        file_count = len(os.listdir(self.tmp_dir()))
+        self.assertEqual(file_count, test_data.get("expected_file_count"))
+        if file_count > 0 and test_data.get("expected_crossref_xml_contains"):
+            # Open the first crossref XML and check some of its contents
+            crossref_xml_filename_path = os.path.join(
+                self.tmp_dir(), sorted(os.listdir(self.tmp_dir()))[0]
+            )
+            with open(crossref_xml_filename_path, "rb") as open_file:
+                crossref_xml = open_file.read().decode("utf8")
+                for expected in test_data.get("expected_crossref_xml_contains"):
+                    self.assertTrue(
+                        expected in crossref_xml,
+                        "{expected} not found in crossref_xml {path}".format(
+                            expected=expected, path=crossref_xml_filename_path
+                        ),
+                    )
+        if file_count > 0 and test_data.get("expected_crossref_version_xml_contains"):
+            # Open the second crossref XML and check some of its contents
+            crossref_xml_filename_path = os.path.join(
+                self.tmp_dir(), sorted(os.listdir(self.tmp_dir()))[1]
+            )
+            with open(crossref_xml_filename_path, "rb") as open_file:
+                crossref_xml = open_file.read().decode("utf8")
+                for expected in test_data.get("expected_crossref_version_xml_contains"):
+                    self.assertTrue(
+                        expected in crossref_xml,
+                        "{expected} not found in crossref_xml {path}".format(
+                            expected=expected, path=crossref_xml_filename_path
+                        ),
+                    )
+
+    @patch.object(cleaner, "get_docmap")
+    @patch.object(activity_module.email_provider, "smtp_connect")
+    @patch.object(lax_provider, "article_status_version_map")
+    @patch("requests.post")
+    @patch("provider.outbox_provider.storage_context")
+    @patch.object(activity_DepositCrossrefPostedContent, "clean_tmp_dir")
+    def test_do_activity_update_date(
+        self,
+        fake_clean_tmp_dir,
+        fake_storage_context,
+        fake_post_request,
+        fake_version_map,
+        fake_email_smtp_connect,
+        fake_get_docmap,
+    ):
+        "test a preprint version XML file having an update date"
+        test_data = {
+            "comment": "Article 103870",
+            "article_xml_filenames": ["elife-preprint-103870-v2.xml"],
+            "post_status_code": 200,
+            "expected_result": True,
+            "expected_approve_status": True,
+            "expected_generate_status": True,
+            "expected_publish_status": True,
+            "expected_outbox_status": True,
+            "expected_email_status": True,
+            "expected_activity_status": True,
+            "expected_file_count": 2,
+            "expected_crossref_xml_contains": [
+                '<posted_content type="preprint">',
+                "<posted_date>",
+                "<month>04</month>",
+                "<day>11</day>",
+                "<year>2025</year>",
+                "<doi>10.7554/eLife.103870</doi>",
+                "<resource>https://elifesciences.org/reviewed-preprints/103870</resource>",
+                "</posted_content>",
+                (
+                    '<rel:intra_work_relation identifier-type="doi"'
+                    ' relationship-type="isVersionOf">'
+                    "10.7554/eLife.103870.1"
+                    "</rel:intra_work_relation>"
+                ),
+                (
+                    '<rel:intra_work_relation identifier-type="doi" relationship-type="isSameAs">'
+                    "10.7554/eLife.103870.2"
+                    "</rel:intra_work_relation>"
+                ),
+            ],
+            "expected_crossref_version_xml_contains": [
+                '<posted_content type="preprint">',
+                "<posted_date>",
+                "<month>04</month>",
+                "<day>11</day>",
+                "<year>2025</year>",
+                "<doi>10.7554/eLife.103870.2</doi>",
+                "<resource>https://elifesciences.org/reviewed-preprints/103870v2</resource>",
+                "</posted_content>",
+                (
+                    '<rel:intra_work_relation identifier-type="doi"'
+                    ' relationship-type="isVersionOf">'
+                    "10.7554/eLife.103870.1"
+                    "</rel:intra_work_relation>"
+                ),
+            ],
+        }
+        directory = TempDirectory()
+        fake_clean_tmp_dir.return_value = None
+
+        # change docmap fixture data to match
+        docmap_content = read_fixture("sample_docmap_for_84364.json")
+        docmap_content = docmap_content.replace(b"84364", b"103870")
+        fake_get_docmap.return_value = docmap_content
+
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
+        fake_version_map.return_value = {}
+        resources = helpers.populate_storage(
+            from_dir=self.outbox_folder,
+            to_dir=directory.path,
+            filenames=test_data["article_xml_filenames"],
+            sub_dir="crossref_posted_content/outbox",
+        )
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources, dest_folder=directory.path
+        )
+        # mock the POST to endpoint
+        fake_post_request.return_value = FakeResponse(test_data.get("post_status_code"))
+        # do the activity
+        result = self.activity.do_activity(self.activity_data)
+        # check assertions
+        self.assertEqual(result, test_data.get("expected_result"))
+        # check statuses assertions
+        for status_name in [
+            "approve",
+            "generate",
+            "publish",
+            "outbox",
+            "email",
+            "activity",
+        ]:
+            status_value = self.activity.statuses.get(status_name)
+            expected = test_data.get("expected_" + status_name + "_status")
+            self.assertEqual(
+                status_value,
+                expected,
+                "{expected} {status_name} status not equal to {status_value} in {comment}".format(
+                    expected=expected,
+                    status_name=status_name,
+                    status_value=status_value,
+                    comment=test_data.get("comment"),
+                ),
+            )
+        # Count crossref XML file in the tmp directory
+        file_count = len(os.listdir(self.tmp_dir()))
+        self.assertEqual(file_count, test_data.get("expected_file_count"))
+        if file_count > 0 and test_data.get("expected_crossref_xml_contains"):
+            # Open the first crossref XML and check some of its contents
+            crossref_xml_filename_path = os.path.join(
+                self.tmp_dir(), sorted(os.listdir(self.tmp_dir()))[0]
+            )
+            with open(crossref_xml_filename_path, "rb") as open_file:
+                crossref_xml = open_file.read().decode("utf8")
+                for expected in test_data.get("expected_crossref_xml_contains"):
+                    self.assertTrue(
+                        expected in crossref_xml,
+                        "{expected} not found in crossref_xml {path}".format(
+                            expected=expected, path=crossref_xml_filename_path
+                        ),
+                    )
+        if file_count > 0 and test_data.get("expected_crossref_version_xml_contains"):
+            # Open the second crossref XML and check some of its contents
+            crossref_xml_filename_path = os.path.join(
+                self.tmp_dir(), sorted(os.listdir(self.tmp_dir()))[1]
+            )
+            with open(crossref_xml_filename_path, "rb") as open_file:
+                crossref_xml = open_file.read().decode("utf8")
+                for expected in test_data.get("expected_crossref_version_xml_contains"):
+                    self.assertTrue(
+                        expected in crossref_xml,
+                        "{expected} not found in crossref_xml {path}".format(
+                            expected=expected, path=crossref_xml_filename_path
+                        ),
+                    )
+
+    @patch.object(cleaner, "get_docmap")
+    @patch.object(activity_module.email_provider, "smtp_connect")
+    @patch.object(lax_provider, "article_status_version_map")
+    @patch("requests.post")
+    @patch("provider.outbox_provider.storage_context")
+    @patch.object(activity_DepositCrossrefPostedContent, "clean_tmp_dir")
     def test_do_activity_vor_exists(
         self,
         fake_clean_tmp_dir,
