@@ -17,7 +17,7 @@ from tests.activity.classes_mock import (
     FakeSession,
     FakeStorageContext,
 )
-from tests.activity import settings_mock
+from tests.activity import helpers, settings_mock, test_activity_data
 
 
 def input_data(article_id=None, version=None, standalone=None):
@@ -32,13 +32,16 @@ def input_data(article_id=None, version=None, standalone=None):
 
 
 def session_data(article_id=None, version=None):
+    session_dict = test_activity_data.post_preprint_publication_session_example()
     sess_data = input_data(article_id, version)
-    sess_data["preprint_expanded_folder"] = "preprint.%s.%s/%s" % (
+    for key in ["article_id", "version", "standalone"]:
+        session_dict[key] = sess_data.get(key)
+    session_dict["preprint_expanded_folder"] = "preprint.%s.%s/%s" % (
         article_id,
         version,
         sess_data.get("run"),
     )
-    return sess_data
+    return session_dict
 
 
 @ddt
@@ -55,8 +58,8 @@ class TestScheduleCrossrefPreprint(unittest.TestCase):
         # clean the temporary directory
         self.activity.clean_tmp_dir()
 
-    @patch("provider.preprint.storage_context")
     @patch("provider.outbox_provider.storage_context")
+    @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
     @data(
         {
@@ -71,20 +74,39 @@ class TestScheduleCrossrefPreprint(unittest.TestCase):
         self,
         test_data,
         fake_session,
+        fake_storage_context,
         fake_outbox_storage_context,
-        fake_preprint_storage_context,
     ):
         "non-standalone test which uses the preprint XML from the bucket expanded folder"
         directory = TempDirectory()
+        session_dict = session_data(
+            test_data.get("article_id"), test_data.get("version")
+        )
+        # create folders if they do not exist
+        meca_file_path = "tests/files_source/95901-v1-meca.zip"
+        resource_folder = os.path.join(
+            directory.path,
+            session_dict.get("expanded_folder"),
+        )
+        # create folders if they do not exist
+        os.makedirs(resource_folder, exist_ok=True)
+        # unzip the test fixture files
+        zip_file_paths = helpers.unzip_fixture(meca_file_path, resource_folder)
+        resources = [
+            os.path.join(
+                test_activity_data.ingest_meca_session_example().get("expanded_folder"),
+                file_path,
+            )
+            for file_path in zip_file_paths
+        ]
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources, dest_folder=directory.path
+        )
+
         fake_outbox_storage_context.return_value = FakeStorageContext(
             dest_folder=directory.path
         )
-        fake_preprint_storage_context.return_value = FakeStorageContext(
-            resources=["elife-preprint-84364-v2.xml"], dest_folder=directory.path
-        )
-        fake_session.return_value = FakeSession(
-            session_data(test_data.get("article_id"), test_data.get("version"))
-        )
+        fake_session.return_value = FakeSession(session_dict)
         # do the activity
         result = self.activity.do_activity(
             input_data(
@@ -116,8 +138,8 @@ class TestScheduleCrossrefPreprint(unittest.TestCase):
             os.listdir(peer_review_outbox_path), ["elife-preprint-84364-v2.xml"]
         )
 
-    @patch("provider.preprint.storage_context")
     @patch("provider.outbox_provider.storage_context")
+    @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
     @data(
         {
@@ -132,21 +154,23 @@ class TestScheduleCrossrefPreprint(unittest.TestCase):
         self,
         test_data,
         fake_session,
+        fake_storage_context,
         fake_outbox_storage_context,
-        fake_preprint_storage_context,
     ):
         "test if preprint XML was not found in the bucket expanded folder"
         directory = TempDirectory()
+        session_dict = session_data(
+            test_data.get("article_id"), test_data.get("version")
+        )
+        # no bucket resources
+        resources = []
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources, dest_folder=directory.path
+        )
         fake_outbox_storage_context.return_value = FakeStorageContext(
             dest_folder=directory.path
         )
-        # no bucket resources
-        fake_preprint_storage_context.return_value = FakeStorageContext(
-            resources=[], dest_folder=directory.path
-        )
-        fake_session.return_value = FakeSession(
-            session_data(test_data.get("article_id"), test_data.get("version"))
-        )
+        fake_session.return_value = FakeSession(session_dict)
         # do the activity
         result = self.activity.do_activity(
             input_data(

@@ -1,6 +1,8 @@
 import json
 import os
-from provider import outbox_provider, preprint
+import shutil
+from provider import outbox_provider, preprint, utils
+from provider.storage_provider import storage_context
 from provider.execution_context import get_session
 from activity.objects import Activity
 
@@ -53,11 +55,8 @@ class activity_ScheduleCrossrefPreprint(Activity):
                 session = get_session(self.settings, data, run)
                 article_id = session.get_value("article_id")
                 version = session.get_value("version")
-                expanded_folder_name = session.get_value("preprint_expanded_folder")
-                expanded_bucket_name = (
-                    self.settings.publishing_buckets_prefix
-                    + self.settings.expanded_bucket
-                )
+                article_xml_path = session.get_value("article_xml_path")
+                expanded_folder = session.get_value("expanded_folder")
         except:
             self.logger.exception("Error starting %s activity" % self.pretty_name)
             return self.ACTIVITY_PERMANENT_FAILURE
@@ -114,30 +113,51 @@ class activity_ScheduleCrossrefPreprint(Activity):
                 )
                 return self.ACTIVITY_PERMANENT_FAILURE
         elif run:
-            # download the preprint XML from the expanded folder
-            bucket_resource = preprint.expanded_folder_bucket_resource(
-                self.settings, expanded_bucket_name, expanded_folder_name
+            # configure the S3 bucket storage library
+            storage = storage_context(self.settings)
+
+            # local path to the article XML file
+            input_xml_file_path = os.path.join(
+                self.directories.get("INPUT_DIR"), article_xml_path
             )
-            xml_filename = preprint.find_xml_filename_in_expanded_folder(
-                self.settings, bucket_resource
+            # create folders if they do not exist
+            os.makedirs(os.path.dirname(input_xml_file_path), exist_ok=True)
+
+            # download XML from the bucket folder
+            orig_resource = (
+                self.settings.storage_provider
+                + "://"
+                + self.settings.bot_bucket
+                + "/"
+                + expanded_folder
             )
-            # check if a file name was found
-            if not xml_filename:
-                self.logger.info(
-                    "%s, xml_filename is None for article %s version %s"
-                    % (self.name, article_id, version)
+            storage_resource_origin = orig_resource + "/" + article_xml_path
+            self.logger.info(
+                "%s, downloading %s to %s"
+                % (self.name, storage_resource_origin, input_xml_file_path)
+            )
+            try:
+                with open(input_xml_file_path, "wb") as open_file:
+                    storage.get_resource_to_file(storage_resource_origin, open_file)
+            except Exception as exception:
+                self.logger.exception(
+                    "%s, input_xml_file_path is None for article %s version %s: %s"
+                    % (self.name, article_id, version, str(exception))
                 )
                 return self.ACTIVITY_PERMANENT_FAILURE
 
-            # download the XML file
-            xml_file_path = preprint.download_from_expanded_folder(
-                self.settings,
-                self.directories,
-                xml_filename,
-                bucket_resource,
-                self.name,
-                self.logger,
+            # rename the file
+            xml_file_name = preprint.PREPRINT_XML_FILE_NAME_PATTERN.format(
+                article_id=utils.pad_msid(article_id), version=version
             )
+            xml_file_path = input_xml_file_path.replace(
+                input_xml_file_path.rsplit(os.sep, 1)[-1], xml_file_name
+            )
+            self.logger.info(
+                "%s, moving %s to %s for article %s version %s"
+                % (self.name, input_xml_file_path, xml_file_path, article_id, version)
+            )
+            shutil.move(input_xml_file_path, xml_file_path)
 
         # upload to the posted_content outbox folder
         self.upload_file_to_outbox_folder(
