@@ -97,19 +97,6 @@ class activity_DepositCrossrefPostedContent(Activity):
         # build Crossref deposit objects
         crossref_object_map = OrderedDict()
         for xml_file, article in list(article_object_map.items()):
-            # check for a published POA or VOR version before adding the concept DOI deposit
-            status_version_map = lax_provider.article_status_version_map(
-                article.manuscript, self.settings
-            )
-            if len(status_version_map.keys()) > 0:
-                # there is already a poa or vor, skip it
-                self.logger.info(
-                    "%s, there is already a VOR article published for %s,"
-                    " will not generate a concept DOI deposit"
-                    % (self.name, article.manuscript)
-                )
-                continue
-
             # set a posted_date if it is not set
             if not article.get_date("posted_date"):
                 if article.get_date("update"):
@@ -127,6 +114,19 @@ class activity_DepositCrossrefPostedContent(Activity):
                 if posted_date:
                     posted_date.date_type = "posted_date"
                     article.add_date(posted_date)
+
+            # check for a published POA or VOR version before adding the concept DOI deposit
+            status_version_map = lax_provider.article_status_version_map(
+                article.manuscript, self.settings
+            )
+            if len(status_version_map.keys()) > 0:
+                # there is already a poa or vor, skip it
+                self.logger.info(
+                    "%s, there is already a VOR article published for %s,"
+                    " will not generate a concept DOI deposit"
+                    % (self.name, article.manuscript)
+                )
+                continue
 
             # check whether this is a less than more recent EPP version
             docmap_string = cleaner.get_docmap_string(
