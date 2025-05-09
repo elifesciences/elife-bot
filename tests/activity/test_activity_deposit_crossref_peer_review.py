@@ -240,9 +240,9 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
                     "</title>\n"
                     "            </titles>\n"
                     "            <review_date>\n"
-                    "                <month>02</month>\n"
-                    "                <day>10</day>\n"
-                    "                <year>2023</year>"
+                    "                <month>04</month>\n"
+                    "                <day>11</day>\n"
+                    "                <year>2025</year>"
                 ),
             ],
         },
@@ -275,9 +275,10 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
 
         if (
             "elife-preprint-84364-v2.xml" in test_data["article_xml_filenames"]
-            or "elife-preprint-103870-v2.xml" in test_data["article_xml_filenames"]
         ):
             rows = FakeBigQueryRowIterator([bigquery_test_data.ARTICLE_RESULT_84364])
+        elif ("elife-preprint-103870-v2.xml" in test_data["article_xml_filenames"]):
+            rows = []
         else:
             rows = FakeBigQueryRowIterator([bigquery_test_data.ARTICLE_RESULT_15747])
         client = FakeBigQueryClient(rows)

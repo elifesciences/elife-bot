@@ -219,6 +219,9 @@ class activity_DepositCrossrefPeerReview(Activity):
         # continue with setting more article data
         for article in list(article_object_map.values()):
             if preprint.is_article_preprint(article):
+                # set a posted_date if it is not set
+                crossref.set_preprint_posted_date(article, self.name, self.logger)
+                # use preprint config
                 use_config = crossref_preprint_config
             else:
                 use_config = crossref_config

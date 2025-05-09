@@ -1,4 +1,5 @@
 import os
+import copy
 import time
 from collections import OrderedDict
 from xml.etree.ElementTree import SubElement
@@ -362,3 +363,23 @@ def doi_does_not_exist(doi, logger):
     elif response.status_code < 500:
         does_not_exist = True
     return does_not_exist
+
+
+def set_preprint_posted_date(article, caller_name, logger):
+    "if article has no posted_date, set one"
+    if not article.get_date("posted_date"):
+        if article.get_date("update"):
+            logger.info(
+                "%s, settings posted_date from update date"
+                " for version_doi %s " % (caller_name, article.version_doi)
+            )
+            posted_date = copy.copy(article.get_date("update"))
+        elif article.get_date("original-publication"):
+            logger.info(
+                "%s, settings posted_date from original-publication date"
+                " for version_doi %s " % (caller_name, article.version_doi)
+            )
+            posted_date = copy.copy(article.get_date("original-publication"))
+        if posted_date:
+            posted_date.date_type = "posted_date"
+            article.add_date(posted_date)
