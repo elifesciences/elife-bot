@@ -8,10 +8,10 @@ from activity.objects import Activity
 from provider import (
     bigquery,
     crossref,
-    downstream,
     email_provider,
     lax_provider,
     outbox_provider,
+    preprint,
     utils,
 )
 
@@ -102,7 +102,7 @@ class activity_DepositCrossrefPeerReview(Activity):
         journal_article_object_map = OrderedDict()
         preprint_article_object_map = OrderedDict()
         for xml_file, article in list(generate_article_object_map.items()):
-            if article.article_type == "preprint":
+            if preprint.is_article_preprint(article):
                 preprint_article_object_map[xml_file] = article
             else:
                 journal_article_object_map[xml_file] = article
@@ -218,7 +218,7 @@ class activity_DepositCrossrefPeerReview(Activity):
         )
         # continue with setting more article data
         for article in list(article_object_map.values()):
-            if article.article_type == "preprint":
+            if preprint.is_article_preprint(article):
                 use_config = crossref_preprint_config
             else:
                 use_config = crossref_config
@@ -247,7 +247,6 @@ class activity_DepositCrossrefPeerReview(Activity):
                         # use the article pub date
                         pub_date = crossref.article_first_pub_date(use_config, article)
                         if pub_date is not None:
-                            review_date_struct = pub_date.date
                             review_date = time.strftime(
                                 utils.PUB_DATE_FORMAT, pub_date.date
                             )
@@ -275,8 +274,9 @@ class activity_DepositCrossrefPeerReview(Activity):
                 # dedupe contributors
                 dedupe_contributors(sub_article)
 
-                # set Contributor orcid_authenticated values to True
-                crossref.contributor_orcid_authenticated(sub_article, True)
+                if not preprint.is_article_preprint(article):
+                    # set Contributor orcid_authenticated values to True
+                    crossref.contributor_orcid_authenticated(sub_article, True)
 
         return article_object_map
 
@@ -286,7 +286,7 @@ class activity_DepositCrossrefPeerReview(Activity):
         rows = bigquery.article_data(bigquery_client, doi)
         # use the first row returned
         try:
-            first_row = [row for row in rows][0]
+            first_row = list(rows)[0]
         except IndexError:
             first_row = None
             self.logger.info("No data from BigQuery for DOI %s" % doi)
@@ -410,7 +410,7 @@ def prune_article_object_map(article_object_map, settings, logger):
             good = check_doi_exists(article, logger)
         # check VoR is published
         if good:
-            if article.article_type != "preprint":
+            if not preprint.is_article_preprint(article):
                 good = check_vor_is_published(article, settings, logger)
 
         # finally if still good, add it to the map of good articles
