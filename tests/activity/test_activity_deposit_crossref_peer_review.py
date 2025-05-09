@@ -146,7 +146,7 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
                 ),
                 '<anonymous contributor_role="author" sequence="first"/>',
                 '<peer_review stage="pre-publication" type="editor-report">',
-                '<ORCID authenticated="true">https://orcid.org/test-orcid</ORCID>',
+                "<ORCID>https://orcid.org/test-orcid</ORCID>",
                 '<peer_review stage="pre-publication" type="referee-report">',
                 '<peer_review stage="pre-publication" type="author-comment">',
                 "<doi>10.7554/eLife.84364.2.sa0</doi>",
@@ -202,6 +202,50 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
                 "<resource>https://elifesciences.org/articles/86628#sa2</resource>",
             ],
         },
+        {
+            "comment": "Preprint XML using publication-state value",
+            "article_xml_filenames": ["elife-preprint-103870-v2.xml"],
+            "vor_exists": False,
+            "post_status_code": 200,
+            "expected_result": True,
+            "expected_approve_status": True,
+            "expected_generate_status": True,
+            "expected_publish_status": True,
+            "expected_outbox_status": True,
+            "expected_email_status": True,
+            "expected_activity_status": True,
+            "expected_file_count": 1,
+            "expected_crossref_xml_contains": [
+                "<doi_batch_id>elife-crossref-preprint-peer_review-103870-",
+                "<ai:license_ref>https://creativecommons.org/licenses/by/4.0/</ai:license_ref>",
+                "<title>eLife Assessment: Flower/FLWR-1 regulates neuronal activity via the plasma membrane Ca2+-ATPase to promote recycling of synaptic vesicles</title>",
+                "<title>Reviewer #1 (Public review): Flower/FLWR-1 regulates neuronal activity via the plasma membrane Ca2+-ATPase to promote recycling of synaptic vesicles</title>",
+                "<title>Reviewer #2 (Public review): Flower/FLWR-1 regulates neuronal activity via the plasma membrane Ca2+-ATPase to promote recycling of synaptic vesicles</title>",
+                "<title>Author response: Flower/FLWR-1 regulates neuronal activity via the plasma membrane Ca2+-ATPase to promote recycling of synaptic vesicles</title>",
+                (
+                    '<rel:inter_work_relation identifier-type="doi" relationship-type="isReviewOf">'
+                    + "10.7554/eLife.103870.2</rel:inter_work_relation>"
+                ),
+                "<ORCID>http://orcid.org/0000-0002-2050-0745</ORCID>",
+                '<anonymous contributor_role="author" sequence="first"/>',
+                '<peer_review stage="pre-publication" type="editor-report">',
+                '<peer_review stage="pre-publication" type="referee-report">',
+                '<peer_review stage="pre-publication" type="author-comment">',
+                "<doi>10.7554/eLife.103870.2.sa0</doi>",
+                "<resource>https://elifesciences.org/reviewed-preprints/103870v2/reviews</resource>",
+                (
+                    "<titles>\n"
+                    "                <title>"
+                    "Author response: Flower/FLWR-1 regulates neuronal activity via the plasma membrane Ca2+-ATPase to promote recycling of synaptic vesicles"
+                    "</title>\n"
+                    "            </titles>\n"
+                    "            <review_date>\n"
+                    "                <month>02</month>\n"
+                    "                <day>10</day>\n"
+                    "                <year>2023</year>"
+                ),
+            ],
+        },
     )
     def test_do_activity(
         self,
@@ -229,7 +273,10 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
             directory.path, resources, dest_folder=directory.path
         )
 
-        if "elife-preprint-84364-v2.xml" in test_data["article_xml_filenames"]:
+        if (
+            "elife-preprint-84364-v2.xml" in test_data["article_xml_filenames"]
+            or "elife-preprint-103870-v2.xml" in test_data["article_xml_filenames"]
+        ):
             rows = FakeBigQueryRowIterator([bigquery_test_data.ARTICLE_RESULT_84364])
         else:
             rows = FakeBigQueryRowIterator([bigquery_test_data.ARTICLE_RESULT_15747])
