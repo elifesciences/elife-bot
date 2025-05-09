@@ -98,22 +98,7 @@ class activity_DepositCrossrefPostedContent(Activity):
         crossref_object_map = OrderedDict()
         for xml_file, article in list(article_object_map.items()):
             # set a posted_date if it is not set
-            if not article.get_date("posted_date"):
-                if article.get_date("update"):
-                    self.logger.info(
-                        "%s, settings posted_date from update date"
-                        " for version_doi %s " % (self.name, article.version_doi)
-                    )
-                    posted_date = copy.copy(article.get_date("update"))
-                elif article.get_date("original-publication"):
-                    self.logger.info(
-                        "%s, settings posted_date from original-publication date"
-                        " for version_doi %s " % (self.name, article.version_doi)
-                    )
-                    posted_date = copy.copy(article.get_date("original-publication"))
-                if posted_date:
-                    posted_date.date_type = "posted_date"
-                    article.add_date(posted_date)
+            crossref.set_preprint_posted_date(article, self.name, self.logger)
 
             # check for a published POA or VOR version before adding the concept DOI deposit
             status_version_map = lax_provider.article_status_version_map(
