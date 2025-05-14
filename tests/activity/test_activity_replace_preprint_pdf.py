@@ -51,14 +51,17 @@ class TestReplacePreprintPdf(unittest.TestCase):
     @patch("requests.get")
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
+    @patch.object(activity_class, "clean_tmp_dir")
     def test_do_activity(
         self,
+        fake_clean_tmp_dir,
         fake_session,
         fake_storage_context,
         fake_get,
     ):
         "test if there is a pdf_url in the session"
         directory = TempDirectory()
+        fake_clean_tmp_dir.return_value = None
 
         pdf_url = "https://example.org/raw/master/data/95901/v1/95901-v1.pdf"
         session_dict = copy.copy(SESSION_DICT)
@@ -340,14 +343,17 @@ class TestReplacePreprintPdf(unittest.TestCase):
     @patch("requests.get")
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
+    @patch.object(activity_class, "clean_tmp_dir")
     def test_no_meca_pdf_file(
         self,
+        fake_clean_tmp_dir,
         fake_session,
         fake_storage_context,
         fake_get,
     ):
         "test if there is no PDF file in the MECA package"
         directory = TempDirectory()
+        fake_clean_tmp_dir.return_value = None
 
         pdf_url = "https://example.org/raw/master/data/95901/v1/95901-v1.pdf"
         session_dict = copy.copy(SESSION_DICT)
