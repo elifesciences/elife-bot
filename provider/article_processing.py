@@ -420,7 +420,9 @@ def zip_files(zip_file_path, folder_path, caller_name, logger):
                 if os.path.isfile(filename):
                     logger.info(
                         "%s, adding file %s to zip file %s",
-                        (caller_name, filename, zip_file_path),
+                        caller_name,
+                        filename,
+                        zip_file_path,
                     )
                     # Archive file name, effectively strip the local folder name
                     arcname = root.rsplit(folder_path, 1)[-1] + "/" + dir_file

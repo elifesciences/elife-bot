@@ -5,7 +5,6 @@ import sys
 import zipfile
 from collections import OrderedDict
 from ddt import ddt, data, unpack
-from testfixtures import tempdir
 from testfixtures import TempDirectory
 import provider.article_processing as article_processing
 from tests.activity.classes_mock import FakeLogger
@@ -656,6 +655,35 @@ class TestRemoveVersionDoiTag(unittest.TestCase):
         self.assertEqual(
             self.logger.loginfo[-1],
             "Removing version DOI article-id tag",
+        )
+
+
+class TestZipFiles(unittest.TestCase):
+    "tests for zip_files()"
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_zip_files(self):
+        directory = TempDirectory()
+        logger = FakeLogger()
+        caller_name = "test_zip_files"
+        folder_path = os.path.join(directory.path, "files")
+        os.mkdir(folder_path)
+        zip_file_path = os.path.join(directory.path, "test.zip")
+        # files to zip
+        test_file_path = os.path.join(folder_path, "test.txt")
+        with open(test_file_path, "wb") as open_file:
+            open_file.write(b"test")
+        # invoke
+        article_processing.zip_files(
+            zip_file_path, folder_path, caller_name, logger
+        )
+        # assert
+        self.assertEqual(
+            logger.loginfo[-1],
+            "%s, adding file %s to zip file %s"
+            % (caller_name, test_file_path, zip_file_path),
         )
 
 
