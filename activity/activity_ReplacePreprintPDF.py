@@ -215,6 +215,9 @@ class activity_ReplacePreprintPDF(MecaBaseActivity):
 
         self.logger.info("%s statuses: %s" % (self.name, self.statuses))
 
+        # Clean up disk
+        self.clean_tmp_dir()
+
         return self.ACTIVITY_SUCCESS
 
 
