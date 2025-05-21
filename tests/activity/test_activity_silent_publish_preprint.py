@@ -37,6 +37,7 @@ class TestSilentPublishPreprint(unittest.TestCase):
             "expected_approved_status": True,
             "expected_queued_status": True,
             "expected_sqs_queue_message": {
+                "execution_start_to_close_timeout": "3600",
                 "workflow_name": "PostPreprintPublication",
                 "workflow_data": {
                     "article_id": 95901,
