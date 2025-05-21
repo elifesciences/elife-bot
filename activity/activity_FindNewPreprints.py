@@ -323,6 +323,7 @@ class activity_FindNewPreprints(CleanerBaseActivity):
         message = {
             "workflow_name": workflow_name,
             "workflow_data": workflow_data,
+            "execution_start_to_close_timeout": str(60 * 60),
         }
         self.logger.info(
             "%s, starting a %s workflow for article_id %s, version %s",
