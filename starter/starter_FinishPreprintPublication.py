@@ -11,6 +11,7 @@ class starter_FinishPreprintPublication(Starter):
         super(starter_FinishPreprintPublication, self).__init__(
             settings, logger, "FinishPreprintPublication"
         )
+        self.execution_start_to_close_timeout = str(60 * 60)
 
     def get_workflow_params(
         self,
@@ -30,6 +31,9 @@ class starter_FinishPreprintPublication(Starter):
         workflow_params["workflow_id"] = "%s_%s" % (self.name, article_id)
         workflow_params["workflow_name"] = self.name
         workflow_params["workflow_version"] = "1"
+        workflow_params[
+            "execution_start_to_close_timeout"
+        ] = self.execution_start_to_close_timeout
 
         info = {
             "run": run,
