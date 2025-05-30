@@ -566,6 +566,29 @@ class TestConditionalStarts(unittest.TestCase):
     def test_conditional_starts_23_45_utc(self, test_data):
         self.conditional_start_test_run(test_data)
 
+    @data(
+        {
+            "comment": "00:45 UTC",
+            "date_time": "1970-01-01 00:45:00 UTC",
+            "expected_starter_names": [
+                "cron_FiveMinute",
+                "starter_DepositCrossref",
+                "starter_FindReadyToFinishPreprints",
+                "starter_PubmedArticleDeposit",
+                "starter_AdminEmail",
+            ],
+            "expected_workflow_ids": [
+                "cron_FiveMinute",
+                "DepositCrossref",
+                "FindReadyToFinishPreprints",
+                "PubmedArticleDeposit",
+                "AdminEmail",
+            ],
+        },
+    )
+    def test_conditional_starts_00_45_utc(self, test_data):
+        self.conditional_start_test_run(test_data)
+
 
 if __name__ == "__main__":
     unittest.main()

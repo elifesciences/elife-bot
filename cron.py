@@ -290,6 +290,18 @@ def conditional_starts(current_datetime):
     elif current_time.tm_min >= 45 and current_time.tm_min <= 59:
         # Bottom quarter of the hour
 
+        # Find Preprint PDFs once per day 00:45 UTC
+        if current_time.tm_hour == 0:
+            conditional_start_list.append(
+                OrderedDict(
+                    [
+                        ("starter_name", "starter_FindReadyToFinishPreprints"),
+                        ("workflow_id", "FindReadyToFinishPreprints"),
+                        ("start_seconds", 60 * 31),
+                    ]
+                )
+            )
+
         # Pub router deposits once per day 23:45 UTC
         if current_time.tm_hour == 23:
             conditional_start_list.append(
@@ -422,6 +434,7 @@ def start_workflow(settings, starter_name, workflow_id=None):
         "starter_DepositCrossrefPendingPublication",
         "starter_PubmedArticleDeposit",
         "starter_FindNewDocmaps",
+        "starter_FindReadyToFinishPreprints",
     ]:
         starter_object.start(settings=settings)
 
