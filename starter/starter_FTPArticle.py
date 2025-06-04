@@ -15,6 +15,7 @@ WORKFLOW_NAMES = [
     "CNPIEC",
     "CNKI",
     "CLOCKSS",
+    "CLOCKSS_Preprint",
     "OVID",
     "Zendy",
     "OASwitchboard",
@@ -27,7 +28,9 @@ class starter_FTPArticle(Starter):
         super(starter_FTPArticle, self).__init__(settings, logger, "FTPArticle")
         self.execution_start_to_close_timeout = str(60 * 60 * 23)
 
-    def get_workflow_params(self, workflow=None, doi_id=None):
+    def get_workflow_params(
+        self, workflow=None, doi_id=None, version=None, publication_state=None
+    ):
         if workflow is None:
             raise NullRequiredDataException(
                 "Did not get a workflow argument. Required."
@@ -50,6 +53,8 @@ class starter_FTPArticle(Starter):
         data = {}
         data["workflow"] = workflow
         data["elife_id"] = doi_id
+        data["version"] = version
+        data["publication_state"] = publication_state
 
         info = {
             "data": data,
@@ -58,27 +63,44 @@ class starter_FTPArticle(Starter):
         workflow_params["input"] = json.dumps(info, default=lambda ob: None)
         return workflow_params
 
-    def start(self, settings, workflow=None, doi_id=None):
+    def start(
+        self, settings, workflow=None, doi_id=None, version=None, publication_state=None
+    ):
         """method for backwards compatibility"""
         self.settings = settings
         self.instantiate_logger()
         self.start_workflow(
             workflow,
             doi_id,
+            version,
+            publication_state,
         )
 
-    def start_workflow(self, workflow=None, doi_id=None):
-
-        workflow_params = self.get_workflow_params(workflow, doi_id)
+    def start_workflow(
+        self, workflow=None, doi_id=None, version=None, publication_state=None
+    ):
+        workflow_params = self.get_workflow_params(
+            workflow, doi_id, version, publication_state
+        )
 
         self.start_workflow_execution(workflow_params)
 
 
 if __name__ == "__main__":
-
-    ENV, DOI_ID, WORKFLOW = utils.console_start_env_workflow_doi_id()
+    (
+        ENV,
+        DOI_ID,
+        WORKFLOW,
+        VERSION,
+        PUBLICATION_STATE,
+    ) = utils.console_start_env_workflow_doi_id_version_publication_state()
     SETTINGS = utils.get_settings(ENV)
 
     STARTER = starter_FTPArticle(SETTINGS)
 
-    STARTER.start_workflow(workflow=WORKFLOW, doi_id=DOI_ID)
+    STARTER.start_workflow(
+        workflow=WORKFLOW,
+        doi_id=DOI_ID,
+        version=VERSION,
+        publication_state=PUBLICATION_STATE,
+    )

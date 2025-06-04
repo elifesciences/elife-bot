@@ -23,7 +23,13 @@ class TestStarterFTPArticle(unittest.TestCase):
                 ("workflow_version", "1"),
                 ("child_policy", None),
                 ("execution_start_to_close_timeout", "82800"),
-                ("input", '{"data": {"workflow": "HEFCE", "elife_id": "666"}}'),
+                (
+                    "input",
+                    (
+                        '{"data": {"workflow": "HEFCE", "elife_id": "666",'
+                        ' "version": null, "publication_state": null}}'
+                    ),
+                ),
             ]
         )
         params = self.starter.get_workflow_params(workflow="HEFCE", doi_id="666")

@@ -4,6 +4,7 @@ import os
 import zipfile
 import datetime
 from mock import MagicMock, patch
+from testfixtures import TempDirectory
 from ddt import ddt, data, unpack
 from provider.sftp import SFTP
 import activity.activity_FTPArticle as activity_module
@@ -40,23 +41,53 @@ class TestFTPArticle(unittest.TestCase):
     @patch("activity.activity_FTPArticle.FTP")
     @patch("activity.activity_FTPArticle.SFTP")
     @data(
-        ("HEFCE", True, "hefce_ftp.localhost", "hefce_sftp.localhost:22", 1, True),
-        ("Cengage", True, "cengage.localhost", None, 1, True),
-        ("GoOA", True, "gooa.localhost", None, 1, True),
-        ("WoS", True, "wos.localhost", None, 1, True),
-        ("CNPIEC", True, "cnpiec.localhost", None, 1, True),
-        ("CNKI", True, "cnki.localhost", None, 1, True),
-        ("CLOCKSS", True, "clockss.localhost", None, 1, True),
-        ("OVID", True, "ovid.localhost", None, 1, True),
-        ("Zendy", True, None, "zendy.localhost:22", 1, True),
-        ("OASwitchboard", True, None, "oaswitchboard.localhost:22", 1, True),
-        ("Scilit", True, None, "scilit.localhost:22", 1, True),
-        ("__unknown__", False, None, None, 0, False),
+        (
+            "HEFCE",
+            None,
+            None,
+            True,
+            "hefce_ftp.localhost",
+            "hefce_sftp.localhost:22",
+            1,
+            True,
+        ),
+        ("Cengage", None, None, True, "cengage.localhost", None, 1, True),
+        ("GoOA", None, None, True, "gooa.localhost", None, 1, True),
+        ("WoS", None, None, True, "wos.localhost", None, 1, True),
+        ("CNPIEC", None, None, True, "cnpiec.localhost", None, 1, True),
+        ("CNKI", None, None, True, "cnki.localhost", None, 1, True),
+        ("CLOCKSS", None, None, True, "clockss.localhost", None, 1, True),
+        (
+            "CLOCKSS_Preprint",
+            "1",
+            "reviewed preprint",
+            True,
+            "clockss_preprint.localhost",
+            None,
+            1,
+            True,
+        ),
+        ("OVID", None, None, True, "ovid.localhost", None, 1, True),
+        ("Zendy", None, None, True, None, "zendy.localhost:22", 1, True),
+        (
+            "OASwitchboard",
+            None,
+            None,
+            True,
+            None,
+            "oaswitchboard.localhost:22",
+            1,
+            True,
+        ),
+        ("Scilit", None, None, True, None, "scilit.localhost:22", 1, True),
+        ("__unknown__", None, None, False, None, None, 0, False),
     )
     @unpack
     def test_do_activity(
         self,
         workflow,
+        version,
+        publication_state,
         archive_zip_return_value,
         expected_ftp_uri,
         expected_sftp_uri,
@@ -71,8 +102,33 @@ class TestFTPArticle(unittest.TestCase):
         fake_ftp.return_value = FakeFTP()
         fake_download_archive_zip_from_s3.return_value = archive_zip_return_value
         fake_repackage_pmc_zip.return_value = True
-        activity_data = {"data": {"elife_id": "19405", "workflow": workflow}}
-        self.assertEqual(self.activity.do_activity(activity_data), expected_result)
+        activity_data = {
+            "data": {
+                "elife_id": "19405",
+                "workflow": workflow,
+                "version": version,
+                "publication_state": publication_state,
+            }
+        }
+
+        # populate a file for testing preprint zip logic
+        zip_file_name = "elife-85111-rp-v1-20250528190334.zip"
+        zip_file_path = os.path.join(
+            self.activity.directories.get("TMP_DIR"), zip_file_name
+        )
+        # create folders if they do not exist
+        os.makedirs(os.path.dirname(zip_file_path), exist_ok=True)
+        with open(zip_file_path, "wb") as open_file:
+            open_file.write(b"test")
+
+        # invoke
+        result = self.activity.do_activity(activity_data)
+        # assert
+        self.assertEqual(
+            result,
+            expected_result,
+            "Failed for workflow %s" % workflow,
+        )
         self.assertEqual(self.activity.FTP_URI, expected_ftp_uri)
         self.assertEqual(self.activity.SFTP_URI, expected_sftp_uri)
         # check log for started ftp_to_endpoint() or started sftp_to_endpoint()
@@ -185,8 +241,12 @@ class TestDownloadFilesFromS3(unittest.TestCase):
         fake_repackage_archive_zip.return_value = False
         doi_id = "353"
         workflow = "HEFCE"
+        version = None
+        publication_state = None
         # invoke the method being tested
-        self.activity.download_files_from_s3(doi_id, workflow)
+        self.activity.download_files_from_s3(
+            doi_id, workflow, version, publication_state
+        )
         self.assertEqual(
             self.activity.logger.loginfo[-1],
             (
@@ -203,6 +263,7 @@ class TestDownloadArchiveZip(unittest.TestCase):
         )
 
     def tearDown(self):
+        TempDirectory.cleanup_all()
         self.activity.clean_tmp_dir()
 
     @patch.object(activity_module, "storage_context")
@@ -221,6 +282,37 @@ class TestDownloadArchiveZip(unittest.TestCase):
         self.assertEqual(
             self.activity.logger.loginfo[1],
             ("Latest archive zip for status vor, doi id %s, is s3 key name %s")
+            % (doi_id, zip_file_name),
+        )
+        self.assertEqual(
+            os.listdir(self.activity.directories.get("TMP_DIR")),
+            [zip_file_name],
+        )
+
+    @patch.object(activity_module, "storage_context")
+    def test_download_preprint_archive_zip_from_s3(self, fake_storage_context):
+        self.activity.make_activity_directories()
+        # create mock Key object with name and last_modified value
+        directory = TempDirectory()
+        doi_id = "85111"
+        version = "1"
+        status = "rp"
+        zip_file_name = "elife-85111-rp-v1-20250528190334.zip"
+        with open(os.path.join(directory.path, zip_file_name), "wb") as open_file:
+            open_file.write(b"test")
+        resources = [
+            {"Key": zip_file_name, "LastModified": datetime.datetime(2019, 5, 31)}
+        ]
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources
+        )
+        # invoke
+        result = self.activity.download_archive_zip_from_s3(doi_id, version, status)
+        # assert
+        self.assertEqual(result, True)
+        self.assertEqual(
+            self.activity.logger.loginfo[1],
+            ("Latest archive zip for status rp, doi id %s, is s3 key name %s")
             % (doi_id, zip_file_name),
         )
         self.assertEqual(

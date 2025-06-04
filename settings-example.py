@@ -244,6 +244,13 @@ class exp:
     CLOCKSS_FTP_CWD = ""
     CLOCKSS_EMAIL = "clockss@example.org"
 
+    # CLOCKSS_Preprint FTP settings
+    CLOCKSS_PREPRINT_FTP_URI = ""
+    CLOCKSS_PREPRINT_FTP_USERNAME = ""
+    CLOCKSS_PREPRINT_FTP_PASSWORD = ""
+    CLOCKSS_PREPRINT_FTP_CWD = ""
+    CLOCKSS_PREPRINT_EMAIL = "clockss@example.org"
+
     # OVID FTP settings
     OVID_FTP_URI = ""
     OVID_FTP_USERNAME = ""
@@ -622,6 +629,13 @@ class dev:
     CLOCKSS_FTP_CWD = ""
     CLOCKSS_EMAIL = "clockss@example.org"
 
+    # CLOCKSS_Preprint FTP settings
+    CLOCKSS_PREPRINT_FTP_URI = ""
+    CLOCKSS_PREPRINT_FTP_USERNAME = ""
+    CLOCKSS_PREPRINT_FTP_PASSWORD = ""
+    CLOCKSS_PREPRINT_FTP_CWD = ""
+    CLOCKSS_PREPRINT_EMAIL = "clockss@example.org"
+
     # OVID FTP settings
     OVID_FTP_URI = ""
     OVID_FTP_USERNAME = ""
@@ -996,6 +1010,13 @@ class live:
     CLOCKSS_FTP_PASSWORD = ""
     CLOCKSS_FTP_CWD = ""
     CLOCKSS_EMAIL = "clockss@example.org"
+
+    # CLOCKSS_Preprint FTP settings
+    CLOCKSS_PREPRINT_FTP_URI = ""
+    CLOCKSS_PREPRINT_FTP_USERNAME = ""
+    CLOCKSS_PREPRINT_FTP_PASSWORD = ""
+    CLOCKSS_PREPRINT_FTP_CWD = ""
+    CLOCKSS_PREPRINT_EMAIL = "clockss@example.org"
 
     # OVID FTP settings
     OVID_FTP_URI = ""

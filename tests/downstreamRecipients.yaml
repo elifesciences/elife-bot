@@ -124,6 +124,23 @@ CLOCKSS:
   settings_ftp_password: CLOCKSS_FTP_PASSWORD
   settings_ftp_cwd: CLOCKSS_FTP_CWD
 
+CLOCKSS_Preprint:
+  activity_name: FTPArticle
+  s3_bucket_folder: clockss_preprint
+  schedule_downstream: true
+  schedule_silent_correction: true
+  schedule_article_types:
+    - preprint
+  send_by_protocol: ftp
+  send_once_only: false
+  send_article_types:
+    - preprint
+  settings_friendly_email_recipients: CLOCKSS_PREPRINT_EMAIL
+  settings_ftp_uri: CLOCKSS_PREPRINT_FTP_URI
+  settings_ftp_username: CLOCKSS_PREPRINT_FTP_USERNAME
+  settings_ftp_password: CLOCKSS_PREPRINT_FTP_PASSWORD
+  settings_ftp_cwd: CLOCKSS_PREPRINT_FTP_CWD
+
 CNKI:
   activity_name: FTPArticle
   s3_bucket_folder: cnki

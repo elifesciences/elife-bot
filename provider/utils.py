@@ -201,6 +201,22 @@ CONSOLE_ARGUMENT_MAP = {
         "dest": "document",
         "help": "specify the S3 object name of the input file",
     },
+    "v": {
+        "flags": ["-v", "--version"],
+        "default": None,
+        "action": "store",
+        "type": str,
+        "dest": "version",
+        "help": "specify the article version",
+    },
+    "p": {
+        "flags": ["-p", "--publication-state"],
+        "default": None,
+        "action": "store",
+        "type": str,
+        "dest": "publication_state",
+        "help": "specify the article publication state, example: reviewed preprint",
+    },
 }
 
 
@@ -267,6 +283,18 @@ def console_start_env_workflow_doi_id():
     add_console_argument(parser, "w")
     args, unknown = parser.parse_known_args()
     return args.env, args.doi_id, args.workflow
+
+
+def console_start_env_workflow_doi_id_version_publication_state():
+    "capture ENV, WORKFLOW, DOI_ID, and publication state from arguments when running standalone"
+    parser = ArgumentParser()
+    add_console_argument(parser, "e")
+    add_console_argument(parser, "d")
+    add_console_argument(parser, "w")
+    add_console_argument(parser, "v")
+    add_console_argument(parser, "p")
+    args, unknown = parser.parse_known_args()
+    return args.env, args.doi_id, args.workflow, args.version, args.publication_state
 
 
 def create_aws_connection(service, service_creation_kwargs):
