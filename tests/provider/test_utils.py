@@ -377,6 +377,55 @@ class TestConsoleStartEnvWorkflowDoiId(unittest.TestCase):
             self.assertEqual(utils.console_start_env_workflow_doi_id(), expected)
 
 
+class TestConsoleStartEnvWorkflowDoiIdVersionPublicationState(unittest.TestCase):
+    "tests for console_start_env_workflow_doi_id_version_publication_state()"
+
+    def test_console_start_env(self):
+        env = "foo"
+        doi_id = "85111"
+        workflow = "CLOCKSS_Preprint"
+        version = "1"
+        publication_state = "reviewed preprint"
+        expected = env, doi_id, workflow, version, publication_state
+        testargs = [
+            "cron.py",
+            "-e",
+            env,
+            "-d",
+            doi_id,
+            "-w",
+            workflow,
+            "-v",
+            version,
+            "-p",
+            publication_state,
+        ]
+        with patch.object(sys, "argv", testargs):
+            self.assertEqual(
+                utils.console_start_env_workflow_doi_id_version_publication_state(),
+                expected,
+            )
+
+    def test_console_start_env_workflow_doi_id_blank(self):
+        expected = "dev", None, None, None, None
+        testargs = ["cron.py"]
+        with patch.object(sys, "argv", testargs):
+            self.assertEqual(
+                utils.console_start_env_workflow_doi_id_version_publication_state(),
+                expected,
+            )
+
+    def test_console_start_env_workflow_doi_id_unrecognized_arguments(self):
+        env = "foo"
+        expected = env, None, None, None, None
+        testargs = ["cron.py", "-e", env, "0"]
+        with patch.object(sys, "argv", testargs):
+            self.assertEqual(
+                utils.console_start_env_workflow_doi_id_version_publication_state(),
+                expected,
+            )
+
+
 @ddt
 class TestContentTypeFromFileName(unittest.TestCase):
     @unpack

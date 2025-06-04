@@ -78,7 +78,6 @@ def rename_files_remove_version_number(files_dir, output_dir, logger=None):
 
 
 def convert_xml(xml_file, file_name_map):
-
     # Register namespaces
     xmlio.register_xmlns()
 
@@ -131,21 +130,36 @@ def new_pmc_zip_filename(journal, volume, fid, revision=None):
     return filename
 
 
-def latest_archive_zip_revision(doi_id, s3_keys, journal, status):
+def new_rp_zip_filename(journal, doi_id, version):
+    "preprint zip file name for sending downstream"
+    filename = journal
+    filename = filename + "-" + utils.pad_msid(doi_id)
+    filename = filename + "-rp"
+    filename = filename + "-v" + str(version)
+    filename += ".zip"
+    return filename
+
+
+def latest_archive_zip_revision(doi_id, s3_keys, journal, status, version=None):
     """
     Get the most recent version of the article zip file from the
     list of bucket key names
     """
     s3_key_name = None
 
-    name_prefix_to_match = journal + "-" + utils.pad_msid(doi_id) + "-" + status + "-v"
+    name_prefix = journal + "-" + utils.pad_msid(doi_id) + "-" + status + "-v"
+    name_prefix_to_match = name_prefix
+
+    # extend the match to include the version number if supplied
+    if version:
+        name_prefix_to_match += "%s-" % str(version)
 
     highest = 0
     for key in s3_keys:
         if key["name"].startswith(name_prefix_to_match):
             version_and_date = None
             try:
-                parts = key["name"].split(name_prefix_to_match)
+                parts = key["name"].split(name_prefix)
                 version = parts[1].split("-")[0]
                 date_formatted = dateutil.parser.parse(key["last_modified"])
                 date_part = date_formatted.strftime(utils.S3_DATE_FORMAT)

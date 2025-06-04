@@ -76,10 +76,14 @@ class activity_FTPArticle(Activity):
         # Data passed to this activity
         elife_id = data["data"]["elife_id"]
         workflow = data["data"]["workflow"]
+        version = data["data"].get("version")
+        publication_state = data["data"].get("publication_state")
 
         # Set some variables to use in logging
         self.workflow = workflow
         self.doi_id = elife_id
+        self.version = version
+        self.publication_state = publication_state
 
         # Create output directories
         self.make_activity_directories()
@@ -117,7 +121,7 @@ class activity_FTPArticle(Activity):
             return self.ACTIVITY_PERMANENT_FAILURE
 
         # Download the S3 objects
-        self.download_files_from_s3(elife_id, workflow)
+        self.download_files_from_s3(elife_id, workflow, version, publication_state)
 
         # send files to endpoint
         try:
@@ -187,8 +191,26 @@ class activity_FTPArticle(Activity):
         for key, value in credentials.items():
             setattr(self, key, value)
 
-    def download_files_from_s3(self, doi_id, workflow):
+    def download_files_from_s3(self, doi_id, workflow, version, publication_state):
         # download and convert the archive zip
+
+        # switch logic depending on publication_state value
+        if publication_state and "preprint" in publication_state:
+            self.download_archive_zip_from_s3(doi_id, version, status="rp")
+            archive_zip_name = glob.glob(self.directories.get("TMP_DIR") + "/*.zip")[0]
+            if archive_zip_name:
+                new_archive_zip_name = article_processing.new_rp_zip_filename(
+                    self.journal, doi_id, version
+                )
+                from_path = archive_zip_name
+                to_path = os.path.join(
+                    self.directories.get("FTP_TO_SOMEWHERE_DIR"), new_archive_zip_name
+                )
+                self.logger.info(
+                    "%s, moving %s to %s" % (self.name, from_path, to_path)
+                )
+                shutil.move(from_path, to_path)
+
         archive_zip_downloaded = self.download_archive_zip_from_s3(doi_id)
         archive_zip_repackaged = None
         details = sending_details(self.settings, workflow)
@@ -207,8 +229,14 @@ class activity_FTPArticle(Activity):
                 % (workflow, doi_id)
             )
 
-    def download_archive_zip_from_s3(self, doi_id):
+    def download_archive_zip_from_s3(self, doi_id, version=None, status=None):
         "download the latest archive zip for the article to be repackaged"
+        if status:
+            status_list = [status]
+        else:
+            # default
+            status_list = ["vor", "poa"]
+
         # Connect to S3 and bucket
         bucket_name = self.archive_zip_bucket
         storage = storage_context(self.settings)
@@ -226,9 +254,9 @@ class activity_FTPArticle(Activity):
                 }
             )
 
-        for status in ["vor", "poa"]:
+        for status in status_list:
             s3_key_name = article_processing.latest_archive_zip_revision(
-                doi_id, s3_keys, self.journal, status
+                doi_id, s3_keys, self.journal, status, version=version
             )
             if s3_key_name:
                 if self.logger:

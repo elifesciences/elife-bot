@@ -29,7 +29,7 @@ class TestArticleProcessing(unittest.TestCase):
     @unpack
     @data(
         {
-            "input": [
+            "input_data": [
                 {
                     "name": "elife-16747-vor-v1-20160831000000.zip",
                     "last_modified": "2017-05-18T09:04:11.000Z",
@@ -39,10 +39,12 @@ class TestArticleProcessing(unittest.TestCase):
                     "last_modified": "2016-08-31T06:26:56.000Z",
                 },
             ],
+            "status": "vor",
+            "version": None,
             "expected": "elife-16747-vor-v1-20160831000000.zip",
         },
         {
-            "input": [
+            "input_data": [
                 {
                     "name": "elife-16747-vor-v1-20160831000000.zip",
                     "last_modified": "2017-05-18T09:04:11.000Z",
@@ -56,19 +58,40 @@ class TestArticleProcessing(unittest.TestCase):
                     "last_modified": "2015-01-05T00:20:50.000Z",
                 },
             ],
+            "status": "vor",
+            "version": None,
             "expected": "elife-16747-vor-v2-20160831000000.zip",
         },
+        {
+            "input_data": [
+                {
+                    "name": "elife-16747-rp-v1-20160831000000.zip",
+                    "last_modified": "2017-05-18T09:04:11.000Z",
+                },
+                {
+                    "name": "elife-16747-rp-v1-20160831132647.zip",
+                    "last_modified": "2016-08-31T06:26:56.000Z",
+                },
+                {
+                    "name": "elife-16747-rp-v2-20160831000000.zip",
+                    "last_modified": "2015-01-05T00:20:50.000Z",
+                },
+            ],
+            "status": "rp",
+            "version": 1,
+            "expected": "elife-16747-rp-v1-20160831000000.zip",
+        },
     )
-    def test_latest_archive_zip_revision(self, input, expected):
+    def test_latest_archive_zip_revision(self, input_data, status, version, expected):
         output = article_processing.latest_archive_zip_revision(
-            "16747", input, "elife", "vor"
+            "16747", input_data, "elife", status, version
         )
         self.assertEqual(output, expected)
 
     @unpack
     @data(
         {
-            "input": [
+            "input_data": [
                 {
                     "name": "elife-16747-vor-v2-20160831000000.zip",
                     "last_modified": "this_is_junk_for_testing",
@@ -77,9 +100,9 @@ class TestArticleProcessing(unittest.TestCase):
             "expected": None,
         }
     )
-    def test_latest_archive_zip_revision_exception(self, input, expected):
+    def test_latest_archive_zip_revision_exception(self, input_data, expected):
         output = article_processing.latest_archive_zip_revision(
-            "16747", input, "elife", "vor"
+            "16747", input_data, "elife", "vor"
         )
         self.assertRaises(ValueError)
 
@@ -189,6 +212,16 @@ class TestArticleProcessing(unittest.TestCase):
     def test_new_pmc_zip_filename(self, journal, volume, fid, revision, expected):
         self.assertEqual(
             article_processing.new_pmc_zip_filename(journal, volume, fid, revision),
+            expected,
+        )
+
+    @unpack
+    @data(
+        ("elife", "85111", 1, "elife-85111-rp-v1.zip"),
+    )
+    def test_new_rp_zip_filename(self, journal, doi_id, version, expected):
+        self.assertEqual(
+            article_processing.new_rp_zip_filename(journal, doi_id, version),
             expected,
         )
 
@@ -676,9 +709,7 @@ class TestZipFiles(unittest.TestCase):
         with open(test_file_path, "wb") as open_file:
             open_file.write(b"test")
         # invoke
-        article_processing.zip_files(
-            zip_file_path, folder_path, caller_name, logger
-        )
+        article_processing.zip_files(zip_file_path, folder_path, caller_name, logger)
         # assert
         self.assertEqual(
             logger.loginfo[-1],
