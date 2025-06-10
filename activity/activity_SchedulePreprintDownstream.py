@@ -42,6 +42,7 @@ class activity_SchedulePreprintDownstream(Activity):
             session = get_session(self.settings, data, run)
             article_id = session.get_value("article_id")
             version = session.get_value("version")
+            pdf_url = session.get_value("pdf_url")
             expanded_folder_name = session.get_value("preprint_expanded_folder")
             expanded_bucket_name = (
                 self.settings.publishing_buckets_prefix + self.settings.expanded_bucket
@@ -71,7 +72,7 @@ class activity_SchedulePreprintDownstream(Activity):
             )
             xml_key_name = "%s/%s" % (expanded_folder_name, xml_file_name)
             outbox_list = downstream.choose_outboxes(
-                status, first_by_status, rules, run_type
+                status, first_by_status, rules, run_type, pdf_url=pdf_url
             )
 
             for outbox in outbox_list:

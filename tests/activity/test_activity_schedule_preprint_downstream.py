@@ -30,13 +30,14 @@ def input_data(article_id=None, version=None, standalone=None, run_type=None):
     return activity_data
 
 
-def session_data(article_id=None, version=None):
+def session_data(article_id=None, version=None, pdf_url=None):
     sess_data = input_data(article_id, version)
     sess_data["preprint_expanded_folder"] = "preprint.%s.%s/%s" % (
         article_id,
         version,
         sess_data.get("run"),
     )
+    sess_data["pdf_url"] = pdf_url
     return sess_data
 
 
@@ -56,9 +57,18 @@ class TestSchedulePreprintDownstream(unittest.TestCase):
     @patch.object(activity_module, "get_session")
     @data(
         {
-            "comment": "preprint article example",
+            "comment": "pre-finished preprint article example",
             "article_id": "84364",
             "version": 2,
+            "expected_outbox_folders": ["publication_email"],
+            "expected_result": activity_object.ACTIVITY_SUCCESS,
+        },
+        {
+            "comment": "finished preprint article example",
+            "article_id": "84364",
+            "version": 2,
+            "pdf_url": "https://example.org/raw/master/data/84364/v2/84364-v2.pdf",
+            "expected_outbox_folders": ["clockss_preprint"],
             "expected_result": activity_object.ACTIVITY_SUCCESS,
         },
     )
@@ -77,7 +87,11 @@ class TestSchedulePreprintDownstream(unittest.TestCase):
             resources=["elife-preprint-84364-v2.xml"]
         )
         fake_session.return_value = FakeSession(
-            session_data(test_data.get("article_id"), test_data.get("version"))
+            session_data(
+                test_data.get("article_id"),
+                test_data.get("version"),
+                test_data.get("pdf_url"),
+            )
         )
         # do the activity
         result = self.activity.do_activity(
@@ -93,14 +107,26 @@ class TestSchedulePreprintDownstream(unittest.TestCase):
                 article_id=test_data.get("article_id"),
             ),
         )
-        # assert XML is in each outbox folder
-        publication_email_outbox_path = os.path.join(
-            directory.path, "publication_email", "outbox"
-        )
-        self.assertEqual(len(os.listdir(publication_email_outbox_path)), 1)
+        # assert list of outbox folders
         self.assertEqual(
-            os.listdir(publication_email_outbox_path), ["elife-preprint-84364-v2.xml"]
+            sorted(os.listdir(directory.path)),
+            sorted(test_data.get("expected_outbox_folders")),
+            ("failed in {comment}, got {result}, article_id {article_id}").format(
+                comment=test_data.get("comment"),
+                result=result,
+                article_id=test_data.get("article_id"),
+            ),
         )
+        # assert XML is in an outbox folder
+        for outbox_folder in test_data.get("expected_outbox_folders"):
+            publication_email_outbox_path = os.path.join(
+                directory.path, outbox_folder, "outbox"
+            )
+            self.assertEqual(len(os.listdir(publication_email_outbox_path)), 1)
+            self.assertEqual(
+                os.listdir(publication_email_outbox_path),
+                ["elife-preprint-84364-v2.xml"],
+            )
 
     @patch.object(activity_module, "storage_context")
     @patch("provider.preprint.storage_context")

@@ -278,3 +278,40 @@ class TestChooseOutboxes(unittest.TestCase):
                 "%s/outbox/" % folder_name in outbox_list,
                 "unexpectedly found %s folder" % folder_name,
             )
+
+    def test_pdf_url(self):
+        "test rules if there is a preprint pdf_url"
+        article_profile_type = "retraction_of_preprint"
+        outbox_list = downstream.choose_outboxes(
+            "preprint",
+            True,
+            self.rules,
+            pdf_url="https://example.org/raw/master/data/84364/v2/84364-v2.pdf",
+        )
+        # schedule the following
+        for folder_name in [
+            "clockss_preprint",
+        ]:
+            self.assertTrue(
+                "%s/outbox/" % folder_name in outbox_list,
+                "did not find %s folder" % folder_name,
+            )
+        # do not schedule the following
+        for folder_name in [
+            "cengage",
+            "cnki",
+            "cnpiec",
+            "gooa",
+            "oaswitchboard",
+            "publication_email",
+            "pubmed",
+            "pmc",
+            "ovid",
+            "pub_router",
+            "wos",
+            "zendy",
+        ]:
+            self.assertFalse(
+                "%s/outbox/" % folder_name in outbox_list,
+                "unexpectedly found %s folder" % folder_name,
+            )

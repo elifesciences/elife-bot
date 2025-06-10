@@ -72,6 +72,7 @@ PreprintPublicationEmail:
   schedule_first_version_only: false
   schedule_article_types:
     - preprint
+  schedule_if_pdf_url: false
 
 Pubmed:
   activity_name: PubmedArticleDeposit
@@ -131,6 +132,7 @@ CLOCKSS_Preprint:
   schedule_silent_correction: true
   schedule_article_types:
     - preprint
+  schedule_if_pdf_url: true
   send_by_protocol: ftp
   send_once_only: false
   send_article_types:

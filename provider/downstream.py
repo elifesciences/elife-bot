@@ -27,6 +27,7 @@ def choose_outboxes(
     run_type=None,
     article_profile_type=None,
     assessment_keywords=None,
+    pdf_url=None,
 ):
     outbox_list = []
 
@@ -69,6 +70,14 @@ def choose_outboxes(
             if set(assessment_keywords).intersection(
                 set(workflow_rules.get("do_not_schedule_assessment_keywords"))
             ):
+                continue
+
+        if "schedule_if_pdf_url" in workflow_rules:
+            # do not schedule if pdf_url and do not want a pdf_url
+            if pdf_url and not workflow_rules.get("schedule_if_pdf_url"):
+                continue
+            # do not schedule if no pdf_url and need to have a pdf_url
+            if not pdf_url and workflow_rules.get("schedule_if_pdf_url"):
                 continue
 
         if workflow_rules.get("schedule_article_types"):
