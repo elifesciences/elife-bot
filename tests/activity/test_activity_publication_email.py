@@ -164,8 +164,15 @@ class TestPublicationEmail(unittest.TestCase):
         fake_email_smtp_connect,
     ):
         directory = TempDirectory()
-        prepared_article_xml_filenames = ["elife00013.xml", "elife03385.xml"]
-        approved_article_xml_filenames = ["elife00013.xml"]
+        prepared_article_xml_filenames = [
+            "elife00013.xml",
+            "elife03385.xml",
+            "elife-preprint-103870-v2.xml",
+        ]
+        approved_article_xml_filenames = [
+            "elife00013.xml",
+            "elife-preprint-103870-v2.xml",
+        ]
         not_published_article_xml_filenames = ["elife03385.xml"]
         expected_result = True
 
@@ -689,6 +696,22 @@ class TestProcessArticles(unittest.TestCase):
             "expected_not_published_count": 0,
             "admin_email_content_contains": [
                 "Parsed https://doi.org/10.7554/eLife.91826",
+                "Total parsed articles: 1",
+                "Total approved articles: 1",
+                "Total prepared articles: 1",
+            ],
+        },
+        {
+            "comment": "MECA XML preprint article",
+            "xml_filenames": [
+                "elife-preprint-103870-v2.xml",
+            ],
+            "lax_article_versions_response_data": [{}],
+            "expected_approved_count": 1,
+            "expected_prepared_count": 1,
+            "expected_not_published_count": 0,
+            "admin_email_content_contains": [
+                "Parsed https://doi.org/10.7554/eLife.103870",
                 "Total parsed articles: 1",
                 "Total approved articles: 1",
                 "Total prepared articles: 1",
