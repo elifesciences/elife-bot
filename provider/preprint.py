@@ -343,7 +343,10 @@ def copy_ref_list_xml(article_xml_path, xml_string):
 
 def is_article_preprint(article_object):
     "check properties of an Article for whether it is considered to be a preprint"
-    if article_object.article_type == "preprint" or (
+    if (
+        hasattr(article_object, "publication_state")
+        and article_object.article_type == "preprint"
+    ) or (
         hasattr(article_object, "publication_state")
         and article_object.publication_state == "reviewed preprint"
     ):

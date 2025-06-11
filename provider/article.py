@@ -97,6 +97,8 @@ class article:
 
             self.version_doi = parser.version_doi(soup)
 
+            self.publication_state = parser.publication_state(soup)
+
             return True
         except:
             return False

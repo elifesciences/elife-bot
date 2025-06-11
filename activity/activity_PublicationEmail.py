@@ -10,6 +10,7 @@ from provider import (
     lax_provider,
     outbox_provider,
     pdf_cover_page,
+    preprint,
     templates,
     utils,
     yaml_provider,
@@ -240,9 +241,15 @@ class activity_PublicationEmail(Activity):
 
         remove_article_doi = []
         related_articles = []
+
         # Process or delete articles as required
         for article in articles:
-            self.logger.info(article.doi + " is type " + article.article_type)
+            use_article_type = getattr(article, "article_type")
+            # detect preprint articles
+            if preprint.is_article_preprint(article):
+                use_article_type = "preprint"
+
+            self.logger.info(article.doi + " is type " + use_article_type)
             if is_insight_article(article):
                 self.set_related_article(
                     article,
@@ -254,11 +261,16 @@ class activity_PublicationEmail(Activity):
 
         # Can remove articles now if required
         for article in articles:
+            use_article_type = getattr(article, "article_type")
+            # detect preprint articles
+            if preprint.is_article_preprint(article):
+                use_article_type = "preprint"
+
             if article.doi not in remove_article_doi:
                 # check if an email_type can be found in the rules
                 try:
                     email_type = choose_email_type(
-                        article_type=article.article_type,
+                        article_type=use_article_type,
                         is_poa=article.is_poa,
                         was_ever_poa=article.was_ever_poa,
                         rules=rules,
@@ -277,7 +289,7 @@ class activity_PublicationEmail(Activity):
                         self.name,
                         email_type,
                         article.doi,
-                        article.article_type,
+                        use_article_type,
                         article.is_poa,
                         article.was_ever_poa,
                         getattr(article, "version_doi", None),
@@ -384,8 +396,13 @@ class activity_PublicationEmail(Activity):
         not_published_articles = []
 
         for article in articles:
+            use_article_type = getattr(article, "article_type")
+            # detect preprint articles
+            if preprint.is_article_preprint(article):
+                use_article_type = "preprint"
+
             # Remove based on article type
-            if article.article_type in do_not_send_article_types_from_rules(rules):
+            if use_article_type in do_not_send_article_types_from_rules(rules):
                 log_info = "Removing based on article type " + article.doi
                 self.admin_email_content += "\n" + log_info
                 self.logger.info(log_info)
@@ -408,9 +425,14 @@ class activity_PublicationEmail(Activity):
         for article in articles:
             # Determine which email type or template to send
 
+            use_article_type = getattr(article, "article_type")
+            # detect preprint articles
+            if preprint.is_article_preprint(article):
+                use_article_type = "preprint"
+
             # use the rules for choosing the email template
             email_type = choose_email_type(
-                article_type=article.article_type,
+                article_type=use_article_type,
                 is_poa=article.is_poa,
                 was_ever_poa=article.was_ever_poa,
                 rules=rules,
@@ -423,7 +445,7 @@ class activity_PublicationEmail(Activity):
             # process the recipient data, adding Feature article recipients if applicable
             recipient_authors = choose_recipient_authors(
                 authors=authors,
-                article_type=article.article_type,
+                article_type=use_article_type,
                 feature_article=is_feature_article(article),
                 related_insight_article=article.related_insight_article,
                 features_email=self.settings.features_publication_recipient_email,
@@ -479,9 +501,11 @@ class activity_PublicationEmail(Activity):
         version = None
         if hasattr(article, "article_type"):
             article_type = article.article_type
-        if article_type == "preprint":
+        # determine if XML is for a preprint
+        if preprint.is_article_preprint(article):
             # get version from version DOI
             version = utils.version_doi_parts(article.version_doi)[1]
+            article_type = "preprint"
         article_authors = self.get_authors(doi_id, article_type, version)
         # do not get email addresses from the XML for feature articles
         if is_feature_article(article):
