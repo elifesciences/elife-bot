@@ -1,6 +1,6 @@
 import json
 import os
-from provider import downstream, preprint, yaml_provider
+from provider import downstream, preprint, utils, yaml_provider
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 from activity.objects import Activity
@@ -42,11 +42,9 @@ class activity_SchedulePreprintDownstream(Activity):
             session = get_session(self.settings, data, run)
             article_id = session.get_value("article_id")
             version = session.get_value("version")
+            article_xml_path = session.get_value("article_xml_path")
             pdf_url = session.get_value("pdf_url")
-            expanded_folder_name = session.get_value("preprint_expanded_folder")
-            expanded_bucket_name = (
-                self.settings.publishing_buckets_prefix + self.settings.expanded_bucket
-            )
+            expanded_folder = session.get_value("expanded_folder")
         except:
             self.logger.exception("Error starting %s activity" % self.pretty_name)
             return self.ACTIVITY_PERMANENT_FAILURE
@@ -63,14 +61,13 @@ class activity_SchedulePreprintDownstream(Activity):
         run_type = data.get("run_type")
 
         try:
-            bucket_resource = preprint.expanded_folder_bucket_resource(
-                self.settings, expanded_bucket_name, expanded_folder_name
+            source_xml_key_name = expanded_folder + "/" + article_xml_path
+            expanded_bucket_name = self.settings.bot_bucket
+            # new name for the file
+            xml_file_name = preprint.PREPRINT_XML_FILE_NAME_PATTERN.format(
+                article_id=utils.pad_msid(article_id), version=version
             )
 
-            xml_file_name = preprint.find_xml_filename_in_expanded_folder(
-                self.settings, bucket_resource
-            )
-            xml_key_name = "%s/%s" % (expanded_folder_name, xml_file_name)
             outbox_list = downstream.choose_outboxes(
                 status, first_by_status, rules, run_type, pdf_url=pdf_url
             )
@@ -80,7 +77,7 @@ class activity_SchedulePreprintDownstream(Activity):
                     publish_bucket_name,
                     xml_file_name,
                     expanded_bucket_name,
-                    xml_key_name,
+                    source_xml_key_name,
                     outbox,
                 )
 
@@ -96,9 +93,9 @@ class activity_SchedulePreprintDownstream(Activity):
             self.logger.exception(
                 (
                     "%s, exception when scheduling downstream deposits for"
-                    " preprint article_id %s, version %s"
+                    " preprint article_id %s, version %s: %s"
                 )
-                % (self.name, article_id, version)
+                % (self.name, article_id, version, str(exception))
             )
 
             return self.ACTIVITY_TEMPORARY_FAILURE

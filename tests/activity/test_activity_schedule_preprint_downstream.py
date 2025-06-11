@@ -14,7 +14,7 @@ from tests.activity.classes_mock import (
     FakeSession,
     FakeStorageContext,
 )
-from tests.activity import settings_mock
+from tests.activity import helpers, settings_mock, test_activity_data
 
 
 def input_data(article_id=None, version=None, standalone=None, run_type=None):
@@ -31,13 +31,13 @@ def input_data(article_id=None, version=None, standalone=None, run_type=None):
 
 
 def session_data(article_id=None, version=None, pdf_url=None):
-    sess_data = input_data(article_id, version)
-    sess_data["preprint_expanded_folder"] = "preprint.%s.%s/%s" % (
-        article_id,
-        version,
-        sess_data.get("run"),
-    )
-    sess_data["pdf_url"] = pdf_url
+    sess_data = test_activity_data.post_preprint_publication_session_example()
+    if article_id:
+        sess_data["article_id"] = article_id
+    if version:
+        sess_data["version"] = version
+    if pdf_url:
+        sess_data["pdf_url"] = pdf_url
     return sess_data
 
 
@@ -53,7 +53,6 @@ class TestSchedulePreprintDownstream(unittest.TestCase):
         self.activity.clean_tmp_dir()
 
     @patch.object(activity_module, "storage_context")
-    @patch("provider.preprint.storage_context")
     @patch.object(activity_module, "get_session")
     @data(
         {
@@ -76,23 +75,40 @@ class TestSchedulePreprintDownstream(unittest.TestCase):
         self,
         test_data,
         fake_session,
-        fake_preprint_storage_context,
         fake_storage_context,
     ):
         directory = TempDirectory()
-        fake_storage_context.return_value = FakeStorageContext(
-            dest_folder=directory.path
+
+        session_dict = session_data(
+            test_data.get("article_id"),
+            test_data.get("version"),
+            test_data.get("pdf_url"),
         )
-        fake_preprint_storage_context.return_value = FakeStorageContext(
-            resources=["elife-preprint-84364-v2.xml"]
+
+        # create folders if they do not exist
+        meca_file_path = "tests/files_source/95901-v1-meca.zip"
+        resource_folder = os.path.join(
+            directory.path,
+            session_dict.get("expanded_folder"),
         )
-        fake_session.return_value = FakeSession(
-            session_data(
-                test_data.get("article_id"),
-                test_data.get("version"),
-                test_data.get("pdf_url"),
+        poa_bucket_folder = os.path.join(directory.path, "poa_bucket")
+        # create folders if they do not exist
+        os.makedirs(resource_folder, exist_ok=True)
+        os.makedirs(poa_bucket_folder, exist_ok=True)
+        # unzip the test fixture files
+        zip_file_paths = helpers.unzip_fixture(meca_file_path, resource_folder)
+        resources = [
+            os.path.join(
+                test_activity_data.ingest_meca_session_example().get("expanded_folder"),
+                file_path,
             )
+            for file_path in zip_file_paths
+        ]
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources, dest_folder=poa_bucket_folder
         )
+
+        fake_session.return_value = FakeSession(session_dict)
         # do the activity
         result = self.activity.do_activity(
             input_data(test_data.get("article_id"), test_data.get("version"))
@@ -109,7 +125,7 @@ class TestSchedulePreprintDownstream(unittest.TestCase):
         )
         # assert list of outbox folders
         self.assertEqual(
-            sorted(os.listdir(directory.path)),
+            sorted(os.listdir(poa_bucket_folder)),
             sorted(test_data.get("expected_outbox_folders")),
             ("failed in {comment}, got {result}, article_id {article_id}").format(
                 comment=test_data.get("comment"),
@@ -120,7 +136,7 @@ class TestSchedulePreprintDownstream(unittest.TestCase):
         # assert XML is in an outbox folder
         for outbox_folder in test_data.get("expected_outbox_folders"):
             publication_email_outbox_path = os.path.join(
-                directory.path, outbox_folder, "outbox"
+                poa_bucket_folder, outbox_folder, "outbox"
             )
             self.assertEqual(len(os.listdir(publication_email_outbox_path)), 1)
             self.assertEqual(
@@ -129,7 +145,6 @@ class TestSchedulePreprintDownstream(unittest.TestCase):
             )
 
     @patch.object(activity_module, "storage_context")
-    @patch("provider.preprint.storage_context")
     @patch.object(activity_module, "get_session")
     @data(
         {
@@ -144,20 +159,41 @@ class TestSchedulePreprintDownstream(unittest.TestCase):
         self,
         test_data,
         fake_session,
-        fake_preprint_storage_context,
         fake_storage_context,
     ):
         "test run_type silent-correction"
         directory = TempDirectory()
+
+        session_dict = session_data(
+            test_data.get("article_id"),
+            test_data.get("version"),
+            test_data.get("pdf_url"),
+        )
+
+        # create folders if they do not exist
+        meca_file_path = "tests/files_source/95901-v1-meca.zip"
+        resource_folder = os.path.join(
+            directory.path,
+            session_dict.get("expanded_folder"),
+        )
+        poa_bucket_folder = os.path.join(directory.path, "poa_bucket")
+        # create folders if they do not exist
+        os.makedirs(resource_folder, exist_ok=True)
+        os.makedirs(poa_bucket_folder, exist_ok=True)
+        # unzip the test fixture files
+        zip_file_paths = helpers.unzip_fixture(meca_file_path, resource_folder)
+        resources = [
+            os.path.join(
+                test_activity_data.ingest_meca_session_example().get("expanded_folder"),
+                file_path,
+            )
+            for file_path in zip_file_paths
+        ]
         fake_storage_context.return_value = FakeStorageContext(
-            dest_folder=directory.path
+            directory.path, resources, dest_folder=poa_bucket_folder
         )
-        fake_preprint_storage_context.return_value = FakeStorageContext(
-            resources=["elife-preprint-84364-v2.xml"]
-        )
-        fake_session.return_value = FakeSession(
-            session_data(test_data.get("article_id"), test_data.get("version"))
-        )
+        fake_session.return_value = FakeSession(session_dict)
+
         # do the activity
         result = self.activity.do_activity(
             input_data(
@@ -200,7 +236,9 @@ class TestSchedulePreprintDownstream(unittest.TestCase):
         fake_session.side_effect = Exception("An exception")
         # do the activity
         result = self.activity.do_activity(
-            input_data(test_data.get("article_id"), test_data.get("version"))
+            input_data(
+                test_data.get("article_id"), test_data.get("version"), standalone=True
+            )
         )
         # check assertions
         self.assertEqual(
@@ -214,21 +252,26 @@ class TestSchedulePreprintDownstream(unittest.TestCase):
         )
 
     @patch.object(activity_module, "get_session")
-    @patch("provider.preprint.expanded_folder_bucket_resource")
-    @patch("provider.preprint.find_xml_filename_in_expanded_folder")
+    @patch.object(activity_module, "storage_context")
+    @patch("provider.downstream.choose_outboxes")
     def test_do_activity_exception(
         self,
-        fake_find,
-        fake_expanded,
+        fake_choose_outboxes,
+        fake_storage_context,
         fake_session,
     ):
-        "test if an exception is raised in finding preprint XML"
+        "test if an exception is raised when populating outbox folders"
+        directory = TempDirectory()
         article_id = "84364"
         version = 2
         expected_result = activity_object.ACTIVITY_TEMPORARY_FAILURE
         fake_session.return_value = FakeSession(session_data(article_id, version))
-        fake_expanded.return_value = True
-        fake_find.side_effect = Exception("Something went wrong!")
+        resources = []
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources, dest_folder=directory.path
+        )
+        exception_message = "Something went wrong!"
+        fake_choose_outboxes.side_effect = Exception(exception_message)
         # do the activity
         result = self.activity.do_activity(input_data(article_id, version))
         # check assertions
@@ -237,7 +280,7 @@ class TestSchedulePreprintDownstream(unittest.TestCase):
             self.activity.logger.logexception,
             (
                 "SchedulePreprintDownstream, exception when scheduling downstream deposits"
-                " for preprint article_id %s, version %s"
+                " for preprint article_id %s, version %s: %s"
             )
-            % (article_id, version),
+            % (article_id, version, exception_message),
         )
