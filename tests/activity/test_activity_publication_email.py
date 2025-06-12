@@ -1892,6 +1892,36 @@ class TestEmailTypeFromRules(unittest.TestCase):
         )
         self.assertEqual(result, expected)
 
+    def test_article_type_preprint_version_1_poa_false(self):
+        "test preprint article_type arguments for a version 1 and is_poa is False"
+        rules = yaml_provider.load_config(
+            settings_mock, config_type="publication_email"
+        )
+        article_type = "preprint"
+        # currently the parser considers the XML to be POA status
+        is_poa = False
+        version = "1"
+        expected = "author_publication_email_RP_first_version"
+        result = activity_module.email_type_from_rules(
+            rules, article_type, is_poa=is_poa, version=version
+        )
+        self.assertEqual(result, expected)
+
+    def test_article_type_preprint_version_2_poa_false(self):
+        "test preprint article_type arguments for a version 2 and is_poa is False"
+        rules = yaml_provider.load_config(
+            settings_mock, config_type="publication_email"
+        )
+        article_type = "preprint"
+        # currently the parser considers the XML to be POA status
+        is_poa = False
+        version = "2"
+        expected = "author_publication_email_RP_revised_version"
+        result = activity_module.email_type_from_rules(
+            rules, article_type, is_poa=is_poa, version=version
+        )
+        self.assertEqual(result, expected)
+
     def test_no_rules(self):
         "test if rules are empty"
         rules = None
