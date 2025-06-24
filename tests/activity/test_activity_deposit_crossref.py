@@ -59,7 +59,7 @@ class TestDepositCrossref(unittest.TestCase):
                 '<ORCID authenticated="true">http://orcid.org/0000-0002-9558-1121</ORCID>',
                 '<item_number item_number_type="article_number">e15747</item_number>',
                 (
-                    '<citation key="bib13"><journal_title>BMC Biology</journal_title>'
+                    '<citation key="bib13" type="journal_article"><journal_title>BMC Biology</journal_title>'
                     + "<author>Gilbert</author><volume>12</volume><cYear>2014</cYear>"
                     + "<article_title>The Earth Microbiome project: successes and aspirations"
                     + "</article_title><doi>10.1186/s12915-014-0069-1</doi>"
