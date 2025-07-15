@@ -21,7 +21,7 @@ docmaptools==0.28.0
 ejpcsvparser==0.4.0
 elifearticle==0.24.0
 elifecleaner==0.82.0
-elifecrossref==0.39.0
+elifecrossref==0.40.0
 elifepubmed==0.7.0
 elifetools==0.44.0
 exceptiongroup==1.3.0
