@@ -222,7 +222,9 @@ class activity_FTPArticle(Activity):
                     "%s, moving %s to %s" % (self.name, from_path, to_path)
                 )
                 shutil.move(from_path, to_path)
+                return
 
+        # continue for non-preprint zip file
         archive_zip_downloaded = self.download_archive_zip_from_s3(doi_id)
         archive_zip_repackaged = None
         details = sending_details(self.settings, workflow)

@@ -60,7 +60,7 @@ class TestFTPArticle(unittest.TestCase):
             "CLOCKSS_Preprint",
             "1",
             "reviewed preprint",
-            None,
+            True,
             "clockss_preprint.localhost",
             None,
             1,
