@@ -36,7 +36,6 @@ class TestFTPArticle(unittest.TestCase):
     def tearDown(self):
         self.activity.clean_tmp_dir()
 
-    @patch.object(activity_FTPArticle, "repackage_archive_zip_to_pmc_zip")
     @patch.object(activity_FTPArticle, "download_archive_zip_from_s3")
     @patch("activity.activity_FTPArticle.FTP")
     @patch("activity.activity_FTPArticle.SFTP")
@@ -61,7 +60,7 @@ class TestFTPArticle(unittest.TestCase):
             "CLOCKSS_Preprint",
             "1",
             "reviewed preprint",
-            True,
+            None,
             "clockss_preprint.localhost",
             None,
             1,
@@ -80,7 +79,16 @@ class TestFTPArticle(unittest.TestCase):
             True,
         ),
         ("Scilit", None, None, True, None, "scilit.localhost:22", 1, True),
-        ("__unknown__", None, None, False, None, None, 0, False),
+        (
+            "__unknown__",
+            None,
+            None,
+            False,
+            None,
+            None,
+            0,
+            activity_FTPArticle.ACTIVITY_PERMANENT_FAILURE,
+        ),
     )
     @unpack
     def test_do_activity(
@@ -96,12 +104,11 @@ class TestFTPArticle(unittest.TestCase):
         fake_sftp,
         fake_ftp,
         fake_download_archive_zip_from_s3,
-        fake_repackage_pmc_zip,
     ):
         fake_sftp.return_value = FakeSFTP()
         fake_ftp.return_value = FakeFTP()
         fake_download_archive_zip_from_s3.return_value = archive_zip_return_value
-        fake_repackage_pmc_zip.return_value = True
+
         activity_data = {
             "data": {
                 "elife_id": "19405",
@@ -118,8 +125,10 @@ class TestFTPArticle(unittest.TestCase):
         )
         # create folders if they do not exist
         os.makedirs(os.path.dirname(zip_file_path), exist_ok=True)
-        with open(zip_file_path, "wb") as open_file:
-            open_file.write(b"test")
+        with zipfile.ZipFile(zip_file_path, "w") as zip_file:
+            zip_file.write(
+                "tests/files_source/elife-00353-v1.xml", "elife-00353-v1.xml"
+            )
 
         # invoke
         result = self.activity.do_activity(activity_data)
@@ -193,7 +202,7 @@ class TestFTPArticle(unittest.TestCase):
         fake_download_files_from_s3.return_value = True
         workflow = "HEFCE"
         elife_id = "19405"
-        expected_result = False
+        expected_result = self.activity.ACTIVITY_PERMANENT_FAILURE
         # Cause an exception by setting elife_id as non numeric for now
         activity_data = {"data": {"elife_id": elife_id, "workflow": workflow}}
         self.assertEqual(self.activity.do_activity(activity_data), expected_result)

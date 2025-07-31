@@ -124,10 +124,22 @@ class activity_FTPArticle(Activity):
         self.download_files_from_s3(elife_id, workflow, version, publication_state)
 
         # send files to endpoint
-        try:
-            uploadfiles = glob.glob(
-                self.directories.get("FTP_TO_SOMEWHERE_DIR") + "/*.zip"
+        uploadfiles = glob.glob(self.directories.get("FTP_TO_SOMEWHERE_DIR") + "/*.zip")
+        if not uploadfiles:
+            self.logger.info(
+                (
+                    "%s no zip file found for for workflow %s, doi_id %s,"
+                    " version %s, publication_state %s"
+                ),
+                self.name,
+                workflow,
+                self.doi_id,
+                version,
+                publication_state,
             )
+            return self.ACTIVITY_PERMANENT_FAILURE
+
+        try:
             if self.logger:
                 self.logger.info(
                     "FTPArticle running %s workflow for article %s, attempting to send files: %s"
