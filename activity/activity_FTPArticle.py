@@ -209,7 +209,16 @@ class activity_FTPArticle(Activity):
         # switch logic depending on publication_state value
         if publication_state and "preprint" in publication_state:
             self.download_archive_zip_from_s3(doi_id, version, status="rp")
-            archive_zip_name = glob.glob(self.directories.get("TMP_DIR") + "/*.zip")[0]
+            try:
+                archive_zip_name = glob.glob(
+                    self.directories.get("TMP_DIR") + "/*.zip"
+                )[0]
+            except IndexError:
+                self.logger.info(
+                    "%s, no preprint zip file found in TMP_DIR for doi_id %s, version %s"
+                    % (self.name, doi_id, version)
+                )
+                archive_zip_name = None
             if archive_zip_name:
                 new_archive_zip_name = article_processing.new_rp_zip_filename(
                     self.journal, doi_id, version
@@ -222,7 +231,7 @@ class activity_FTPArticle(Activity):
                     "%s, moving %s to %s" % (self.name, from_path, to_path)
                 )
                 shutil.move(from_path, to_path)
-                return
+            return
 
         # continue for non-preprint zip file
         archive_zip_downloaded = self.download_archive_zip_from_s3(doi_id)
