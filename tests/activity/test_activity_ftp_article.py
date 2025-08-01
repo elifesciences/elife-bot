@@ -264,6 +264,30 @@ class TestDownloadFilesFromS3(unittest.TestCase):
             % (workflow, doi_id),
         )
 
+    @patch.object(activity_FTPArticle, "repackage_archive_zip_to_pmc_zip")
+    @patch.object(activity_FTPArticle, "download_archive_zip_from_s3")
+    def test_download_files_from_s3_preprint_failure(
+        self, fake_download_archive_zip, fake_repackage_archive_zip
+    ):
+        "test failing to download preprint zip"
+        fake_download_archive_zip.return_value = True
+        fake_repackage_archive_zip.return_value = False
+        doi_id = "353"
+        workflow = "CLOCKSS_Preprint"
+        version = 1
+        publication_state = "reviewed preprint"
+        # invoke the method being tested
+        self.activity.download_files_from_s3(
+            doi_id, workflow, version, publication_state
+        )
+        self.assertEqual(
+            self.activity.logger.loginfo[-1],
+            (
+                "FTPArticle, no preprint zip file found in TMP_DIR for doi_id %s, version %s"
+            )
+            % (doi_id, version),
+        )
+
 
 class TestDownloadArchiveZip(unittest.TestCase):
     def setUp(self):
