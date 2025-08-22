@@ -81,3 +81,18 @@ ARTICLE_RESULT_84364 = Row(
         "Reviewers_And_Editors": 7,
     },
 )
+
+PREPRINT_95901_V1_DATA_AVAILABILITY_RESULT = Row(
+    (
+        "95901",
+        "1",
+        "eLife-RP-RA-2023-89331R2",
+        "<xml>\n  <data_availability_textbox>Sequencing data (fastq) is available in the Sequence Read Archive (SRA) with the BioProject identification PRJNA934938.  \n\nScripts used for ChIP-seq, RNA-seq, and VSG-seq analysis are available at https://github.com/cestari-lab/lab_scripts. \n\nA specific pipeline was developed for clonal VSG-seq analysis, available at https://github.com/cestari-lab/VSG-Bar-seq.</data_availability_textbox>\n  <datasets>\n    <dataset>\n      <seq_no>1</seq_no>\n      <authors_text_list>Touray AO, Rajesh R, Isebe I, Sternlieb T, Loock M, Kutova O, Cestari I</authors_text_list>\n      <id>https://dataview.ncbi.nlm.nih.gov/object/PRJNA934938</id>\n      <license_info>SRA Bioproject PRJNA934938</license_info>\n      <title>Trypanosoma brucei brucei strain:Lister 427 DNA or RNA sequencing</title>\n      <year>2023</year>\n    </dataset>\n    <datasets_ind>1</datasets_ind>\n    <dryad_ind>0</dryad_ind>\n    <reporting_standards_ind>0</reporting_standards_ind>\n  </datasets>\n  <prev_published_datasets>\n    <dataset>\n      <seq_no>1</seq_no>\n      <authors_text_list>B. Akiyoshi, K. Gull</authors_text_list>\n      <id>https://www.ncbi.nlm.nih.gov/sra/?term=SRP031518</id>\n      <license_info>SRA, accession numbers SRR1023669\tand SRX372731</license_info>\n      <title>Trypanosoma brucei KKT2 ChIP</title>\n      <year>2014</year>\n    </dataset>\n    <datasets_ind>1</datasets_ind>\n    <dryad_ind>0</dryad_ind>\n  </prev_published_datasets>\n</xml>",
+    ),
+    {
+        "manuscript_id": 0,
+        "manuscript_version_str": 1,
+        "long_manuscript_identifier": 2,
+        "data_availability_xml": 3,
+    },
+)

@@ -1,25 +1,28 @@
 # coding=utf-8
 
 import copy
-from collections import OrderedDict
 from datetime import datetime
 import importlib
 import json
 import os
 import shutil
 import time
-import zipfile
 import unittest
 from xml.etree import ElementTree
 from mock import patch
 from testfixtures import TempDirectory
 import docmaptools
-from provider import utils
+from elifearticle.article import Dataset
+from provider import bigquery, utils
 import activity.activity_ModifyMecaXml as activity_module
 from activity.activity_ModifyMecaXml import (
     activity_ModifyMecaXml as activity_object,
 )
-from tests import read_fixture
+from tests import bigquery_test_data, read_fixture
+from tests.classes_mock import (
+    FakeBigQueryClient,
+    FakeBigQueryRowIterator,
+)
 from tests.activity.classes_mock import (
     FakeLogger,
     FakeSession,
@@ -75,6 +78,7 @@ class TestModifyMecaXml(unittest.TestCase):
         # reload the module which had MagicMock applied to revert the mock
         importlib.reload(docmaptools)
 
+    @patch.object(bigquery, "get_client")
     @patch("docmaptools.parse.get_web_content")
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
@@ -83,6 +87,7 @@ class TestModifyMecaXml(unittest.TestCase):
         fake_session,
         fake_storage_context,
         fake_get_web_content,
+        fake_bigquery_get_client,
     ):
         directory = TempDirectory()
 
@@ -114,6 +119,14 @@ class TestModifyMecaXml(unittest.TestCase):
             directory.path, resources, dest_folder=directory.path
         )
         fake_get_web_content.side_effect = mock_get_web_content
+
+        # mock BigQuery
+        rows = FakeBigQueryRowIterator(
+            [bigquery_test_data.PREPRINT_95901_V1_DATA_AVAILABILITY_RESULT]
+        )
+        client = FakeBigQueryClient(rows)
+        fake_bigquery_get_client.return_value = client
+
         # do the activity
         result = self.activity.do_activity(test_activity_data.ingest_meca_data)
         # assertions
@@ -257,6 +270,57 @@ class TestModifyMecaXml(unittest.TestCase):
             in xml_string
         )
 
+        # assert data availability statement
+        self.assertTrue(
+            (
+                '<sec id="das" sec-type="data-availability">\n'
+                "<p>Sequencing data (fastq) is available in the Sequence Read Archive (SRA)"
+                " with the BioProject identification PRJNA934938. Scripts used for ChIP-seq,"
+                " RNA-seq, and VSG-seq analysis are available at"
+                " https://github.com/cestari-lab/lab_scripts. A specific pipeline was developed"
+                " for clonal VSG-seq analysis, available at"
+                " https://github.com/cestari-lab/VSG-Bar-seq.</p>\n"
+                "</sec>\n"
+            )
+            in xml_string
+        )
+
+        self.assertTrue(
+            (
+                '<ref id="dataref1">\n'
+                '<element-citation publication-type="data" specific-use="generated">\n'
+                '<person-group person-group-type="author">\n'
+                "<collab>Touray AO, Rajesh R, Isebe I, Sternlieb T,"
+                " Loock M, Kutova O, Cestari I</collab>\n"
+                "</person-group>\n"
+                "<article-title>Trypanosoma brucei brucei strain:Lister 427 DNA or"
+                " RNA sequencing</article-title>\n"
+                "<source>SRA Bioproject PRJNA934938</source>\n"
+                '<year iso-8601-date="2023">2023</year>\n'
+                '<ext-link ext-link-type="uri"'
+                ' xlink:href="https://dataview.ncbi.nlm.nih.gov/object/PRJNA934938">\n'
+                "</ext-link>\n"
+                "</element-citation>\n"
+                "</ref>\n"
+                '<ref id="dataref2">\n'
+                '<element-citation publication-type="data" specific-use="analyzed">\n'
+                '<person-group person-group-type="author">\n'
+                "<collab>B. Akiyoshi, K. Gull</collab>\n"
+                "</person-group>\n"
+                "<article-title>Trypanosoma brucei KKT2 ChIP</article-title>\n"
+                "<source>SRA, accession numbers SRR1023669 and SRX372731</source>\n"
+                '<year iso-8601-date="2014">2014</year>\n'
+                '<ext-link ext-link-type="uri"'
+                ' xlink:href="https://www.ncbi.nlm.nih.gov/sra/?term=SRP031518">\n'
+                "</ext-link>\n"
+                "</element-citation>\n"
+                "</ref>\n"
+                "</ref-list>\n"
+            )
+            in xml_string
+        )
+
+    @patch.object(bigquery, "get_client")
     @patch("docmaptools.parse.get_web_content")
     @patch.object(utils, "get_current_datetime")
     @patch.object(activity_module, "storage_context")
@@ -267,6 +331,7 @@ class TestModifyMecaXml(unittest.TestCase):
         fake_storage_context,
         fake_datetime,
         fake_get_web_content,
+        fake_bigquery_get_client,
     ):
         "test if the docmap_string is missing some data"
         directory = TempDirectory()
@@ -310,6 +375,14 @@ class TestModifyMecaXml(unittest.TestCase):
             directory.path, resources, dest_folder=directory.path
         )
         fake_get_web_content.side_effect = mock_get_web_content
+
+        # mock BigQuery
+        rows = FakeBigQueryRowIterator(
+            [bigquery_test_data.PREPRINT_95901_V1_DATA_AVAILABILITY_RESULT]
+        )
+        client = FakeBigQueryClient(rows)
+        fake_bigquery_get_client.return_value = client
+
         # do the activity
         result = self.activity.do_activity(test_activity_data.ingest_meca_data)
         # assertions
@@ -547,6 +620,158 @@ class TestModifyMecaXml(unittest.TestCase):
             in xml_string
         )
 
+    @patch.object(bigquery, "get_client")
+    @patch("docmaptools.parse.get_web_content")
+    @patch.object(utils, "get_current_datetime")
+    @patch.object(activity_module, "storage_context")
+    @patch.object(activity_module, "get_session")
+    def test_no_bigquery_data_availability_data(
+        self,
+        fake_session,
+        fake_storage_context,
+        fake_datetime,
+        fake_get_web_content,
+        fake_bigquery_get_client,
+    ):
+        "test if no data availability data is returned from BigQuery"
+        directory = TempDirectory()
+        docmap_string = self.session.get_value("docmap_string")
+        minimal_docmap = json.loads(docmap_string)
+        del minimal_docmap["steps"]["_:b0"]["assertions"][0]["happened"]
+        del minimal_docmap["steps"]["_:b1"]
+        del minimal_docmap["steps"]["_:b2"]
+        del minimal_docmap["steps"]["_:b3"]
+        self.session.store_value("docmap_string", json.dumps(minimal_docmap))
+
+        fake_session.return_value = self.session
+
+        fake_datetime.return_value = datetime.strptime(
+            "2024-06-27 +0000", "%Y-%m-%d %z"
+        )
+
+        destination_path = os.path.join(
+            directory.path,
+            SESSION_DICT.get("expanded_folder"),
+            SESSION_DICT.get("article_xml_path"),
+        )
+        # create folders if they do not exist
+        meca_file_path = "tests/files_source/95901-v1-meca.zip"
+        resource_folder = os.path.join(
+            directory.path,
+            SESSION_DICT.get("expanded_folder"),
+        )
+        # create folders if they do not exist
+        os.makedirs(resource_folder, exist_ok=True)
+        # unzip the test fixture files
+        zip_file_paths = helpers.unzip_fixture(meca_file_path, resource_folder)
+        resources = [
+            os.path.join(
+                test_activity_data.ingest_meca_session_example().get("expanded_folder"),
+                file_path,
+            )
+            for file_path in zip_file_paths
+        ]
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources, dest_folder=directory.path
+        )
+        fake_get_web_content.side_effect = mock_get_web_content
+
+        # mock BigQuery
+        rows = FakeBigQueryRowIterator([])
+        client = FakeBigQueryClient(rows)
+        fake_bigquery_get_client.return_value = client
+
+        # do the activity
+        result = self.activity.do_activity(test_activity_data.ingest_meca_data)
+        # assertions
+        self.assertEqual(result, True)
+        self.assertTrue(
+            (
+                "ModifyMecaXml, no data availability data from BigQuery"
+                " for article_id 95901, version 1"
+            )
+            in self.activity.logger.loginfo
+        )
+
+    @patch.object(activity_module, "add_data_availability")
+    @patch.object(bigquery, "get_client")
+    @patch("docmaptools.parse.get_web_content")
+    @patch.object(utils, "get_current_datetime")
+    @patch.object(activity_module, "storage_context")
+    @patch.object(activity_module, "get_session")
+    def test_data_availability_exception(
+        self,
+        fake_session,
+        fake_storage_context,
+        fake_datetime,
+        fake_get_web_content,
+        fake_bigquery_get_client,
+        fake_add_data_availability,
+    ):
+        "test if an exception is raised when adding data availability XML"
+        directory = TempDirectory()
+        docmap_string = self.session.get_value("docmap_string")
+        minimal_docmap = json.loads(docmap_string)
+        del minimal_docmap["steps"]["_:b0"]["assertions"][0]["happened"]
+        del minimal_docmap["steps"]["_:b1"]
+        del minimal_docmap["steps"]["_:b2"]
+        del minimal_docmap["steps"]["_:b3"]
+        self.session.store_value("docmap_string", json.dumps(minimal_docmap))
+
+        fake_session.return_value = self.session
+
+        fake_datetime.return_value = datetime.strptime(
+            "2024-06-27 +0000", "%Y-%m-%d %z"
+        )
+
+        destination_path = os.path.join(
+            directory.path,
+            SESSION_DICT.get("expanded_folder"),
+            SESSION_DICT.get("article_xml_path"),
+        )
+        # create folders if they do not exist
+        meca_file_path = "tests/files_source/95901-v1-meca.zip"
+        resource_folder = os.path.join(
+            directory.path,
+            SESSION_DICT.get("expanded_folder"),
+        )
+        # create folders if they do not exist
+        os.makedirs(resource_folder, exist_ok=True)
+        # unzip the test fixture files
+        zip_file_paths = helpers.unzip_fixture(meca_file_path, resource_folder)
+        resources = [
+            os.path.join(
+                test_activity_data.ingest_meca_session_example().get("expanded_folder"),
+                file_path,
+            )
+            for file_path in zip_file_paths
+        ]
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources, dest_folder=directory.path
+        )
+        fake_get_web_content.side_effect = mock_get_web_content
+
+        # mock BigQuery
+        rows = FakeBigQueryRowIterator(
+            [bigquery_test_data.PREPRINT_95901_V1_DATA_AVAILABILITY_RESULT]
+        )
+        client = FakeBigQueryClient(rows)
+        fake_bigquery_get_client.return_value = client
+
+        fake_add_data_availability.side_effect = Exception("An exception")
+
+        # do the activity
+        result = self.activity.do_activity(test_activity_data.ingest_meca_data)
+        # assertions
+        self.assertEqual(result, True)
+        self.assertEqual(
+            self.activity.logger.logexception,
+            (
+                "ModifyMecaXml, exception raised when adding data availability data for"
+                " article_id 95901, version 1: An exception"
+            ),
+        )
+
 
 class TestClearArticleId(unittest.TestCase):
     "tests for clear_article_id()"
@@ -735,7 +960,7 @@ class TestClearPubHistory(unittest.TestCase):
             "</front>"
             "</article>"
         )
-        expected = "<article>" "<front>" "<article-meta />" "</front>" "</article>"
+        expected = "<article><front><article-meta /></front></article>"
         # invoke
         activity_module.clear_pub_history(xml_root)
         # assert
@@ -782,3 +1007,56 @@ class TestClearEditors(unittest.TestCase):
         # assert
         xml_string = ElementTree.tostring(xml_root).decode("utf-8")
         self.assertEqual(xml_string, expected)
+
+
+class TestGetDataAvailabilityData(unittest.TestCase):
+    "test for get_data_availability_data()"
+
+    def setUp(self):
+        self.article_id = 95901
+        self.version = 1
+        self.caller_name = "ModifyMecaXml"
+        self.logger = FakeLogger()
+
+    @patch.object(bigquery, "get_client")
+    def test_get_data_availability_data(self, fake_bigquery_get_client):
+        "test getting data availability data using BigQuery"
+        # mock BigQuery
+        rows = FakeBigQueryRowIterator(
+            [bigquery_test_data.PREPRINT_95901_V1_DATA_AVAILABILITY_RESULT]
+        )
+        client = FakeBigQueryClient(rows)
+        fake_bigquery_get_client.return_value = client
+
+        # invoke
+        result = activity_module.get_data_availability_data(
+            self.article_id, self.version, settings_mock, self.caller_name, self.logger
+        )
+        # assert
+        self.assertIsNotNone(result)
+
+    @patch.object(bigquery, "get_data_availability_data")
+    @patch.object(bigquery, "get_client")
+    def test_exception(self, fake_bigquery_get_client, fake_get_data):
+        "test an exception is raised getting data from BigQuery"
+        client = FakeBigQueryClient([])
+        fake_bigquery_get_client.return_value = client
+        exception_message = "An exception"
+        fake_get_data.side_effect = Exception(exception_message)
+        # invoke
+        activity_module.get_data_availability_data(
+            self.article_id,
+            self.version,
+            settings_mock,
+            self.caller_name,
+            self.logger,
+        )
+        # assert
+        self.assertEqual(
+            (
+                "%s, exception getting data availability data from"
+                " BigQuery for article_id %s, version %s: %s"
+            )
+            % (self.caller_name, self.article_id, self.version, exception_message),
+            self.logger.logexception,
+        )

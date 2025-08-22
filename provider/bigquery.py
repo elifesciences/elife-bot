@@ -1,5 +1,7 @@
+from xml.etree import ElementTree
 from google.cloud.bigquery import Client, QueryJobConfig, ScalarQueryParameter
 from google.auth.exceptions import DefaultCredentialsError
+from provider import utils
 
 
 BIG_QUERY_VIEW_NAME = (
@@ -8,6 +10,11 @@ BIG_QUERY_VIEW_NAME = (
 
 BIG_QUERY_PREPRINT_VIEW_NAME = (
     "elife-data-pipeline.prod.v_latest_reviewed_preprint_publication_date"
+)
+
+
+BIG_QUERY_DATA_AVAILABILITY_VIEW_NAME = (
+    "elife-data-pipeline.prod.mv_rp_data_availability"
 )
 
 
@@ -177,3 +184,75 @@ def preprint_article_result(client, date_string=None, day_interval=None):
 def preprint_objects(query_result):
     "from a preprint query result, return a list of populated objects"
     return [Preprint(row_dict=row) for row in query_result]
+
+
+def get_data_availability_data(client, manuscript_id, version):
+    "get data availability data from the view for a preprint version"
+
+    # query
+    query = (
+        "SELECT * FROM `{view_name}`"
+        " WHERE `manuscript_id` = @manuscript_id AND version = @version"
+    ).format(view_name=BIG_QUERY_DATA_AVAILABILITY_VIEW_NAME)
+
+    # parameters
+    job_config = QueryJobConfig(
+        query_parameters=[
+            ScalarQueryParameter("manuscript_id", "STRING", manuscript_id),
+            ScalarQueryParameter("manuscript_version_str", "STRING", version),
+        ]
+    )
+
+    query_job = client.query(query, job_config=job_config)  # API request
+    rows = query_job.result()  # Waits for query to fini
+    # use the first row returned
+    try:
+        first_row = list(rows)[0]
+    except IndexError:
+        first_row = None
+    return first_row
+
+
+def parse_data_availability_data(data_availability_data):
+    "parse big query row containing XML into parts"
+
+    xml_string = data_availability_data.get("data_availability_xml")
+    data_availability_xml = ElementTree.fromstring(xml_string)
+
+    # parse data availability content
+    data_availability_statement_tag = data_availability_xml.find(
+        ".//data_availability_textbox"
+    )
+    data_availability_statement = None
+    if data_availability_statement_tag is not None:
+        data_availability_statement = utils.tidy_whitespace(
+            data_availability_statement_tag.text
+        )
+    # parse datasets
+    data_citations = []
+    # map of XML tag name to dataset specific-use value
+    dataset_tag_specific_use_map = {
+        "datasets": "generated",
+        "prev_published_datasets": "analyzed",
+    }
+    for tag_name, specific_use in dataset_tag_specific_use_map.items():
+        dataset_list_xml = data_availability_xml.find(".//%s" % tag_name)
+        if dataset_list_xml is not None:
+            for dataset_tag in dataset_list_xml.findall(".//dataset"):
+                data_citation = {}
+                data_citation["specific_use"] = specific_use
+                for tag_name in [
+                    "authors_text_list",
+                    "id",
+                    "license_info",
+                    "title",
+                    "year",
+                ]:
+                    value_tag = dataset_tag.find(".//%s" % tag_name)
+                    if value_tag is not None:
+                        data_citation[tag_name] = utils.tidy_whitespace(value_tag.text)
+
+                # append to list
+                data_citations.append(data_citation)
+
+    return data_availability_statement, data_citations

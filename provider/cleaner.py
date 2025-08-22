@@ -6,10 +6,11 @@ import re
 import time
 from urllib.parse import urlparse
 from xml.etree import ElementTree
-from xml.etree.ElementTree import SubElement
+from xml.etree.ElementTree import Element, SubElement
 import requests
 from docmaptools import parse as docmap_parse
 from elifearticle import parse as elifearticle_parse
+from elifearticle.article import Dataset
 from elifearticle.utils import license_data_by_url
 from elifecleaner import (
     LOGGER,
@@ -30,6 +31,7 @@ from elifecleaner import (
 )
 from elifetools import xmlio
 from jatsgenerator import build
+from jatsgenerator import utils as jats_utils
 from provider import utils
 from provider.storage_provider import storage_context
 from provider.article_processing import file_extension
@@ -1123,6 +1125,109 @@ def set_editors(parent, editors):
     return prc.set_editors(parent, editors)
 
 
+# XML data availability sec tag @id attribute
+DATA_AVAILABILITY_SEC_ID = "das"
+
+
+def set_data_availability(xml_root, data_availability_statement):
+    "add sec for data availability and add statement"
+    # create sec tag
+    sec_tag = Element("sec")
+    # sec tag id
+    sec_tag.set("id", DATA_AVAILABILITY_SEC_ID)
+    sec_tag.set("sec-type", "data-availability")
+    set_data_availability_content(sec_tag, data_availability_statement)
+    # insert sec tag
+    back_tag = xml_root.find(".//back")
+    back_tag.insert(0, sec_tag)
+
+
+def set_data_availability_content(parent, data_availability_statement):
+    "add p tag to data availabiltiy sec tag"
+    if data_availability_statement:
+        tag_name = "p"
+        jats_utils.append_to_tag(parent, tag_name, data_availability_statement)
+
+
+def data_citation_dataset_list(data_citations):
+    "convert data_citations to a list of Dataset objects"
+    dataset_list = []
+    for data_citation in data_citations:
+        dataset = Dataset()
+        if data_citation.get("id"):
+            # check if URI is a DOI
+            if utils.doi_uri_to_doi(data_citation.get("id")) != data_citation.get("id"):
+                dataset.doi = utils.doi_uri_to_doi(data_citation.get("id"))
+            else:
+                dataset.uri = data_citation.get("id")
+
+        # authors as a single string
+        if data_citation.get("authors_text_list"):
+            dataset.add_author(data_citation.get("authors_text_list"))
+        dataset.year = data_citation.get("year")
+        dataset.title = data_citation.get("title")
+        dataset.license_info = data_citation.get("license_info")
+        dataset.dataset_type = data_citation.get("specific_use")
+
+        dataset_list.append(dataset)
+
+    return dataset_list
+
+
+def set_data_citations(xml_root, dataset_list):
+    "add ref and element-citation XML tags to the ref-list"
+
+    ref_list_tag = xml_root.find(".//ref-list")
+    # do not add more tags if there is no existing ref-list tag?
+    if ref_list_tag is None:
+        return
+
+    for index, dataset in enumerate(dataset_list):
+        # append a ref tag
+        ref_tag = SubElement(ref_list_tag, "ref")
+        ref_tag.set("id", "dataref%s" % (index + 1))
+        set_data_citation(ref_tag, dataset, specific_use=dataset.dataset_type)
+
+
+def set_data_citation(parent, dataset, specific_use=None):
+    "append element-citation tag for data reference"
+    element_citation_tag = SubElement(parent, "element-citation")
+    element_citation_tag.set("publication-type", "data")
+    if specific_use:
+        element_citation_tag.set("specific-use", specific_use)
+
+    if dataset.authors:
+        person_group_tag = SubElement(element_citation_tag, "person-group")
+        person_group_tag.set("person-group-type", "author")
+        for author in dataset.authors:
+            collab = SubElement(person_group_tag, "collab")
+            collab.text = author
+
+    if dataset.title:
+        source = SubElement(element_citation_tag, "article-title")
+        source.text = dataset.title
+
+    if dataset.license_info:
+        comment = SubElement(element_citation_tag, "source")
+        comment.text = dataset.license_info
+
+    if dataset.year:
+        year = SubElement(element_citation_tag, "year")
+        year.text = dataset.year
+        year.set("iso-8601-date", dataset.year)
+
+    if dataset.uri:
+        ext_link_tag = SubElement(element_citation_tag, "ext-link")
+        ext_link_tag.text = dataset.source_id
+        ext_link_tag.set("ext-link-type", "uri")
+        ext_link_tag.set("xlink:href", dataset.uri)
+
+    if dataset.doi:
+        pub_id_tag = SubElement(element_citation_tag, "pub-id")
+        pub_id_tag.set("pub-id-type", "doi")
+        pub_id_tag.text = dataset.doi
+
+
 def format_article_meta_xml(xml_root):
     "add whitespace around selected tags in XML article-meta"
     for tag in (
@@ -1172,6 +1277,17 @@ def format_article_meta_xml(xml_root):
             "./front/article-meta/contrib-group/contrib/aff/institution-wrap/institution"
         )
         + xml_root.findall("./front/article-meta/contrib-group/contrib/aff/country")
+        + xml_root.findall("./back/sec")
+        + xml_root.findall("./back/sec/p")
+        + xml_root.findall("./back/ref-list/ref/element-citation/..")
+        + xml_root.findall("./back/ref-list/ref/element-citation")
+        + xml_root.findall("./back/ref-list/ref/element-citation/person-group")
+        + xml_root.findall("./back/ref-list/ref/element-citation/person-group/collab")
+        + xml_root.findall("./back/ref-list/ref/element-citation/article-title")
+        + xml_root.findall("./back/ref-list/ref/element-citation/source")
+        + xml_root.findall("./back/ref-list/ref/element-citation/year")
+        + xml_root.findall("./back/ref-list/ref/element-citation/ext-link")
+        + xml_root.findall("./back/ref-list/ref/element-citation/pub-id")
     ):
         sub_article.tag_new_line_wrap(tag)
     for tag in (

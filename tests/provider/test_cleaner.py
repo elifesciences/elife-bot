@@ -9,6 +9,7 @@ import zipfile
 from mock import patch
 from testfixtures import TempDirectory
 import wand
+from elifearticle.article import Dataset
 from provider import cleaner
 from tests import settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeResponse, FakeStorageContext
@@ -1677,3 +1678,163 @@ class TestModifyPermissions(unittest.TestCase):
         # assert
         xml_string = ElementTree.tostring(xml_root).decode("utf-8")
         self.assertEqual(xml_string, expected)
+
+
+class TestSetDataAvailability(unittest.TestCase):
+    "tests for set_data_availability()"
+
+    def test_set_data_availability(self):
+        "test adding data availability sec XML"
+        xml_root = ElementTree.fromstring(
+            '<article><back><sec id="s1"/></back></article>'
+        )
+        data_availability_statement = "Statement."
+        expected = (
+            "<article>"
+            "<back>"
+            '<sec id="das" sec-type="data-availability">'
+            "<p>Statement.</p>"
+            "</sec>"
+            '<sec id="s1" />'
+            "</back>"
+            "</article>"
+        )
+        # invoke
+        cleaner.set_data_availability(xml_root, data_availability_statement)
+        # assert
+        xml_string = ElementTree.tostring(xml_root).decode("utf-8")
+        self.assertEqual(xml_string, expected)
+
+
+class TestSetDataAvailabilityContent(unittest.TestCase):
+    "tests for set_data_availability_content()"
+
+    def test_set_data_availability_content(self):
+        "test adding content to a p tag in a data availability statement"
+        parent = ElementTree.fromstring("<back/>")
+        data_availability_statement = "<italic>A</italic> statement & more."
+        expected = "<back><p><italic>A</italic> statement &amp; more.</p></back>"
+        # invoke
+        cleaner.set_data_availability_content(parent, data_availability_statement)
+        # assert
+        xml_string = ElementTree.tostring(parent).decode("utf-8")
+        self.assertEqual(xml_string, expected)
+
+
+EXAMPLE_DATA_CITATIONS = [
+    {
+        "specific_use": "generated",
+        "authors_text_list": (
+            "Touray AO, Rajesh R, Isebe I, Sternlieb T, Loock M, Kutova O, Cestari I"
+        ),
+        "id": "https://dataview.ncbi.nlm.nih.gov/object/PRJNA934938",
+        "license_info": "SRA Bioproject PRJNA934938",
+        "title": "Trypanosoma brucei brucei strain:Lister 427 DNA or RNA sequencing",
+        "year": "2023",
+    },
+    {
+        "specific_use": "analyzed",
+        "authors_text_list": "K Kok, A Ay, L Li",
+        "id": "https://doi.org/10.5061/dryad.cv323",
+        "license_info": "Dryad Digital Repository",
+        "title": "Genome-wide errant targeting by Hairy",
+        "year": "2015",
+    },
+]
+
+
+class TestSetDataCitation(unittest.TestCase):
+    "tests for set_data_citation()"
+
+    def test_set_data_citation(self):
+        "test adding element-citation tag to ref tag"
+        parent = ElementTree.fromstring("<ref/>")
+        dataset = Dataset()
+        # set both uri and doi values for test coverage
+        dataset.uri = "https://example.org/"
+        dataset.doi = "https://doi.org/example"
+        dataset.add_author("X Author")
+        dataset.year = "2025"
+        dataset.title = "Sample Data"
+        dataset.license_info = "Dryad Digital Repository"
+        specific_use = "generated"
+        expected = (
+            "<ref>"
+            '<element-citation publication-type="data" specific-use="generated">'
+            '<person-group person-group-type="author">'
+            "<collab>X Author</collab>"
+            "</person-group>"
+            "<article-title>Sample Data</article-title>"
+            "<source>Dryad Digital Repository</source>"
+            '<year iso-8601-date="2025">2025</year>'
+            '<ext-link ext-link-type="uri" xlink:href="https://example.org/" />'
+            '<pub-id pub-id-type="doi">https://doi.org/example</pub-id>'
+            "</element-citation>"
+            "</ref>"
+        )
+        # invoke
+        cleaner.set_data_citation(parent, dataset, specific_use)
+        # assert
+        xml_string = ElementTree.tostring(parent).decode("utf-8")
+        self.assertEqual(xml_string, expected)
+
+
+class TestSetDataCitations(unittest.TestCase):
+    "tests for set_data_citations()"
+
+    def test_set_data_citations(self):
+        "test adding ref and element-citation tags for data citations to a ref-list"
+        xml_root = ElementTree.fromstring("<article><back><ref-list/></back></article>")
+        data_citations = EXAMPLE_DATA_CITATIONS
+        dataset_list = cleaner.data_citation_dataset_list(data_citations)
+        expected = (
+            "<article>"
+            "<back>"
+            "<ref-list>"
+            '<ref id="dataref1">'
+            '<element-citation publication-type="data" specific-use="generated">'
+            '<person-group person-group-type="author">'
+            "<collab>Touray AO, Rajesh R, Isebe I, Sternlieb T,"
+            " Loock M, Kutova O, Cestari I</collab>"
+            "</person-group>"
+            "<article-title>Trypanosoma brucei brucei strain:Lister 427 DNA or"
+            " RNA sequencing</article-title>"
+            "<source>SRA Bioproject PRJNA934938</source>"
+            '<year iso-8601-date="2023">2023</year>'
+            '<ext-link ext-link-type="uri"'
+            ' xlink:href="https://dataview.ncbi.nlm.nih.gov/object/PRJNA934938" />'
+            "</element-citation>"
+            "</ref>"
+            '<ref id="dataref2">'
+            '<element-citation publication-type="data" specific-use="analyzed">'
+            '<person-group person-group-type="author">'
+            "<collab>K Kok, A Ay, L Li</collab>"
+            "</person-group>"
+            "<article-title>Genome-wide errant targeting by Hairy</article-title>"
+            "<source>Dryad Digital Repository</source>"
+            '<year iso-8601-date="2015">2015</year>'
+            '<pub-id pub-id-type="doi">10.5061/dryad.cv323</pub-id>'
+            "</element-citation>"
+            "</ref>"
+            "</ref-list>"
+            "</back>"
+            "</article>"
+        )
+        # invoke
+        cleaner.set_data_citations(xml_root, dataset_list)
+        # assert
+        xml_string = ElementTree.tostring(xml_root).decode("utf-8")
+        self.assertEqual(xml_string, expected)
+
+    def test_no_ref_list_tag(self):
+        "test if there is no ref-list tag in the XML"
+        xml_string = "<article><back /></article>"
+        xml_root = ElementTree.fromstring(xml_string)
+        data_citations = EXAMPLE_DATA_CITATIONS
+        dataset_list = cleaner.data_citation_dataset_list(data_citations)
+        expected = xml_string
+        # invoke
+        cleaner.set_data_citations(xml_root, dataset_list)
+        # assert
+        modified_xml_string = ElementTree.tostring(xml_root).decode("utf-8")
+        self.assertEqual(modified_xml_string, expected)

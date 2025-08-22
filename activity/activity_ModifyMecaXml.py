@@ -3,7 +3,7 @@ import json
 from elifetools import xmlio
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
-from provider import cleaner, utils
+from provider import bigquery, cleaner, utils
 from activity.objects import MecaBaseActivity
 
 
@@ -184,6 +184,28 @@ class activity_ModifyMecaXml(MecaBaseActivity):
 
             cleaner.set_editors(article_meta_tag, editors)
 
+        # 9. add data availability statement and data citations
+        if session.get_value("run_type") != "silent-correction":
+            data_availability_data = get_data_availability_data(
+                article_id, version, self.settings, self.name, self.logger
+            )
+            if data_availability_data:
+                try:
+                    add_data_availability(xml_root, data_availability_data)
+                except Exception as exception:
+                    self.logger.exception(
+                        (
+                            "%s, exception raised when adding data availability data"
+                            " for article_id %s, version %s: %s"
+                        )
+                        % (self.name, article_id, version, str(exception))
+                    )
+            else:
+                self.logger.info(
+                    "%s, no data availability data from BigQuery for article_id %s, version %s"
+                    % (self.name, article_id, version)
+                )
+
         # finally, improve whitespace
         cleaner.format_article_meta_xml(xml_root)
 
@@ -269,3 +291,35 @@ def clear_editors(xml_root):
                 './contrib-group/contrib[@contrib-type="%s"]/..' % contrib_type
             ):
                 parent_tag.remove(contrib_group_tag)
+
+
+def add_data_availability(xml_root, data_availability_data):
+    "parse data availability data and add to XML"
+    data_availability_statement = None
+    data_citations = []
+    if data_availability_data:
+        (
+            data_availability_statement,
+            data_citations,
+        ) = bigquery.parse_data_availability_data(data_availability_data)
+    if data_availability_statement:
+        cleaner.set_data_availability(xml_root, data_availability_statement)
+    if data_citations:
+        dataset_list = cleaner.data_citation_dataset_list(data_citations)
+        cleaner.set_data_citations(xml_root, dataset_list)
+
+
+def get_data_availability_data(article_id, version, settings, caller_name, logger):
+    "from BigQuery get the data availability data"
+    bigquery_client = bigquery.get_client(settings, logger)
+    try:
+        return bigquery.get_data_availability_data(bigquery_client, article_id, version)
+    except Exception as exception:
+        logger.exception(
+            (
+                "%s, exception getting data availability data from"
+                " BigQuery for article_id %s, version %s: %s"
+            )
+            % (caller_name, article_id, version, str(exception))
+        )
+    return None
