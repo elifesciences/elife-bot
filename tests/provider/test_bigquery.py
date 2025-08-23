@@ -238,3 +238,125 @@ class TestPreprint(unittest.TestCase):
         "empty row data"
         preprint = bigquery.Preprint()
         self.assertIsNone(preprint.populate_from_dict(None))
+
+
+class TestGetDataAvailabilityData(unittest.TestCase):
+    "test for get_data_availability_data()"
+
+    def test_get_data_availability_data(self):
+        "test getting data availability data from BigQuery"
+        manuscript_id = 95901
+        version = 1
+        rows = FakeBigQueryRowIterator(
+            [bigquery_test_data.PREPRINT_95901_V1_DATA_AVAILABILITY_RESULT]
+        )
+        client = FakeBigQueryClient(rows)
+        # run the query
+        result = bigquery.get_data_availability_data(client, manuscript_id, version)
+        # check the result
+
+        self.assertEqual(result.manuscript_id, "95901")
+        self.assertEqual(result.manuscript_version_str, "1")
+        self.assertEqual(result.long_manuscript_identifier, "eLife-RP-RA-2023-89331R2")
+        self.assertEqual(
+            result.data_availability_xml,
+            (
+                "<xml>\n"
+                "  <data_availability_textbox>Sequencing data (fastq) is available in the"
+                " Sequence Read Archive (SRA) with the BioProject identification PRJNA934938."
+                "  \n\nScripts used for ChIP-seq, RNA-seq, and VSG-seq analysis are available"
+                " at https://github.com/cestari-lab/lab_scripts. \n\nA specific pipeline was"
+                " developed for clonal VSG-seq analysis, available at"
+                " https://github.com/cestari-lab/VSG-Bar-seq.</data_availability_textbox>\n"
+                "  <datasets>\n"
+                "    <dataset>\n"
+                "      <seq_no>1</seq_no>\n"
+                "      <authors_text_list>Touray AO, Rajesh R, Isebe I, Sternlieb T, Loock M, Kutova O, Cestari I</authors_text_list>\n"
+                "      <id>https://dataview.ncbi.nlm.nih.gov/object/PRJNA934938</id>\n"
+                "      <license_info>SRA Bioproject PRJNA934938</license_info>\n"
+                "      <title>Trypanosoma brucei brucei strain:Lister 427 DNA"
+                " or RNA sequencing</title>\n"
+                "      <year>2023</year>\n"
+                "    </dataset>\n"
+                "    <datasets_ind>1</datasets_ind>\n"
+                "    <dryad_ind>0</dryad_ind>\n"
+                "    <reporting_standards_ind>0</reporting_standards_ind>\n"
+                "  </datasets>\n"
+                "  <prev_published_datasets>\n"
+                "    <dataset>\n"
+                "      <seq_no>1</seq_no>\n"
+                "      <authors_text_list>B. Akiyoshi, K. Gull</authors_text_list>\n"
+                "      <id>https://www.ncbi.nlm.nih.gov/sra/?term=SRP031518</id>\n"
+                "      <license_info>SRA, accession numbers SRR1023669"
+                "\tand SRX372731</license_info>\n"
+                "      <title>Trypanosoma brucei KKT2 ChIP</title>\n"
+                "      <year>2014</year>\n"
+                "    </dataset>\n"
+                "    <datasets_ind>1</datasets_ind>\n"
+                "    <dryad_ind>0</dryad_ind>\n"
+                "  </prev_published_datasets>\n</xml>"
+            ),
+        )
+
+    def test_no_rows(self):
+        "test if data availability BigQuery query returns no rows"
+        manuscript_id = 95901
+        version = 1
+        rows = FakeBigQueryRowIterator([])
+        client = FakeBigQueryClient(rows)
+        # run the query
+        result = bigquery.get_data_availability_data(client, manuscript_id, version)
+        # check the result
+        self.assertEqual(result, None)
+
+
+class TestParseDataAvailabilityData(unittest.TestCase):
+    "test for parse_data_availability_data()"
+
+    def test_parse_data_availability_data(self):
+        "test parsing BigQuery row into data availability parts"
+        data_availability_data = (
+            bigquery_test_data.PREPRINT_95901_V1_DATA_AVAILABILITY_RESULT
+        )
+        # invoke
+        (
+            data_availability_statement,
+            data_citations,
+        ) = bigquery.parse_data_availability_data(data_availability_data)
+        # assert
+        self.assertEqual(
+            data_availability_statement,
+            (
+                "Sequencing data (fastq) is available in the Sequence Read Archive (SRA)"
+                " with the BioProject identification PRJNA934938. Scripts used for ChIP-seq,"
+                " RNA-seq, and VSG-seq analysis are available at"
+                " https://github.com/cestari-lab/lab_scripts. A specific pipeline was developed"
+                " for clonal VSG-seq analysis, available at"
+                " https://github.com/cestari-lab/VSG-Bar-seq."
+            ),
+        )
+        self.assertEqual(len(data_citations), 2)
+        self.assertDictEqual(
+            data_citations[0],
+            {
+                "specific_use": "generated",
+                "authors_text_list": (
+                    "Touray AO, Rajesh R, Isebe I, Sternlieb T, Loock M, Kutova O, Cestari I"
+                ),
+                "id": "https://dataview.ncbi.nlm.nih.gov/object/PRJNA934938",
+                "license_info": "SRA Bioproject PRJNA934938",
+                "title": "Trypanosoma brucei brucei strain:Lister 427 DNA or RNA sequencing",
+                "year": "2023",
+            },
+        )
+        self.assertDictEqual(
+            data_citations[1],
+            {
+                "specific_use": "analyzed",
+                "authors_text_list": "B. Akiyoshi, K. Gull",
+                "id": "https://www.ncbi.nlm.nih.gov/sra/?term=SRP031518",
+                "license_info": "SRA, accession numbers SRR1023669 and SRX372731",
+                "title": "Trypanosoma brucei KKT2 ChIP",
+                "year": "2014",
+            },
+        )

@@ -28,6 +28,7 @@ def pad_volume(volume):
 
 def tidy_whitespace(string):
     string = re.sub("\n", " ", string)
+    string = re.sub("\t", " ", string)
     string = re.sub(" +", " ", string)
     string = string.strip()
     return string
