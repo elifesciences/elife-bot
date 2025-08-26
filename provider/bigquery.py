@@ -192,7 +192,8 @@ def get_data_availability_data(client, manuscript_id, version):
     # query
     query = (
         "SELECT * FROM `{view_name}`"
-        " WHERE `manuscript_id` = @manuscript_id AND version = @version"
+        " WHERE `manuscript_id` = @manuscript_id"
+        " AND `manuscript_version_str` = @manuscript_version_str"
     ).format(view_name=BIG_QUERY_DATA_AVAILABILITY_VIEW_NAME)
 
     # parameters
