@@ -241,9 +241,12 @@ class activity_PubRouterDeposit(Activity):
         "In here a new FTPArticle workflow is started for the article object supplied"
         # build message
         workflow_name = "FTPArticle"
+
         workflow_data = {
             "workflow": self.workflow,
             "doi_id": article.doi_id,
+            "version": version_from_article(article),
+            "publication_state": getattr(article, "publication_state", None),
         }
         message = {
             "workflow_name": workflow_name,
