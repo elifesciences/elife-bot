@@ -121,6 +121,18 @@ def conditional_starts(current_datetime):
                 )
             )
 
+        # CLOCKSS_Preprint deposits once per day 21:00 UTC
+        if current_time.tm_hour == 21:
+            conditional_start_list.append(
+                OrderedDict(
+                    [
+                        ("starter_name", "starter_PubRouterDeposit"),
+                        ("workflow_id", "PubRouterDeposit_CLOCKSS_Preprint"),
+                        ("start_seconds", 60 * 31),
+                    ]
+                )
+            )
+
         # CLOCKSS deposits once per day 22:00 UTC
         if current_time.tm_hour == 22:
             conditional_start_list.append(
