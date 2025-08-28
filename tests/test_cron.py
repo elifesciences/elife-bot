@@ -590,5 +590,24 @@ class TestConditionalStarts(unittest.TestCase):
         self.conditional_start_test_run(test_data)
 
 
+class TestWorkflowFromWorkflowId(unittest.TestCase):
+    "tests for workflow_from_workflow_id()"
+
+    def test_workflow_from_workflow_id(self):
+        "test get workflow name from PubRouterDeposit workflow_id"
+        # positive test 1
+        workflow_id = "PubRouterDeposit_CLOCKSS"
+        workflow = cron.workflow_from_workflow_id(workflow_id)
+        self.assertEqual(workflow, "CLOCKSS")
+        # positive test 2
+        workflow_id = "PubRouterDeposit_CLOCKSS_Preprint"
+        workflow = cron.workflow_from_workflow_id(workflow_id)
+        self.assertEqual(workflow, "CLOCKSS_Preprint")
+        # negative test 1
+        workflow_id = "PubRouterDeposit"
+        workflow = cron.workflow_from_workflow_id(workflow_id)
+        self.assertEqual(workflow, None)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -368,7 +368,16 @@ class TestApproveArticles(unittest.TestCase):
         test_article.article_type = "research-article"
         test_article.display_channel = ["Research Article"]
         test_article.is_poa = True
-        self.articles = [test_article]
+        # instantiate a preprint article object
+        test_preprint_article = article()
+        test_preprint_article.doi = "10.7554/eLife.85111"
+        test_preprint_article.version_doi = "10.7554/eLife.85111.2"
+        test_preprint_article.doi_id = "85111"
+        test_preprint_article.article_type = "research-article"
+        test_preprint_article.publication_state = "reviewed preprint"
+        # populate article fixtures
+        self.articles = [test_article, test_preprint_article]
+
         self.rules = yaml_provider.load_config(settings_mock)
 
     @patch.object(activity_PubRouterDeposit, "get_latest_archive_zip_name")
@@ -405,11 +414,81 @@ class TestApproveArticles(unittest.TestCase):
         )
 
         expected_approved_article_dois = ["10.7554/eLife.00666"]
-        expected_remove_doi_list = []
+        expected_remove_doi_list = ["10.7554/eLife.85111"]
         approved_articles, remove_doi_list = self.pubrouterdeposit.approve_articles(
             self.articles, workflow_name, self.rules.get(workflow_name)
         )
-        # self.assertTrue(False)
+        approved_article_dois = [article.doi for article in approved_articles]
+        self.assertEqual(approved_article_dois, expected_approved_article_dois)
+        self.assertEqual(remove_doi_list, expected_remove_doi_list)
+
+    @patch.object(activity_PubRouterDeposit, "get_latest_archive_zip_name")
+    @patch("provider.article.article.was_ever_published")
+    @patch("provider.lax_provider.was_ever_poa")
+    @patch("provider.lax_provider.article_versions")
+    @data(
+        "CLOCKSS_Preprint",
+    )
+    def test_approve_articles_preprint(
+        self,
+        workflow_name,
+        fake_article_versions,
+        fake_was_ever_poa,
+        fake_was_ever_published,
+        fake_get_latest_archive_zip_name,
+    ):
+        "test approving preprint article for delivery"
+        fake_was_ever_poa.return_value = True
+        fake_was_ever_published.return_value = False
+        fake_get_latest_archive_zip_name.return_value = "test.zip"
+        fake_article_versions.return_value = (
+            200,
+            test_case_data.lax_article_versions_response_data,
+        )
+
+        expected_approved_article_dois = ["10.7554/eLife.85111"]
+        expected_remove_doi_list = ["10.7554/eLife.00666"]
+        approved_articles, remove_doi_list = self.pubrouterdeposit.approve_articles(
+            self.articles, workflow_name, self.rules.get(workflow_name)
+        )
+        approved_article_dois = [article.doi for article in approved_articles]
+        self.assertEqual(approved_article_dois, expected_approved_article_dois)
+        self.assertEqual(remove_doi_list, expected_remove_doi_list)
+
+    @patch.object(activity_module, "version_from_article")
+    @patch.object(activity_PubRouterDeposit, "get_latest_archive_zip_name")
+    @patch("provider.article.article.was_ever_published")
+    @patch("provider.lax_provider.was_ever_poa")
+    @patch("provider.lax_provider.article_versions")
+    @data(
+        "CLOCKSS_Preprint",
+    )
+    def test_approve_articles_preprint_no_version_doi(
+        self,
+        workflow_name,
+        fake_article_versions,
+        fake_was_ever_poa,
+        fake_was_ever_published,
+        fake_get_latest_archive_zip_name,
+        fake_version_from_article,
+    ):
+        "test a preprint article with no version_doi"
+        fake_was_ever_poa.return_value = True
+        fake_was_ever_published.return_value = False
+        fake_get_latest_archive_zip_name.return_value = "test.zip"
+        fake_article_versions.return_value = (
+            200,
+            test_case_data.lax_article_versions_response_data,
+        )
+        fake_version_from_article.return_value = None
+
+        expected_approved_article_dois = []
+        expected_remove_doi_list = ["10.7554/eLife.00666", "10.7554/eLife.85111"]
+        # invoke
+        approved_articles, remove_doi_list = self.pubrouterdeposit.approve_articles(
+            self.articles, workflow_name, self.rules.get(workflow_name)
+        )
+        # assert
         approved_article_dois = [article.doi for article in approved_articles]
         self.assertEqual(approved_article_dois, expected_approved_article_dois)
         self.assertEqual(remove_doi_list, expected_remove_doi_list)
@@ -440,10 +519,12 @@ class TestApproveArticles(unittest.TestCase):
         # article test data that will not be sent to OASwitchboard
         self.articles[0].article_type = None
         expected_approved_article_dois = []
-        expected_remove_doi_list = ["10.7554/eLife.00666"]
+        expected_remove_doi_list = ["10.7554/eLife.00666", "10.7554/eLife.85111"]
+        # invoke
         approved_articles, remove_doi_list = self.pubrouterdeposit.approve_articles(
             self.articles, workflow_name, self.rules.get(workflow_name)
         )
+        # assert
         approved_article_dois = [article.doi for article in approved_articles]
         self.assertEqual(approved_article_dois, expected_approved_article_dois)
         self.assertEqual(remove_doi_list, expected_remove_doi_list)
@@ -479,10 +560,12 @@ class TestApproveArticles(unittest.TestCase):
             test_case_data.lax_article_versions_response_data,
         )
         expected_approved_article_dois = []
-        expected_remove_doi_list = ["10.7554/eLife.00666"]
+        expected_remove_doi_list = ["10.7554/eLife.00666", "10.7554/eLife.85111"]
+        # invoke
         approved_articles, remove_doi_list = self.pubrouterdeposit.approve_articles(
             self.articles, workflow_name, self.rules.get(workflow_name)
         )
+        # assert
         approved_article_dois = [article.doi for article in approved_articles]
         self.assertEqual(approved_article_dois, expected_approved_article_dois)
         self.assertEqual(remove_doi_list, expected_remove_doi_list)
@@ -494,6 +577,7 @@ class TestApproveArticles(unittest.TestCase):
     @data(
         "Cengage",
         "CLOCKSS",
+        "CLOCKSS_Preprint",
         "CNKI",
         "CNPIEC",
         "GoOA",
@@ -520,13 +604,20 @@ class TestApproveArticles(unittest.TestCase):
         )
         # article test data that will not be sent to OASwitchboard
         self.articles[0].article_type = None
+        self.articles[1].article_type = None
         expected_approved_article_dois = []
-        expected_remove_doi_list = ["10.7554/eLife.00666"]
+        expected_remove_doi_list = ["10.7554/eLife.00666", "10.7554/eLife.85111"]
+        # invoke
         approved_articles, remove_doi_list = self.pubrouterdeposit.approve_articles(
             self.articles, workflow_name, self.rules.get(workflow_name)
         )
+        # assert
         approved_article_dois = [article.doi for article in approved_articles]
-        self.assertEqual(approved_article_dois, expected_approved_article_dois)
+        self.assertEqual(
+            approved_article_dois,
+            expected_approved_article_dois,
+            "Failed for workflow_name %s" % workflow_name,
+        )
         self.assertEqual(remove_doi_list, expected_remove_doi_list)
 
 
@@ -599,3 +690,26 @@ class TestApproveForOaSwitchboard(unittest.TestCase):
         self.assertEqual(
             activity_module.approve_for_oa_switchboard(article_object), False
         )
+
+
+class TestVersionFromArticle(unittest.TestCase):
+    "tests for version_from_article"
+
+    def test_version_from_article(self):
+        "get version from article object version_doi"
+        test_article = article()
+        test_article.version_doi = "10.7554/eLife.85111.2"
+        expected = "2"
+        # invoke
+        version = activity_module.version_from_article(test_article)
+        # assert
+        self.assertEqual(version, expected)
+
+    def test_no_version_doi(self):
+        "test if there is no version_doi"
+        test_article = article()
+        expected = None
+        # invoke
+        version = activity_module.version_from_article(test_article)
+        # assert
+        self.assertEqual(version, expected)

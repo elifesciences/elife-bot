@@ -421,7 +421,7 @@ def start_workflow(settings, starter_name, workflow_id=None):
 
     elif starter_name == "starter_PubRouterDeposit":
         # PubRouterDeposit has different variants specified by the workflow variable
-        workflow = workflow_id.split("_")[-1]
+        workflow = workflow_from_workflow_id(workflow_id)
         starter_object.start(settings=settings, workflow=workflow)
 
     elif starter_name in [
@@ -437,6 +437,14 @@ def start_workflow(settings, starter_name, workflow_id=None):
         "starter_FindReadyToFinishPreprints",
     ]:
         starter_object.start(settings=settings)
+
+
+def workflow_from_workflow_id(workflow_id):
+    "get PubRouterDeposit workflow name from workflow_id"
+    workflow_parts = workflow_id.split("_")
+    if len(workflow_parts) > 1:
+        return "_".join(workflow_parts[1:])
+    return None
 
 
 if __name__ == "__main__":
