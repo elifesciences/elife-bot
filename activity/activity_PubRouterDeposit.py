@@ -2,6 +2,7 @@ import os
 import json
 import time
 import glob
+from operator import attrgetter
 import provider.article as articlelib
 from provider.storage_provider import storage_context
 from provider import (
@@ -9,6 +10,7 @@ from provider import (
     email_provider,
     lax_provider,
     outbox_provider,
+    preprint,
     utils,
     yaml_provider,
 )
@@ -133,7 +135,7 @@ class activity_PubRouterDeposit(Activity):
         for article in self.articles_approved:
             # Start a workflow for each article this is approved to publish
             if workflow_rules.get("activity_name") == "PMCDeposit":
-                zip_file_name = self.get_latest_archive_zip_name(article)
+                zip_file_name = self.get_latest_archive_zip_name(article, status="vor")
                 starter_status = self.start_pmc_deposit_workflow(
                     article,
                     zip_file_name,
@@ -300,10 +302,14 @@ class activity_PubRouterDeposit(Activity):
             )
         return s3_keys
 
-    def get_latest_archive_zip_name(self, article):
+    def get_latest_archive_zip_name(self, article, status, version=None):
         "from the list of s3 keys get the latest archive zip file name"
         return article_processing.latest_archive_zip_revision(
-            article.doi_id, self.archive_bucket_s3_keys, self.journal, status="vor"
+            article.doi_id,
+            self.archive_bucket_s3_keys,
+            self.journal,
+            status=status,
+            version=version,
         )
 
     def start_pmc_deposit_workflow(self, article, zip_file_name, folder=""):
@@ -398,12 +404,15 @@ class activity_PubRouterDeposit(Activity):
             )
 
             # Now can check if published
-            is_published = lax_provider.published_considering_poa_status(
-                article_id=article.doi_id,
-                settings=self.settings,
-                is_poa=article.is_poa,
-                article_was_ever_poa=article.was_ever_poa,
-            )
+            if preprint.is_article_preprint(article):
+                is_published = True
+            else:
+                is_published = lax_provider.published_considering_poa_status(
+                    article_id=article.doi_id,
+                    settings=self.settings,
+                    is_poa=article.is_poa,
+                    article_was_ever_poa=article.was_ever_poa,
+                )
             if is_published is not True:
                 if self.logger:
                     log_info = "Removing because it is not published " + article.doi
@@ -443,15 +452,56 @@ class activity_PubRouterDeposit(Activity):
                     if article.doi not in remove_doi_list:
                         remove_doi_list.append(article.doi)
 
-        # Check a vor archive zip file exists if only vor type is sent to the recipient
-        if workflow_rules.get("send_article_types") == ["vor"]:
+        # Check a vor archive zip file exists if vor type is to be sent to the recipient
+        if "vor" in workflow_rules.get("send_article_types") and not article.is_poa:
             for article in articles:
+                # skip preprint articles
+                if preprint.is_article_preprint(article):
+                    log_info = "Removing preprint from sending as a vor " + article.doi
+                    if article.doi not in remove_doi_list:
+                        remove_doi_list.append(article.doi)
+                    continue
                 # Get the file name of the most recent archive zip from the archive bucket
-                zip_file_name = self.get_latest_archive_zip_name(article)
+                zip_file_name = self.get_latest_archive_zip_name(article, status="vor")
                 if not zip_file_name:
                     if self.logger:
                         log_info = (
                             "Removing because there is no VOR archive zip to send "
+                            + article.doi
+                        )
+                        self.admin_email_content += "\n" + log_info
+                        self.logger.info(log_info)
+                    if article.doi not in remove_doi_list:
+                        remove_doi_list.append(article.doi)
+        elif "preprint" in workflow_rules.get("send_article_types"):
+            for article in articles:
+                # skip non-preprint articles
+                if not preprint.is_article_preprint(article):
+                    log_info = (
+                        "Removing non-preprint from sending as a preprint "
+                        + article.doi
+                    )
+                    if article.doi not in remove_doi_list:
+                        remove_doi_list.append(article.doi)
+                    continue
+                # get version from the article
+                version = version_from_article(article)
+                if not version:
+                    log_info = (
+                        "Removing because version of preprint could not be determined "
+                        + article.doi
+                    )
+                    if article.doi not in remove_doi_list:
+                        remove_doi_list.append(article.doi)
+                    continue
+                # Get the file name of the most recent archive zip from the archive bucket
+                zip_file_name = self.get_latest_archive_zip_name(
+                    article, status="rp", version=version
+                )
+                if not zip_file_name:
+                    if self.logger:
+                        log_info = (
+                            "Removing because there is no preprint archive zip to send "
                             + article.doi
                         )
                         self.admin_email_content += "\n" + log_info
@@ -463,8 +513,7 @@ class activity_PubRouterDeposit(Activity):
         for article in articles:
             if article.doi not in remove_doi_list:
                 approved_articles.append(article)
-
-        return approved_articles, remove_doi_list
+        return sorted(approved_articles, key=attrgetter("doi")), sorted(remove_doi_list)
 
     def send_admin_email(self):
         """
@@ -656,3 +705,12 @@ def s3_key_names_to_clean(outbox_folder, articles_approved, xml_file_to_doi_map)
         s3_key_name = outbox_folder + filename
         s3_key_names.append(s3_key_name)
     return s3_key_names
+
+
+def version_from_article(article):
+    "get version from an article object version_doi property"
+    version = None
+    version_doi = getattr(article, "version_doi", None)
+    if version_doi:
+        version = utils.version_doi_parts(version_doi)[1]
+    return version
