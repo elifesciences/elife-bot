@@ -456,13 +456,10 @@ class activity_PubRouterDeposit(Activity):
                         remove_doi_list.append(article.doi)
 
         # Check a vor archive zip file exists if vor type is to be sent to the recipient
-        if "vor" in workflow_rules.get("send_article_types") and not article.is_poa:
+        if "vor" in workflow_rules.get("send_article_types"):
             for article in articles:
-                # skip preprint articles
-                if preprint.is_article_preprint(article):
-                    log_info = "Removing preprint from sending as a vor " + article.doi
-                    if article.doi not in remove_doi_list:
-                        remove_doi_list.append(article.doi)
+                # skip checking poa articles or preprint articles
+                if preprint.is_article_preprint(article) or article.is_poa:
                     continue
                 # Get the file name of the most recent archive zip from the archive bucket
                 zip_file_name = self.get_latest_archive_zip_name(article, status="vor")
@@ -476,16 +473,10 @@ class activity_PubRouterDeposit(Activity):
                         self.logger.info(log_info)
                     if article.doi not in remove_doi_list:
                         remove_doi_list.append(article.doi)
-        elif "preprint" in workflow_rules.get("send_article_types"):
+        if "preprint" in workflow_rules.get("send_article_types"):
             for article in articles:
-                # skip non-preprint articles
+                # skip checking non-preprint articles
                 if not preprint.is_article_preprint(article):
-                    log_info = (
-                        "Removing non-preprint from sending as a preprint "
-                        + article.doi
-                    )
-                    if article.doi not in remove_doi_list:
-                        remove_doi_list.append(article.doi)
                     continue
                 # get version from the article
                 version = version_from_article(article)

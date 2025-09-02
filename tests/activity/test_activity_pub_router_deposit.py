@@ -3,6 +3,7 @@ import datetime
 from mock import patch
 from ddt import ddt, data, unpack
 from testfixtures import TempDirectory
+import copy
 from provider import yaml_provider
 from provider.article import article
 import activity.activity_PubRouterDeposit as activity_module
@@ -367,7 +368,7 @@ class TestApproveArticles(unittest.TestCase):
         test_article.doi_id = "00666"
         test_article.article_type = "research-article"
         test_article.display_channel = ["Research Article"]
-        test_article.is_poa = True
+        test_article.is_poa = False
         # instantiate a preprint article object
         test_preprint_article = article()
         test_preprint_article.doi = "10.7554/eLife.85111"
@@ -376,7 +377,8 @@ class TestApproveArticles(unittest.TestCase):
         test_preprint_article.article_type = "research-article"
         test_preprint_article.publication_state = "reviewed preprint"
         # populate article fixtures
-        self.articles = [test_article, test_preprint_article]
+        self.articles = [test_article]
+        self.preprint_articles = [test_preprint_article]
 
         self.rules = yaml_provider.load_config(settings_mock)
 
@@ -414,7 +416,7 @@ class TestApproveArticles(unittest.TestCase):
         )
 
         expected_approved_article_dois = ["10.7554/eLife.00666"]
-        expected_remove_doi_list = ["10.7554/eLife.85111"]
+        expected_remove_doi_list = []
         approved_articles, remove_doi_list = self.pubrouterdeposit.approve_articles(
             self.articles, workflow_name, self.rules.get(workflow_name)
         )
@@ -447,9 +449,9 @@ class TestApproveArticles(unittest.TestCase):
         )
 
         expected_approved_article_dois = ["10.7554/eLife.85111"]
-        expected_remove_doi_list = ["10.7554/eLife.00666"]
+        expected_remove_doi_list = []
         approved_articles, remove_doi_list = self.pubrouterdeposit.approve_articles(
-            self.articles, workflow_name, self.rules.get(workflow_name)
+            self.preprint_articles, workflow_name, self.rules.get(workflow_name)
         )
         approved_article_dois = [article.doi for article in approved_articles]
         self.assertEqual(approved_article_dois, expected_approved_article_dois)
@@ -483,10 +485,10 @@ class TestApproveArticles(unittest.TestCase):
         fake_version_from_article.return_value = None
 
         expected_approved_article_dois = []
-        expected_remove_doi_list = ["10.7554/eLife.00666", "10.7554/eLife.85111"]
+        expected_remove_doi_list = ["10.7554/eLife.85111"]
         # invoke
         approved_articles, remove_doi_list = self.pubrouterdeposit.approve_articles(
-            self.articles, workflow_name, self.rules.get(workflow_name)
+            self.preprint_articles, workflow_name, self.rules.get(workflow_name)
         )
         # assert
         approved_article_dois = [article.doi for article in approved_articles]
@@ -519,7 +521,7 @@ class TestApproveArticles(unittest.TestCase):
         # article test data that will not be sent to OASwitchboard
         self.articles[0].article_type = None
         expected_approved_article_dois = []
-        expected_remove_doi_list = ["10.7554/eLife.00666", "10.7554/eLife.85111"]
+        expected_remove_doi_list = ["10.7554/eLife.00666"]
         # invoke
         approved_articles, remove_doi_list = self.pubrouterdeposit.approve_articles(
             self.articles, workflow_name, self.rules.get(workflow_name)
@@ -560,7 +562,7 @@ class TestApproveArticles(unittest.TestCase):
             test_case_data.lax_article_versions_response_data,
         )
         expected_approved_article_dois = []
-        expected_remove_doi_list = ["10.7554/eLife.00666", "10.7554/eLife.85111"]
+        expected_remove_doi_list = ["10.7554/eLife.00666"]
         # invoke
         approved_articles, remove_doi_list = self.pubrouterdeposit.approve_articles(
             self.articles, workflow_name, self.rules.get(workflow_name)
@@ -586,7 +588,7 @@ class TestApproveArticles(unittest.TestCase):
         "PMC",
         "WoS",
     )
-    def test_approve_articles_archive_zip_does_not_exist(
+    def test_approve_articles_vor_archive_zip_does_not_exist(
         self,
         workflow_name,
         fake_article_versions,
@@ -594,7 +596,7 @@ class TestApproveArticles(unittest.TestCase):
         fake_was_ever_published,
         fake_get_latest_archive_zip_name,
     ):
-        "test when was_ever_published is False for coverage"
+        "test when archive zip for a VOR is not found in the bucket"
         fake_was_ever_poa.return_value = True
         fake_was_ever_published.return_value = False
         fake_get_latest_archive_zip_name.return_value = None
@@ -603,13 +605,67 @@ class TestApproveArticles(unittest.TestCase):
             test_case_data.lax_article_versions_response_data,
         )
         # article test data that will not be sent to OASwitchboard
-        self.articles[0].article_type = None
-        self.articles[1].article_type = None
-        expected_approved_article_dois = []
-        expected_remove_doi_list = ["10.7554/eLife.00666", "10.7554/eLife.85111"]
+        articles = copy.copy(self.articles)
+        articles[0].article_type = None
+        # expected list of DOIs will depend on preprint or non-preprint workflow
+        if workflow_name == "CLOCKSS_Preprint":
+            expected_approved_article_dois = ["10.7554/eLife.00666"]
+            expected_remove_doi_list = []
+        else:
+            expected_approved_article_dois = []
+            expected_remove_doi_list = ["10.7554/eLife.00666"]
+
         # invoke
         approved_articles, remove_doi_list = self.pubrouterdeposit.approve_articles(
-            self.articles, workflow_name, self.rules.get(workflow_name)
+            articles, workflow_name, self.rules.get(workflow_name)
+        )
+        # assert
+        approved_article_dois = [article.doi for article in approved_articles]
+        self.assertEqual(
+            approved_article_dois,
+            expected_approved_article_dois,
+            "Failed for workflow_name %s" % workflow_name,
+        )
+        self.assertEqual(remove_doi_list, expected_remove_doi_list)
+
+    @patch.object(activity_PubRouterDeposit, "get_latest_archive_zip_name")
+    @patch("provider.article.article.was_ever_published")
+    @patch("provider.lax_provider.was_ever_poa")
+    @patch("provider.lax_provider.article_versions")
+    @data(
+        "Cengage",
+        "CLOCKSS_Preprint",
+    )
+    def test_approve_articles_preprint_archive_zip_does_not_exist(
+        self,
+        workflow_name,
+        fake_article_versions,
+        fake_was_ever_poa,
+        fake_was_ever_published,
+        fake_get_latest_archive_zip_name,
+    ):
+        "test when archive zip for a preprint is not found in the bucket"
+        fake_was_ever_poa.return_value = True
+        fake_was_ever_published.return_value = False
+        fake_get_latest_archive_zip_name.return_value = None
+        fake_article_versions.return_value = (
+            200,
+            test_case_data.lax_article_versions_response_data,
+        )
+        # article test data that will not be sent to OASwitchboard
+        articles = copy.copy(self.preprint_articles)
+        articles[0].article_type = None
+
+        if workflow_name == "CLOCKSS_Preprint":
+            expected_approved_article_dois = []
+            expected_remove_doi_list = ["10.7554/eLife.85111"]
+        else:
+            expected_approved_article_dois = ["10.7554/eLife.85111"]
+            expected_remove_doi_list = []
+
+        # invoke
+        approved_articles, remove_doi_list = self.pubrouterdeposit.approve_articles(
+            articles, workflow_name, self.rules.get(workflow_name)
         )
         # assert
         approved_article_dois = [article.doi for article in approved_articles]
