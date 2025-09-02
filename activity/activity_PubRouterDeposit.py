@@ -223,11 +223,14 @@ class activity_PubRouterDeposit(Activity):
     def sqs_connect(self):
         "connect to the queue service"
         if not self.sqs_client:
-            self.sqs_client = self.settings.aws_conn('sqs', {
-                'aws_access_key_id': self.settings.aws_access_key_id,
-                'aws_secret_access_key': self.settings.aws_secret_access_key,
-                'region_name': self.settings.sqs_region,
-            })
+            self.sqs_client = self.settings.aws_conn(
+                "sqs",
+                {
+                    "aws_access_key_id": self.settings.aws_access_key_id,
+                    "aws_secret_access_key": self.settings.aws_secret_access_key,
+                    "region_name": self.settings.sqs_region,
+                },
+            )
 
     def sqs_queue_url(self):
         "get the queues"
@@ -251,7 +254,7 @@ class activity_PubRouterDeposit(Activity):
         message = {
             "workflow_name": workflow_name,
             "workflow_data": workflow_data,
-            "execution_start_to_close_timeout": str(60 * 60 * 2)
+            "execution_start_to_close_timeout": str(60 * 60 * 2),
         }
         self.logger.info(
             "%s, starting a %s workflow for article_id %s",
