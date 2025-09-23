@@ -297,6 +297,7 @@ class exp:
     git_repo_name = "repository-name"
     git_repo_path = "articles/"
     git_preprint_repo_path = "preprints/"
+    github_named_user = ""
 
     # eLife 2.0 bot lax communication settings
     xml_info_queue = "bot-lax-exp-inc"
@@ -682,6 +683,7 @@ class dev:
     git_repo_name = "repository-name"
     git_repo_path = "articles/"
     git_preprint_repo_path = "preprints/"
+    github_named_user = ""
 
     # videos
     video_url = "https://video.url.here/"
@@ -1064,6 +1066,7 @@ class live:
     git_repo_name = "elife-articles-xml"
     git_repo_path = "articles/"
     git_preprint_repo_path = "preprints/"
+    github_named_user = "github_user_name"
 
     # eLife 2.0 bot lax communication settings
     xml_info_queue = "bot-lax-prod-inc"
