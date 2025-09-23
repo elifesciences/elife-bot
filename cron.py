@@ -109,6 +109,17 @@ def conditional_starts(current_datetime):
         # Jobs to start at the top of the hour
         LOGGER.info("Top of the hour")
 
+        # Check for preprints to reingest at the top of the hour each hour
+        conditional_start_list.append(
+            OrderedDict(
+                [
+                    ("starter_name", "starter_FindReingestPreprint"),
+                    ("workflow_id", "FindReingestPreprint"),
+                    ("start_seconds", 60 * 31),
+                ]
+            )
+        )
+
         # POA Publish at specific hours of the day UK time
         if local_current_time.tm_hour in (10, 12, 14, 16):
             conditional_start_list.append(
@@ -447,6 +458,7 @@ def start_workflow(settings, starter_name, workflow_id=None):
         "starter_PubmedArticleDeposit",
         "starter_FindNewDocmaps",
         "starter_FindReadyToFinishPreprints",
+        "starter_FindReingestPreprint",
     ]:
         starter_object.start(settings=settings)
 
