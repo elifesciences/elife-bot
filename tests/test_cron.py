@@ -155,8 +155,16 @@ class TestConditionalStarts(unittest.TestCase):
         {
             "comment": "zero hour",
             "date_time": "1970-01-01 00:00:00 UTC",
-            "expected_starter_names": ["cron_FiveMinute", "starter_DepositCrossref"],
-            "expected_workflow_ids": ["cron_FiveMinute", "DepositCrossref"],
+            "expected_starter_names": [
+                "cron_FiveMinute",
+                "starter_DepositCrossref",
+                "starter_FindReingestPreprint",
+            ],
+            "expected_workflow_ids": [
+                "cron_FiveMinute",
+                "DepositCrossref",
+                "FindReingestPreprint",
+            ],
         }
     )
     def test_conditional_starts_00_00(self, test_data):
@@ -285,11 +293,13 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
+                "starter_FindReingestPreprint",
                 "starter_PublishPOA",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
+                "FindReingestPreprint",
                 "PublishPOA",
             ],
         },
@@ -344,11 +354,13 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
+                "starter_FindReingestPreprint",
                 "starter_PubRouterDeposit",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
+                "FindReingestPreprint",
                 "PubRouterDeposit_CLOCKSS_Preprint",
             ],
         },
@@ -428,11 +440,13 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
+                "starter_FindReingestPreprint",
                 "starter_PubRouterDeposit",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
+                "FindReingestPreprint",
                 "PubRouterDeposit_CLOCKSS",
             ],
         },
@@ -510,11 +524,13 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
+                "starter_FindReingestPreprint",
                 "starter_PubRouterDeposit",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
+                "FindReingestPreprint",
                 "PubRouterDeposit_CNKI",
             ],
         },
