@@ -39,6 +39,34 @@ class TestMatchIssueTitle(unittest.TestCase):
         self.assertEqual(result, False)
 
 
+class TestDetailFromIssueTitle(unittest.TestCase):
+    "tests for detail_from_issue_title()"
+
+    def test_detail_from_issue_title(self):
+        "test title matching article_id MSID and version"
+        title = "MSID: 95901 Version: 1 DOI x"
+        msid = 95901
+        version = 1
+        result = github_provider.detail_from_issue_title(title)
+        self.assertEqual(result, (95901, 1))
+
+    def test_no_match(self):
+        "test if the title does not match"
+        title = "MSID: 5 Version: b DOI x"
+        msid = 95901
+        version = 1
+        result = github_provider.detail_from_issue_title(title)
+        self.assertEqual(result, (None, None))
+
+    def test_blank_title(self):
+        "test if the title is blank"
+        title = ""
+        msid = 95901
+        version = 1
+        result = github_provider.detail_from_issue_title(title)
+        self.assertEqual(result, (None, None))
+
+
 class TestFindGithubIssue(unittest.TestCase):
     "tests for find_github_issue()"
 
@@ -137,6 +165,69 @@ class TestAddGithubIssueComment(unittest.TestCase):
             )
             % (caller_name, version_doi, exception_message),
         )
+
+
+class TestFindGithubIssuesByAssignee(unittest.TestCase):
+    "tests for find_github_issues_by_assignee()"
+
+    @patch.object(FakeGithubRepository, "get_issues")
+    @patch.object(github_provider, "Github")
+    def test_find_github_issues_by_assignee(self, fake_github, fake_get_issues):
+        "test find_github_issues_by_assignee returns a list of issues"
+        fake_github.return_value = FakeGithub()
+        fake_get_issues.return_value = [
+            FakeGithubIssue(
+                title="MSID: 96848 Version: 2 DOI: 10.1101/2024.01.31.xxxx96848",
+                number=1,
+            ),
+            FakeGithubIssue(
+                title="MSID: 95901 Version: 1 DOI: 10.1101/2024.01.31.xxxx95901",
+                number=2,
+            ),
+        ]
+        assignee = "elife-bot"
+        # invoke
+        result = github_provider.find_github_issues_by_assignee(
+            settings_mock.github_token,
+            settings_mock.preprint_issues_repo_name,
+            assignee=assignee,
+        )
+        # assert
+        self.assertIsNotNone(result)
+        self.assertEqual(
+            result[0].title, "MSID: 96848 Version: 2 DOI: 10.1101/2024.01.31.xxxx96848"
+        )
+
+    @patch.object(FakeGithubRepository, "get_issues")
+    @patch.object(github_provider, "Github")
+    def test_no_issues(self, fake_github, fake_get_issues):
+        "test if no issues found"
+        fake_github.return_value = FakeGithub()
+        fake_get_issues.return_value = []
+        assignee = "elife-bot"
+        # invoke
+        result = github_provider.find_github_issues_by_assignee(
+            settings_mock.github_token,
+            settings_mock.preprint_issues_repo_name,
+            assignee=assignee,
+        )
+        # assert
+        self.assertEqual(result, [])
+
+
+class TestRemoveGithubIssueAssignee(unittest.TestCase):
+    "tests for remove_github_issue_assignee()"
+
+    def test_remove_github_issue_assignee(self):
+        "test removing an assignee from a Github issue mock object"
+        github_issue = FakeGithubIssue()
+        remove_named_user = "elife-bot"
+        keep_named_user = "foo"
+        github_issue.assignees = [remove_named_user, keep_named_user]
+        # invoke
+        github_provider.remove_github_issue_assignee(github_issue, remove_named_user)
+        # assert
+        self.assertEqual(github_issue.assignees, [keep_named_user])
 
 
 @patch.object(github_provider, "Github")

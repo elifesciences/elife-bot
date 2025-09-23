@@ -26,6 +26,14 @@ def match_issue_title(title, article_id, version):
     return False
 
 
+def detail_from_issue_title(title):
+    "extract the article ID and verison from the issue title"
+    match = re.match(ISSUE_TITLE_MATCH_PATTERN, title)
+    if match:
+        return int(match.group("msid")), int(match.group("version"))
+    return None, None
+
+
 def find_github_issue(token, repo_name, version_doi):
     "find the github issue for the article version"
     github_object = Github(token)
@@ -70,6 +78,20 @@ def add_github_issue_comment(settings, logger, caller_name, version_doi, issue_c
                 )
                 % (caller_name, version_doi, str(exception))
             )
+
+
+def find_github_issues_by_assignee(token, repo_name, assignee, state="open"):
+    "find github issues assigned to assignee of state specified"
+    github_object = Github(token)
+    user = github_object.get_user(GITHUB_USER)
+    repo = user.get_repo(repo_name)
+    # find the matching issues and return a list
+    return repo.get_issues(state=state, assignee=assignee)
+
+
+def remove_github_issue_assignee(issue, named_user):
+    "remove assignee from the github issue"
+    issue.remove_from_assignees(named_user)
 
 
 def update_github(settings, logger, repo_file, content):

@@ -363,6 +363,7 @@ class FakeGithubIssue:
         self.title = title
         self.number = number
         self.comment = None
+        self.assignees = []
 
     def __repr__(self) -> str:
         return "{class_name}({params})".format(
@@ -373,3 +374,8 @@ class FakeGithubIssue:
     def create_comment(self, body):
         self.comment = FakeIssueComment(body)
         return self.comment
+
+    def remove_from_assignees(self, named_user):
+        self.assignees = [
+            assignee for assignee in self.assignees if assignee != named_user
+        ]
