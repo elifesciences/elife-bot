@@ -230,6 +230,19 @@ class TestRemoveGithubIssueAssignee(unittest.TestCase):
         self.assertEqual(github_issue.assignees, [keep_named_user])
 
 
+class TestAddLabelToGithubIssue(unittest.TestCase):
+    "tests for add_label_to_github_issue()"
+
+    def test_add_label_to_github_issue(self):
+        "test adding a label to a Github issue mock object"
+        github_issue = FakeGithubIssue()
+        label = "workflow run"
+        # invoke
+        github_provider.add_label_to_github_issue(github_issue, label)
+        # assert
+        self.assertEqual(github_issue.labels, [label])
+
+
 @patch.object(github_provider, "Github")
 class TestUpdateGithub(unittest.TestCase):
     def setUp(self):

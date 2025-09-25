@@ -63,6 +63,7 @@ class workflow_IngestMeca(Workflow):
                     start_to_close_timeout=60 * 10,
                 ),
                 define_workflow_step("EmailMecaOutput", data),
+                define_workflow_step("AddPreprintIssueLabel", data),
             ],
             "finish": {"requirements": None},
         }

@@ -94,6 +94,11 @@ def remove_github_issue_assignee(issue, named_user):
     issue.remove_from_assignees(named_user)
 
 
+def add_label_to_github_issue(issue, label):
+    "add a label to the github issue"
+    issue.add_to_labels(label)
+
+
 def update_github(settings, logger, repo_file, content):
     "add or update XML file in github repository"
     github_object = Github(settings.github_token)

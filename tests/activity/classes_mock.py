@@ -364,6 +364,7 @@ class FakeGithubIssue:
         self.number = number
         self.comment = None
         self.assignees = []
+        self.labels = []
 
     def __repr__(self) -> str:
         return "{class_name}({params})".format(
@@ -379,3 +380,7 @@ class FakeGithubIssue:
         self.assignees = [
             assignee for assignee in self.assignees if assignee != named_user
         ]
+
+    def add_to_labels(self, label):
+        if label not in self.labels:
+            self.labels.append(label)
