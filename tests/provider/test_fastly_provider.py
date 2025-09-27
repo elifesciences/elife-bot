@@ -43,3 +43,8 @@ class TestFastlyProvider(unittest.TestCase):
         response = Response()
         response.status_code = status_code
         post_mock.return_value = response
+
+    @patch("requests.post")
+    def test_purge_preprint(self, post_mock):
+        self._allow_call(post_mock)
+        fastly_provider.purge_preprint("10627", "1", settings_mock)
