@@ -35,6 +35,7 @@ class workflow_PostPreprintPublication(Workflow):
             "steps": [
                 define_workflow_step("PingWorker", data),
                 define_workflow_step("MecaPostPublicationDetails", data),
+                define_workflow_step("InvalidatePreprintCdn", data),
                 define_workflow_step(
                     "ExpandMeca",
                     data,

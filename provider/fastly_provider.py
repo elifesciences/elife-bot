@@ -39,3 +39,23 @@ def purge(article_id, version, settings):
             responses.append(api.purge(surrogate_key, service_id))
 
     return responses
+
+
+PREPRINT_KEYS = [
+    "preprint/{article_id}v{version}",
+    "preprint/{article_id}",
+]
+
+
+def purge_preprint(article_id, version, settings):
+    "purge preprint surrogate keys"
+    responses = []
+    api = FastlyApi(settings.fastly_api_key)
+    for service_id in settings.fastly_service_ids:
+        for key in PREPRINT_KEYS:
+            surrogate_key = key.format(
+                article_id=utils.pad_msid(article_id), version=version
+            )
+            responses.append(api.purge(surrogate_key, service_id))
+
+    return responses
