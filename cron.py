@@ -104,21 +104,21 @@ def conditional_starts(current_datetime):
             )
         )
 
-    # Based on the minutes of the current time, run certain starters
-    if current_time.tm_min >= 0 and current_time.tm_min <= 14:
-        # Jobs to start at the top of the hour
-        LOGGER.info("Top of the hour")
-
-        # Check for preprints to reingest at the top of the hour each hour
+        # Check for preprints to reingest every five minutes
         conditional_start_list.append(
             OrderedDict(
                 [
                     ("starter_name", "starter_FindReingestPreprint"),
                     ("workflow_id", "FindReingestPreprint"),
-                    ("start_seconds", 60 * 31),
+                    ("start_seconds", 60 * 3),
                 ]
             )
         )
+
+    # Based on the minutes of the current time, run certain starters
+    if current_time.tm_min >= 0 and current_time.tm_min <= 14:
+        # Jobs to start at the top of the hour
+        LOGGER.info("Top of the hour")
 
         # POA Publish at specific hours of the day UK time
         if local_current_time.tm_hour in (10, 12, 14, 16):
