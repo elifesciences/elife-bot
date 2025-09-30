@@ -177,10 +177,12 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
+                "starter_FindReingestPreprint",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
+                "FindReingestPreprint",
             ],
         }
     )
@@ -194,11 +196,13 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
+                "starter_FindReingestPreprint",
                 "cron_NewS3POA",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
+                "FindReingestPreprint",
                 "cron_NewS3POA",
             ],
         },
@@ -213,12 +217,14 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
+                "starter_FindReingestPreprint",
                 "cron_NewS3POA",
                 "starter_FindNewDocmaps",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
+                "FindReingestPreprint",
                 "cron_NewS3POA",
                 "FindNewDocmaps",
             ],
@@ -234,12 +240,14 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
+                "starter_FindReingestPreprint",
                 "starter_PubmedArticleDeposit",
                 "starter_AdminEmail",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
+                "FindReingestPreprint",
                 "PubmedArticleDeposit",
                 "AdminEmail",
             ],
@@ -255,11 +263,13 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
+                "starter_FindReingestPreprint",
                 "cron_NewS3POA",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
+                "FindReingestPreprint",
                 "cron_NewS3POA",
             ],
         },
@@ -274,11 +284,13 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
+                "starter_FindReingestPreprint",
                 "cron_NewS3POA",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
+                "FindReingestPreprint",
                 "cron_NewS3POA",
             ],
         },
@@ -314,12 +326,14 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
+                "starter_FindReingestPreprint",
                 "starter_PubmedArticleDeposit",
                 "starter_AdminEmail",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
+                "FindReingestPreprint",
                 "PubmedArticleDeposit",
                 "AdminEmail",
             ],
@@ -335,11 +349,13 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
+                "starter_FindReingestPreprint",
                 "starter_PubRouterDeposit",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
+                "FindReingestPreprint",
                 "PubRouterDeposit_PMC",
             ],
         },
@@ -375,12 +391,14 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
+                "starter_FindReingestPreprint",
                 "starter_DepositCrossrefPendingPublication",
                 "starter_PubRouterDeposit",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
+                "FindReingestPreprint",
                 "DepositCrossrefPendingPublication",
                 "PubRouterDeposit_Zendy",
             ],
@@ -396,11 +414,13 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
+                "starter_FindReingestPreprint",
                 "starter_PubRouterDeposit",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
+                "FindReingestPreprint",
                 "PubRouterDeposit_WoS",
             ],
         },
@@ -415,6 +435,7 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
+                "starter_FindReingestPreprint",
                 "starter_PublicationEmail",
                 "starter_PubRouterDeposit",
                 "starter_PubmedArticleDeposit",
@@ -423,6 +444,7 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
+                "FindReingestPreprint",
                 "PublicationEmail",
                 "PubRouterDeposit_GoOA",
                 "PubmedArticleDeposit",
@@ -461,12 +483,14 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
+                "starter_FindReingestPreprint",
                 "starter_DepositCrossrefPendingPublication",
                 "starter_PubRouterDeposit",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
+                "FindReingestPreprint",
                 "DepositCrossrefPendingPublication",
                 "PubRouterDeposit_OVID",
             ],
@@ -482,11 +506,13 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
+                "starter_FindReingestPreprint",
                 "starter_PubRouterDeposit",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
+                "FindReingestPreprint",
                 "PubRouterDeposit_OASwitchboard",
             ],
         },
@@ -501,6 +527,7 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
+                "starter_FindReingestPreprint",
                 "starter_PubRouterDeposit",
                 "starter_PubmedArticleDeposit",
                 "starter_AdminEmail",
@@ -508,6 +535,7 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
+                "FindReingestPreprint",
                 "PubRouterDeposit_Cengage",
                 "PubmedArticleDeposit",
                 "AdminEmail",
@@ -545,12 +573,14 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
+                "starter_FindReingestPreprint",
                 "starter_DepositCrossrefPendingPublication",
                 "starter_PubRouterDeposit",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
+                "FindReingestPreprint",
                 "DepositCrossrefPendingPublication",
                 "PubRouterDeposit_Scilit",
             ],
@@ -566,11 +596,13 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
+                "starter_FindReingestPreprint",
                 "starter_PubRouterDeposit",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
+                "FindReingestPreprint",
                 "PubRouterDeposit_CNPIEC",
             ],
         },
@@ -585,6 +617,7 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
+                "starter_FindReingestPreprint",
                 "starter_PubRouterDeposit",
                 "starter_PubmedArticleDeposit",
                 "starter_AdminEmail",
@@ -592,6 +625,7 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
+                "FindReingestPreprint",
                 "PubRouterDeposit_HEFCE",
                 "PubmedArticleDeposit",
                 "AdminEmail",
@@ -608,6 +642,7 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_starter_names": [
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
+                "starter_FindReingestPreprint",
                 "starter_FindReadyToFinishPreprints",
                 "starter_PubmedArticleDeposit",
                 "starter_AdminEmail",
@@ -615,6 +650,7 @@ class TestConditionalStarts(unittest.TestCase):
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
+                "FindReingestPreprint",
                 "FindReadyToFinishPreprints",
                 "PubmedArticleDeposit",
                 "AdminEmail",
