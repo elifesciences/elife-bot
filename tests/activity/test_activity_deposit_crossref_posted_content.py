@@ -235,6 +235,20 @@ class TestDepositCrossrefPostedContent(unittest.TestCase):
                 "<year>2023</year>",
                 "<doi>10.7554/eLife.85111.1</doi>",
                 "<resource>https://elifesciences.org/reviewed-preprints/85111v1</resource>",
+                (
+                    '<collection property="text-mining">\n'
+                    "<item>\n"
+                    '<resource mime_type="application/pdf">'
+                    "https://cdn.elifesciences.org/preprints/85111/elife-preprint-85111-v1.pdf"
+                    "</resource>\n"
+                    "</item>\n"
+                    "<item>\n"
+                    '<resource mime_type="application/xml">'
+                    "https://cdn.elifesciences.org/preprints/85111/elife-preprint-85111-v1.xml"
+                    "</resource>\n"
+                    "</item>\n"
+                    "</collection>"
+                ),
                 "</posted_content>",
                 (
                     '<rel:intra_work_relation identifier-type="doi"'
