@@ -3,6 +3,7 @@
 import os
 import time
 import unittest
+from xml.etree import ElementTree
 from xml.etree.ElementTree import Element
 from mock import patch
 from testfixtures import TempDirectory
@@ -986,3 +987,127 @@ class TestGetPreprintPdfUrl(unittest.TestCase):
             preprint.get_preprint_pdf_url(
                 self.endpoint_url, self.caller_name, self.user_agent
             )
+
+
+class TestClearPdfSelfUri(unittest.TestCase):
+    "tests for clear_pdf_self_uri()"
+
+    def test_clear_pdf_self_uri(self):
+        "test removing pdf self-uri tags"
+        xml_string = (
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink">'
+            "<front><article-meta>"
+            "<permissions />"
+            '<self-uri xlink:href="https://example.org" />'
+            '<self-uri xlink:href="24301711.pdf" content-type="pdf" xlink:role="full-text" />'
+            "<related-article />"
+            "</article-meta></front>"
+            "</article>"
+        )
+        xml_root = ElementTree.fromstring(xml_string)
+        expected = (
+            b'<article xmlns:xlink="http://www.w3.org/1999/xlink">'
+            b"<front><article-meta>"
+            b"<permissions />"
+            b'<self-uri xlink:href="https://example.org" />'
+            b"<related-article />"
+            b"</article-meta></front>"
+            b"</article>"
+        )
+        # invoke
+        preprint.clear_pdf_self_uri(xml_root)
+        # assert
+        self.assertEqual(ElementTree.tostring(xml_root), expected)
+
+
+class TestSetPdfSelfUri(unittest.TestCase):
+    "tests for set_pdf_self_uri()"
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_set_pdf_self_uri(self):
+        "test replacing an existing self-uri tag"
+        directory = TempDirectory()
+        xml_header = (
+            '<?xml version="1.0" ?>'
+            '<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96)'
+            ' Journal Archiving and Interchange DTD v1.3 20210610//EN"'
+            '  "JATS-archivearticle1-mathml3.dtd">'
+        )
+        article_open_tag = (
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink"'
+            ' article-type="research-article" dtd-version="1.3" xml:lang="en">'
+        )
+        xml_string = (
+            "%s%s"
+            "<front><article-meta>"
+            "<pub-history/>"
+            "<permissions/>"
+            '<self-uri xlink:href="24301711.pdf" content-type="pdf" xlink:role="full-text"/>'
+            "<related-article/>"
+            "</article-meta></front></article>" % (xml_header, article_open_tag)
+        )
+        xml_file_name = "article.xml"
+        xml_file_path = os.path.join(directory.path, xml_file_name)
+        with open(xml_file_path, "w", encoding="utf-8") as open_file:
+            open_file.write(xml_string)
+        pdf_file_name = "elife-preprint-95901-v1.pdf"
+        identifier = "10.7554/eLife.95901.1"
+        expected = (
+            "%s%s"
+            "<front><article-meta>"
+            "<pub-history/>"
+            "<permissions/>"
+            '<self-uri content-type="pdf" xlink:href="elife-preprint-95901-v1.pdf"/>\n'
+            "<related-article/>"
+            "</article-meta></front></article>" % (xml_header, article_open_tag)
+        )
+        # invoke
+        preprint.set_pdf_self_uri(xml_file_path, pdf_file_name, identifier)
+        # assert
+        with open(xml_file_path, "r", encoding="utf-8") as open_file:
+            xml_content = open_file.read()
+        self.assertEqual(xml_content, expected)
+
+    def test_add_new_pdf_self_uri(self):
+        "test adding a self-uri tag"
+        directory = TempDirectory()
+        xml_header = (
+            '<?xml version="1.0" ?>'
+            '<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96)'
+            ' Journal Archiving and Interchange DTD v1.3 20210610//EN"'
+            '  "JATS-archivearticle1-mathml3.dtd">'
+        )
+        xml_string = (
+            "%s"
+            '<article article-type="research-article" dtd-version="1.3" xml:lang="en">'
+            "<front><article-meta>"
+            "<pub-history/>"
+            "<permissions/>"
+            "<related-article/>"
+            "</article-meta></front></article>" % xml_header
+        )
+        xml_file_name = "article.xml"
+        xml_file_path = os.path.join(directory.path, xml_file_name)
+        with open(xml_file_path, "w", encoding="utf-8") as open_file:
+            open_file.write(xml_string)
+        pdf_file_name = "elife-preprint-95901-v1.pdf"
+        identifier = "10.7554/eLife.95901.1"
+        expected = (
+            "%s"
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink"'
+            ' article-type="research-article" dtd-version="1.3" xml:lang="en">'
+            "<front><article-meta>"
+            "<pub-history/>"
+            "<permissions/>"
+            '<self-uri content-type="pdf" xlink:href="elife-preprint-95901-v1.pdf"/>\n'
+            "<related-article/>"
+            "</article-meta></front></article>" % xml_header
+        )
+        # invoke
+        preprint.set_pdf_self_uri(xml_file_path, pdf_file_name, identifier)
+        # assert
+        with open(xml_file_path, "r", encoding="utf-8") as open_file:
+            xml_content = open_file.read()
+        self.assertEqual(xml_content, expected)

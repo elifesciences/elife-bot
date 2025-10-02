@@ -6,7 +6,7 @@ from elifetools import xmlio
 from jatsgenerator import build
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
-from provider import cleaner, utils
+from provider import cleaner, meca, preprint, utils
 from activity.objects import MecaBaseActivity
 
 
@@ -53,6 +53,7 @@ class activity_ModifyMecaPublishedXml(MecaBaseActivity):
         article_xml_path = session.get_value("article_xml_path")
         expanded_folder = session.get_value("expanded_folder")
         version_doi = session.get_value("version_doi")
+        article_id = session.get_value("article_id")
 
         # doi data
         doi, version = utils.version_doi_parts(version_doi)
@@ -144,6 +145,20 @@ class activity_ModifyMecaPublishedXml(MecaBaseActivity):
             copyright_holder = cleaner.get_copyright_holder(xml_file_path)
         cleaner.modify_permissions(
             xml_root, license_data_dict, copyright_year, copyright_holder
+        )
+
+        # generate path to the PDF file
+        content_subfolder = meca.meca_content_folder(article_xml_path)
+        new_pdf_href = preprint.generate_new_pdf_href(
+            article_id, version, content_subfolder
+        )
+        self.logger.info(
+            "%s, generated new PDF href value %s for %s"
+            % (self.name, new_pdf_href, version_doi)
+        )
+        # add / update self-uri tag in the article XML
+        preprint.set_pdf_self_uri_tag(
+            xml_root, new_pdf_href.rsplit("/", 1)[-1], version_doi
         )
 
         # finally, improve whitespace
