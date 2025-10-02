@@ -156,6 +156,12 @@ class TestModifyMecaPublishedXml(unittest.TestCase):
             in xml_string
         )
 
+        # assert PDF self-uri tag
+        self.assertTrue(
+            '<self-uri content-type="pdf" xlink:href="elife-preprint-95901-v2.pdf"/>'
+            in xml_string
+        )
+
     @patch.object(utils, "get_current_datetime")
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")

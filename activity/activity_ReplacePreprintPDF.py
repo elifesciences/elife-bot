@@ -98,7 +98,9 @@ class activity_ReplacePreprintPDF(MecaBaseActivity):
 
         # generate path to the PDF file
         content_subfolder = meca.meca_content_folder(article_xml_path)
-        new_pdf_href = generate_new_pdf_href(article_id, version, content_subfolder)
+        new_pdf_href = preprint.generate_new_pdf_href(
+            article_id, version, content_subfolder
+        )
         self.logger.info(
             "%s, generated new PDF href value %s for %s"
             % (self.name, new_pdf_href, version_doi)
@@ -202,7 +204,9 @@ class activity_ReplacePreprintPDF(MecaBaseActivity):
             storage.get_resource_to_file(xml_storage_resource_origin, open_file)
 
         # add / update self-uri tag in the article XML
-        set_pdf_self_uri(xml_file_path, new_pdf_href.rsplit("/", 1)[-1], version_doi)
+        preprint.set_pdf_self_uri(
+            xml_file_path, new_pdf_href.rsplit("/", 1)[-1], version_doi
+        )
         self.statuses["modify_article_xml"] = True
 
         # upload the XML to the bucket
@@ -247,46 +251,3 @@ def generate_new_pdf_href(article_id, version, content_subfolder):
         [part for part in [content_subfolder, new_pdf_file_name] if part]
     )
     return new_pdf_href
-
-
-def clear_pdf_self_uri(xml_root):
-    "remove self-uri tag if its content-type is pdf"
-    article_meta_tag = xml_root.find(".//front/article-meta")
-    for self_uri_tag in article_meta_tag.findall('self-uri[@content-type="pdf"]'):
-        article_meta_tag.remove(self_uri_tag)
-
-
-def set_pdf_self_uri(xml_file_path, pdf_file_name, identifier):
-    "set or add a self-uri tag to article XML for an article PDF file"
-    # Register namespaces
-    xmlio.register_xmlns()
-
-    # get the XML doctype
-    xml_root, doctype_dict, processing_instructions = xmlio.parse(
-        xml_file_path,
-        return_doctype_dict=True,
-        return_processing_instructions=True,
-    )
-
-    # remove old self-uri tags
-    clear_pdf_self_uri(xml_root)
-
-    # determine where to insert self-uri tag
-    insert_index = 0
-    article_meta_tag = xml_root.find(".//front/article-meta")
-    for index, tag in enumerate(article_meta_tag.findall("*")):
-        if tag.tag in ["permissions"]:
-            insert_index = index + 1
-            break
-
-    # add pdf self-uri tag
-    self_uri_tag = Element("self-uri")
-    self_uri_tag.set("content-type", "pdf")
-    self_uri_tag.set("{http://www.w3.org/1999/xlink}href", pdf_file_name)
-    self_uri_tag.tail = "\n"
-    article_meta_tag.insert(insert_index, self_uri_tag)
-
-    # write the XML root to disk
-    cleaner.write_xml_file(
-        xml_root, xml_file_path, identifier, doctype_dict, processing_instructions
-    )
