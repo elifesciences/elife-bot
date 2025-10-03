@@ -18,7 +18,7 @@ digestparser==0.2.0
 dill==0.4.0
 docker==7.1.0
 docmaptools==0.28.0
-ejpcsvparser==0.4.0
+ejpcsvparser==0.5.0
 elifearticle==0.25.0
 elifecleaner==0.82.0
 elifecrossref==0.46.0
