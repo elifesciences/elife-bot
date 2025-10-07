@@ -2,7 +2,7 @@ import os
 import json
 import time
 from xml.etree.ElementTree import Element
-from elifetools import xmlio
+from elifetools import xmlio, utils as etoolsutils
 from jatsgenerator import build
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
@@ -89,6 +89,12 @@ class activity_ModifyMecaPublishedXml(MecaBaseActivity):
         with open(xml_file_path, "wb") as open_file:
             storage.get_resource_to_file(storage_resource_origin, open_file)
         self.statuses["download"] = True
+
+        # convert entities to unicode if present
+        self.logger.info(
+            "%s, converting entities to unicode in %s" % (self.name, xml_file_path)
+        )
+        repair_entities(xml_file_path, self.name, self.logger)
 
         # get docmap as a string
         docmap_string = session.get_value("docmap_string")
@@ -186,6 +192,32 @@ class activity_ModifyMecaPublishedXml(MecaBaseActivity):
         self.clean_tmp_dir()
 
         return True
+
+
+def repair_entities(xml_file_path, caller_name, logger):
+    "replace entities with unicode characters in XML file"
+    # read file
+    repaired_xml_string = None
+    with open(xml_file_path, "rb") as open_file:
+        xml_string = open_file.read()
+    # replace entities
+    try:
+        repaired_xml_string = etoolsutils.entity_to_unicode(xml_string)
+    except TypeError:
+        # convert to string then back to bytes
+        repaired_xml_string = bytes(
+            etoolsutils.entity_to_unicode(utils.bytes_decode(xml_string)),
+            encoding="utf-8",
+        )
+    except Exception as exception:
+        logger.exception(
+            "%s, unhandled exception repairing entities in %s: %s"
+            % (caller_name, xml_file_path, str(exception))
+        )
+    # write to file
+    if repaired_xml_string:
+        with open(xml_file_path, "wb") as open_file:
+            open_file.write(repaired_xml_string)
 
 
 def clear_year_only_pub_date(xml_root):
