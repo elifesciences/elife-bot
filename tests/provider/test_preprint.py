@@ -1152,7 +1152,7 @@ class TestRepairEntities(unittest.TestCase):
         with open(xml_file_path, "rb") as open_file:
             self.assertEqual(open_file.read(), expected)
 
-    @patch.object(etoolsutils, "entity_to_unicode")
+    @patch.object(etoolsutils, "named_entity_to_unicode")
     def test_exception(self, fake_entity_to_unicode):
         "test unhandled exception raised when replacing entities"
         directory = TempDirectory()

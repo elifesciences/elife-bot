@@ -84,6 +84,12 @@ class activity_ModifyMecaXml(MecaBaseActivity):
             storage.get_resource_to_file(storage_resource_origin, open_file)
         self.statuses["download"] = True
 
+        # convert entities to unicode if present
+        self.logger.info(
+            "%s, converting entities to unicode in %s" % (self.name, xml_file_path)
+        )
+        preprint.repair_entities(xml_file_path, self.name, self.logger)
+
         # get docmap as a string
         docmap_string = session.get_value("docmap_string")
         self.statuses["docmap_string"] = True

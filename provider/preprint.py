@@ -474,11 +474,11 @@ def repair_entities(xml_file_path, caller_name, logger):
         xml_string = open_file.read()
     # replace entities
     try:
-        repaired_xml_string = etoolsutils.entity_to_unicode(xml_string)
+        repaired_xml_string = etoolsutils.named_entity_to_unicode(xml_string)
     except TypeError:
         # convert to string then back to bytes
         repaired_xml_string = bytes(
-            etoolsutils.entity_to_unicode(utils.bytes_decode(xml_string)),
+            etoolsutils.named_entity_to_unicode(utils.bytes_decode(xml_string)),
             encoding="utf-8",
         )
     except Exception as exception:
