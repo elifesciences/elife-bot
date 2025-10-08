@@ -3,7 +3,7 @@ import os
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element, SubElement
 import requests
-from elifetools import xmlio
+from elifetools import xmlio, utils as etoolsutils
 from elifearticle.parse import build_article_from_xml
 from elifearticle.article import (
     Article,
@@ -464,3 +464,29 @@ def set_pdf_self_uri(xml_file_path, pdf_file_name, identifier):
     cleaner.write_xml_file(
         xml_root, xml_file_path, identifier, doctype_dict, processing_instructions
     )
+
+
+def repair_entities(xml_file_path, caller_name, logger):
+    "replace entities with unicode characters in XML file"
+    # read file
+    repaired_xml_string = None
+    with open(xml_file_path, "rb") as open_file:
+        xml_string = open_file.read()
+    # replace entities
+    try:
+        repaired_xml_string = etoolsutils.entity_to_unicode(xml_string)
+    except TypeError:
+        # convert to string then back to bytes
+        repaired_xml_string = bytes(
+            etoolsutils.entity_to_unicode(utils.bytes_decode(xml_string)),
+            encoding="utf-8",
+        )
+    except Exception as exception:
+        logger.exception(
+            "%s, unhandled exception repairing entities in %s: %s"
+            % (caller_name, xml_file_path, str(exception))
+        )
+    # write to file
+    if repaired_xml_string:
+        with open(xml_file_path, "wb") as open_file:
+            open_file.write(repaired_xml_string)

@@ -3,7 +3,7 @@ import json
 from elifetools import xmlio
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
-from provider import cleaner, meca
+from provider import cleaner, meca, preprint
 from activity.objects import MecaBaseActivity
 
 
@@ -86,6 +86,12 @@ class activity_ResetMeca(MecaBaseActivity):
         )
         with open(xml_file_path, "wb") as open_file:
             storage.get_resource_to_file(xml_storage_resource_origin, open_file)
+
+        # convert entities to unicode if present
+        self.logger.info(
+            "%s, converting entities to unicode in %s" % (self.name, xml_file_path)
+        )
+        preprint.repair_entities(xml_file_path, self.name, self.logger)
 
         # search XML for sub-article tags
         sub_article_tags = find_sub_article_tags(xml_file_path)
