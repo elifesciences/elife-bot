@@ -3,7 +3,7 @@ import json
 from elifetools import xmlio
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
-from provider import bigquery, cleaner, utils
+from provider import bigquery, cleaner, preprint, utils
 from activity.objects import MecaBaseActivity
 
 
@@ -83,6 +83,12 @@ class activity_ModifyMecaXml(MecaBaseActivity):
         with open(xml_file_path, "wb") as open_file:
             storage.get_resource_to_file(storage_resource_origin, open_file)
         self.statuses["download"] = True
+
+        # convert entities to unicode if present
+        self.logger.info(
+            "%s, converting entities to unicode in %s" % (self.name, xml_file_path)
+        )
+        preprint.repair_entities(xml_file_path, self.name, self.logger)
 
         # get docmap as a string
         docmap_string = session.get_value("docmap_string")

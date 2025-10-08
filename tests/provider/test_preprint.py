@@ -16,6 +16,7 @@ from elifearticle.article import (
     License,
     Role,
 )
+from elifetools import utils as etoolsutils
 from tests import read_fixture, settings_mock
 from tests.activity.classes_mock import FakeLogger, FakeResponse, FakeStorageContext
 from provider import cleaner, download_helper, preprint
@@ -1111,3 +1112,64 @@ class TestSetPdfSelfUri(unittest.TestCase):
         with open(xml_file_path, "r", encoding="utf-8") as open_file:
             xml_content = open_file.read()
         self.assertEqual(xml_content, expected)
+
+
+class TestRepairEntities(unittest.TestCase):
+    "tests for repair_entities()"
+
+    def setUp(self):
+        self.fake_logger = FakeLogger()
+        self.caller_name = "ModifyMecaPublishedXml"
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_repair_entities_in_bytes(self):
+        "test replacing entities in XML in bytes string"
+        directory = TempDirectory()
+        xml_string = b"&beta;"
+        xml_file_path = os.path.join(directory.path, "article.xml")
+        with open(xml_file_path, "wb") as open_file:
+            open_file.write(xml_string)
+        expected = b"\xce\xb2"
+        # invoke
+        preprint.repair_entities(xml_file_path, self.caller_name, self.fake_logger)
+        # assert
+        with open(xml_file_path, "rb") as open_file:
+            self.assertEqual(open_file.read(), expected)
+
+    def test_repair_entities_in_string(self):
+        "test replacing entities in XML in normal string"
+        directory = TempDirectory()
+        xml_string = "&beta;"
+        xml_file_path = os.path.join(directory.path, "article.xml")
+        with open(xml_file_path, "w", encoding="utf-8") as open_file:
+            open_file.write(xml_string)
+        expected = b"\xce\xb2"
+        # invoke
+        preprint.repair_entities(xml_file_path, self.caller_name, self.fake_logger)
+        # assert
+        with open(xml_file_path, "rb") as open_file:
+            self.assertEqual(open_file.read(), expected)
+
+    @patch.object(etoolsutils, "entity_to_unicode")
+    def test_exception(self, fake_entity_to_unicode):
+        "test unhandled exception raised when replacing entities"
+        directory = TempDirectory()
+        xml_string = b"&beta;"
+        xml_file_path = os.path.join(directory.path, "article.xml")
+        with open(xml_file_path, "wb") as open_file:
+            open_file.write(xml_string)
+        exception_message = "An exception"
+        fake_entity_to_unicode.side_effect = Exception(exception_message)
+        expected = xml_string
+        # invoke
+        preprint.repair_entities(xml_file_path, self.caller_name, self.fake_logger)
+        # assert
+        with open(xml_file_path, "rb") as open_file:
+            self.assertEqual(open_file.read(), expected)
+        self.assertEqual(
+            self.fake_logger.logexception,
+            ("%s, unhandled exception repairing entities in %s/article.xml: %s")
+            % (self.caller_name, directory.path, exception_message),
+        )
