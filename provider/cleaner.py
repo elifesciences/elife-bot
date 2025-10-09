@@ -265,7 +265,7 @@ def external_hrefs(href_list):
     ]
 
 
-IMAGE_HOSTNAME_LIST = ["i.imgur.com"]
+IMAGE_HOSTNAME_LIST = ["cdn.elifesciences.org", "i.imgur.com"]
 
 
 def filter_hrefs_by_hostname(href_list):

@@ -508,10 +508,18 @@ class TestFilterHrefsByHostname(unittest.TestCase):
             None,
             "local.jpg",
             "https://i.imgur.com/vc4GR10.tif",
+            (
+                "https://cdn.elifesciences.org/public-review-media/"
+                "85111/v1/author-response-image-1.jpg"
+            ),
         ]
         expected = [
             "https://i.imgur.com/vc4GR10.Png",
             "https://i.imgur.com/vc4GR10.tif",
+            (
+                "https://cdn.elifesciences.org/public-review-media/"
+                "85111/v1/author-response-image-1.jpg"
+            ),
         ]
         self.assertEqual(cleaner.filter_hrefs_by_hostname(href_list), expected)
 
