@@ -212,6 +212,28 @@ class activity_ModifyMecaXml(MecaBaseActivity):
                     % (self.name, article_id, version)
                 )
 
+        # 10. add funding XML
+        if session.get_value("run_type") != "silent-correction":
+            funding_data = get_funding_data(
+                article_id, version, self.settings, self.name, self.logger
+            )
+            if funding_data:
+                try:
+                    add_funding(xml_root, funding_data)
+                except Exception as exception:
+                    self.logger.exception(
+                        (
+                            "%s, exception raised when adding funding data"
+                            " for article_id %s, version %s: %s"
+                        )
+                        % (self.name, article_id, version, str(exception))
+                    )
+            else:
+                self.logger.info(
+                    "%s, no funding data from BigQuery for article_id %s, version %s"
+                    % (self.name, article_id, version)
+                )
+
         # finally, improve whitespace
         cleaner.format_article_meta_xml(xml_root)
 
@@ -329,3 +351,28 @@ def get_data_availability_data(article_id, version, settings, caller_name, logge
             % (caller_name, article_id, version, str(exception))
         )
     return None
+
+
+def get_funding_data(article_id, version, settings, caller_name, logger):
+    "from BigQuery get the funding data"
+    bigquery_client = bigquery.get_client(settings, logger)
+    try:
+        return bigquery.get_funding_data(bigquery_client, article_id, version)
+    except Exception as exception:
+        logger.exception(
+            (
+                "%s, exception getting funding data from"
+                " BigQuery for article_id %s, version %s: %s"
+            )
+            % (caller_name, article_id, version, str(exception))
+        )
+    return None
+
+
+def add_funding(xml_root, funding_data):
+    "adding funding XML using the funding_data"
+    funding_awards = []
+    if funding_data:
+        funding_awards = bigquery.parse_funding_data(funding_data)
+    if funding_awards:
+        cleaner.set_funding_award_data(xml_root, funding_awards)

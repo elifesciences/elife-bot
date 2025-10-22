@@ -1228,6 +1228,12 @@ def set_data_citation(parent, dataset, specific_use=None):
         pub_id_tag.text = dataset.doi
 
 
+def set_funding_award_data(xml_root, funding_awards):
+    "add funding data to the XML"
+    article_meta_tag = xml_root.find(".//front/article-meta")
+    build.set_funding_awards(article_meta_tag, funding_awards)
+
+
 def format_article_meta_xml(xml_root):
     "add whitespace around selected tags in XML article-meta"
     for tag in (
@@ -1277,6 +1283,24 @@ def format_article_meta_xml(xml_root):
             "./front/article-meta/contrib-group/contrib/aff/institution-wrap/institution"
         )
         + xml_root.findall("./front/article-meta/contrib-group/contrib/aff/country")
+        + xml_root.findall("./front/article-meta/funding-group")
+        + xml_root.findall("./front/article-meta/funding-group/award-group")
+        + xml_root.findall(
+            "./front/article-meta/funding-group/award-group/funding-source"
+        )
+        + xml_root.findall(
+            "./front/article-meta/funding-group/award-group/funding-source/institution-wrap"
+        )
+        + xml_root.findall(
+            "./front/article-meta/funding-group/award-group/funding-source/institution-wrap/institution-id"
+        )
+        + xml_root.findall(
+            "./front/article-meta/funding-group/award-group/funding-source/institution-wrap/institution"
+        )
+        + xml_root.findall("./front/article-meta/funding-group/award-group/award-id")
+        + xml_root.findall(
+            "./front/article-meta/funding-group/award-group/principal-award-recipient"
+        )
         + xml_root.findall("./back/sec")
         + xml_root.findall("./back/sec/p")
         + xml_root.findall("./back/ref-list/ref/element-citation/..")
