@@ -1,6 +1,7 @@
 from xml.etree import ElementTree
 from google.cloud.bigquery import Client, QueryJobConfig, ScalarQueryParameter
 from google.auth.exceptions import DefaultCredentialsError
+from elifearticle.article import Award, Contributor, FundingAward
 from provider import utils
 
 
@@ -15,6 +16,11 @@ BIG_QUERY_PREPRINT_VIEW_NAME = (
 
 BIG_QUERY_DATA_AVAILABILITY_VIEW_NAME = (
     "elife-data-pipeline.prod.mv_rp_data_availability"
+)
+
+
+BIG_QUERY_PREPRINT_FUNDING_VIEW_NAME = (
+    "elife-data-pipeline.prod.mv_rp_submission_funding_information"
 )
 
 
@@ -257,3 +263,57 @@ def parse_data_availability_data(data_availability_data):
                 data_citations.append(data_citation)
 
     return data_availability_statement, data_citations
+
+
+def get_funding_data(client, manuscript_id, version):
+    "get funding datafrom the view for a preprint version"
+
+    # query
+    query = (
+        "SELECT * FROM `{view_name}`"
+        " WHERE `manuscript_id` = @manuscript_id"
+        " AND `manuscript_version_str` = @manuscript_version_str"
+        " ORDER BY `funding_order_number` ASC"
+    ).format(view_name=BIG_QUERY_PREPRINT_FUNDING_VIEW_NAME)
+
+    # parameters
+    job_config = QueryJobConfig(
+        query_parameters=[
+            ScalarQueryParameter("manuscript_id", "STRING", manuscript_id),
+            ScalarQueryParameter("manuscript_version_str", "STRING", version),
+        ]
+    )
+
+    query_job = client.query(query, job_config=job_config)  # API request
+    return query_job.result()  # return rows
+
+
+def parse_funding_data(funding_data):
+    "parse big query rows containing funding data into FundingAward objects"
+
+    if not funding_data:
+        return None
+    funding_awards = []
+
+    for funding_data_item in funding_data:
+        funding_award_object = FundingAward()
+        funding_award_object.institution_name = funding_data_item.funder
+        if funding_data_item.crossref_funder_id:
+            funding_award_object.institution_id = funding_data_item.crossref_funder_id
+            funding_award_object.institution_id_type = "FundRef"
+        # todo !!! add ROR id when it is made available
+        if funding_data_item.author_name:
+            # add principal award recipient
+            contributor_object = Contributor(None, None, None)
+            contributor_object.collab = funding_data_item.author_name
+            funding_award_object.add_principal_award_recipient(contributor_object)
+        if funding_data_item.grant_reference_id:
+            # add Award
+            award_object = Award()
+            award_object.award_id = funding_data_item.grant_reference_id
+            funding_award_object.add_award(award_object)
+
+        # append FundingAward object to the lsit of awards
+        funding_awards.append(funding_award_object)
+
+    return funding_awards

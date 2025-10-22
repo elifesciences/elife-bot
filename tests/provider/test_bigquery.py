@@ -360,3 +360,54 @@ class TestParseDataAvailabilityData(unittest.TestCase):
                 "year": "2014",
             },
         )
+
+
+class TestGetFundingData(unittest.TestCase):
+    "tests for get_funding_data()"
+
+    def test_get_funding_data(self):
+        "test getting preprint funding data from BigQuery"
+        manuscript_id = 95901
+        version = 1
+        rows = FakeBigQueryRowIterator(
+            bigquery_test_data.PREPRINT_95901_V1_FUNDING_RESULT
+        )
+        client = FakeBigQueryClient(rows)
+        # run the query
+        result = bigquery.get_funding_data(client, manuscript_id, version)
+        # check the result
+        rows = list(result)
+
+        self.assertEqual(rows[0].manuscript_id, str(manuscript_id))
+        self.assertEqual(rows[0].manuscript_version_str, str(version))
+        self.assertEqual(rows[0].author_id, 55759)
+        self.assertEqual(rows[0].author_name, "Igor  Kramnik")
+        self.assertEqual(rows[0].crossref_funder_id, "100000050")
+        self.assertEqual(
+            rows[0].funder,
+            "HHS | NIH | National Heart, Lung, and Blood Institute (NHLBI)",
+        )
+        self.assertEqual(rows[0].funding_order_number, 1)
+        self.assertEqual(rows[0].grant_reference_id, "R01HL126066")
+        self.assertEqual(
+            rows[0].long_manuscript_identifier, "eLife-RP-RA-RC-2025-106814"
+        )
+
+
+class TestParseFundingData(unittest.TestCase):
+    "tests for parse_funding_data()"
+
+    def test_parse_funding_data(self):
+        "test parsing funding data"
+        funding_data = bigquery_test_data.PREPRINT_95901_V1_FUNDING_RESULT
+        # invoke
+        result = bigquery.parse_funding_data(funding_data)
+        # assert
+        self.assertEqual(
+            result[0].institution_name,
+            "HHS | NIH | National Heart, Lung, and Blood Institute (NHLBI)",
+        )
+
+    def test_none(self):
+        "test if funding_data argument is None"
+        self.assertEqual(bigquery.parse_funding_data(None), None)

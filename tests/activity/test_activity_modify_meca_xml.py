@@ -12,7 +12,6 @@ from xml.etree import ElementTree
 from mock import patch
 from testfixtures import TempDirectory
 import docmaptools
-from elifearticle.article import Dataset
 from provider import bigquery, utils
 import activity.activity_ModifyMecaXml as activity_module
 from activity.activity_ModifyMecaXml import (
@@ -78,6 +77,7 @@ class TestModifyMecaXml(unittest.TestCase):
         # reload the module which had MagicMock applied to revert the mock
         importlib.reload(docmaptools)
 
+    @patch.object(bigquery, "get_funding_data")
     @patch.object(bigquery, "get_client")
     @patch("docmaptools.parse.get_web_content")
     @patch.object(activity_module, "storage_context")
@@ -88,6 +88,7 @@ class TestModifyMecaXml(unittest.TestCase):
         fake_storage_context,
         fake_get_web_content,
         fake_bigquery_get_client,
+        fake_funding_data,
     ):
         directory = TempDirectory()
 
@@ -126,6 +127,11 @@ class TestModifyMecaXml(unittest.TestCase):
         )
         client = FakeBigQueryClient(rows)
         fake_bigquery_get_client.return_value = client
+
+        funding_data_rows = FakeBigQueryRowIterator(
+            bigquery_test_data.PREPRINT_95901_V1_FUNDING_RESULT
+        )
+        fake_funding_data.return_value = funding_data_rows
 
         # do the activity
         result = self.activity.do_activity(test_activity_data.ingest_meca_data)
@@ -320,6 +326,7 @@ class TestModifyMecaXml(unittest.TestCase):
             in xml_string
         )
 
+    @patch.object(bigquery, "get_funding_data")
     @patch.object(bigquery, "get_client")
     @patch("docmaptools.parse.get_web_content")
     @patch.object(utils, "get_current_datetime")
@@ -332,6 +339,7 @@ class TestModifyMecaXml(unittest.TestCase):
         fake_datetime,
         fake_get_web_content,
         fake_bigquery_get_client,
+        fake_funding_data,
     ):
         "test if the docmap_string is missing some data"
         directory = TempDirectory()
@@ -382,6 +390,11 @@ class TestModifyMecaXml(unittest.TestCase):
         )
         client = FakeBigQueryClient(rows)
         fake_bigquery_get_client.return_value = client
+
+        funding_data_rows = FakeBigQueryRowIterator(
+            bigquery_test_data.PREPRINT_95901_V1_FUNDING_RESULT
+        )
+        fake_funding_data.return_value = funding_data_rows
 
         # do the activity
         result = self.activity.do_activity(test_activity_data.ingest_meca_data)
@@ -480,6 +493,28 @@ class TestModifyMecaXml(unittest.TestCase):
         )
         # assert editor
         self.assertTrue('<contrib contrib-type="editor">' not in xml_string)
+
+        # assert funding
+        self.assertTrue(
+            (
+                "<funding-group>\n"
+                '<award-group id="par-1">\n'
+                "<funding-source>\n"
+                "<institution-wrap>\n"
+                '<institution-id institution-id-type="FundRef">'
+                "http://dx.doi.org/10.13039/100000050"
+                "</institution-id>\n"
+                "<institution>"
+                "HHS | NIH | National Heart, Lung, and Blood Institute (NHLBI)"
+                "</institution>\n"
+                "</institution-wrap>\n"
+                "</funding-source>\n"
+                "<award-id>R01HL126066</award-id>\n"
+                "<principal-award-recipient>Igor  Kramnik</principal-award-recipient>\n"
+                "</award-group>\n"
+            )
+            in xml_string
+        )
 
     @patch("docmaptools.parse.get_web_content")
     @patch.object(utils, "get_current_datetime")
@@ -648,12 +683,6 @@ class TestModifyMecaXml(unittest.TestCase):
         fake_datetime.return_value = datetime.strptime(
             "2024-06-27 +0000", "%Y-%m-%d %z"
         )
-
-        destination_path = os.path.join(
-            directory.path,
-            SESSION_DICT.get("expanded_folder"),
-            SESSION_DICT.get("article_xml_path"),
-        )
         # create folders if they do not exist
         meca_file_path = "tests/files_source/95901-v1-meca.zip"
         resource_folder = os.path.join(
@@ -723,11 +752,148 @@ class TestModifyMecaXml(unittest.TestCase):
         fake_datetime.return_value = datetime.strptime(
             "2024-06-27 +0000", "%Y-%m-%d %z"
         )
-
-        destination_path = os.path.join(
+        # create folders if they do not exist
+        meca_file_path = "tests/files_source/95901-v1-meca.zip"
+        resource_folder = os.path.join(
             directory.path,
             SESSION_DICT.get("expanded_folder"),
-            SESSION_DICT.get("article_xml_path"),
+        )
+        # create folders if they do not exist
+        os.makedirs(resource_folder, exist_ok=True)
+        # unzip the test fixture files
+        zip_file_paths = helpers.unzip_fixture(meca_file_path, resource_folder)
+        resources = [
+            os.path.join(
+                test_activity_data.ingest_meca_session_example().get("expanded_folder"),
+                file_path,
+            )
+            for file_path in zip_file_paths
+        ]
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources, dest_folder=directory.path
+        )
+        fake_get_web_content.side_effect = mock_get_web_content
+
+        # mock BigQuery
+        rows = FakeBigQueryRowIterator(
+            bigquery_test_data.PREPRINT_95901_V1_FUNDING_RESULT
+        )
+        client = FakeBigQueryClient(rows)
+        fake_bigquery_get_client.return_value = client
+
+        fake_add_data_availability.side_effect = Exception("An exception")
+
+        # do the activity
+        result = self.activity.do_activity(test_activity_data.ingest_meca_data)
+        # assertions
+        self.assertEqual(result, True)
+        self.assertEqual(
+            self.activity.logger.logexception,
+            (
+                "ModifyMecaXml, exception raised when adding data availability data for"
+                " article_id 95901, version 1: An exception"
+            ),
+        )
+
+    @patch.object(activity_module, "get_funding_data")
+    @patch.object(bigquery, "get_client")
+    @patch.object(utils, "get_current_datetime")
+    @patch.object(activity_module, "storage_context")
+    @patch.object(activity_module, "get_session")
+    def test_no_big_query_funding_data(
+        self,
+        fake_session,
+        fake_storage_context,
+        fake_datetime,
+        fake_bigquery_get_client,
+        fake_get_funding_data,
+    ):
+        "test if BigQuery returns no funding data"
+        directory = TempDirectory()
+        docmap_string = self.session.get_value("docmap_string")
+        minimal_docmap = json.loads(docmap_string)
+        del minimal_docmap["steps"]["_:b0"]["assertions"][0]["happened"]
+        del minimal_docmap["steps"]["_:b1"]
+        del minimal_docmap["steps"]["_:b2"]
+        del minimal_docmap["steps"]["_:b3"]
+        self.session.store_value("docmap_string", json.dumps(minimal_docmap))
+
+        fake_session.return_value = self.session
+
+        fake_datetime.return_value = datetime.strptime(
+            "2024-06-27 +0000", "%Y-%m-%d %z"
+        )
+        # create folders if they do not exist
+        meca_file_path = "tests/files_source/95901-v1-meca.zip"
+        resource_folder = os.path.join(
+            directory.path,
+            SESSION_DICT.get("expanded_folder"),
+        )
+        # create folders if they do not exist
+        os.makedirs(resource_folder, exist_ok=True)
+        # unzip the test fixture files
+        zip_file_paths = helpers.unzip_fixture(meca_file_path, resource_folder)
+        resources = [
+            os.path.join(
+                test_activity_data.ingest_meca_session_example().get("expanded_folder"),
+                file_path,
+            )
+            for file_path in zip_file_paths
+        ]
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources, dest_folder=directory.path
+        )
+
+        # mock BigQuery
+        rows = FakeBigQueryRowIterator(
+            bigquery_test_data.PREPRINT_95901_V1_DATA_AVAILABILITY_RESULT
+        )
+        client = FakeBigQueryClient(rows)
+        fake_bigquery_get_client.return_value = client
+
+        fake_get_funding_data.return_value = []
+
+        # do the activity
+        result = self.activity.do_activity(test_activity_data.ingest_meca_data)
+        # assertions
+        self.assertEqual(result, True)
+        self.assertTrue(
+            (
+                "ModifyMecaXml, no funding data from BigQuery"
+                " for article_id 95901, version 1"
+            )
+            in self.activity.logger.loginfo
+        )
+
+    @patch.object(activity_module, "add_funding")
+    @patch.object(bigquery, "get_client")
+    @patch("docmaptools.parse.get_web_content")
+    @patch.object(utils, "get_current_datetime")
+    @patch.object(activity_module, "storage_context")
+    @patch.object(activity_module, "get_session")
+    def test_funding_exception(
+        self,
+        fake_session,
+        fake_storage_context,
+        fake_datetime,
+        fake_get_web_content,
+        fake_bigquery_get_client,
+        fake_add_funding,
+    ):
+        "test if an exception is raised when adding funding XML"
+        directory = TempDirectory()
+        docmap_string = self.session.get_value("docmap_string")
+        minimal_docmap = json.loads(docmap_string)
+        del minimal_docmap["steps"]["_:b0"]["assertions"][0]["happened"]
+        del minimal_docmap["steps"]["_:b1"]
+        del minimal_docmap["steps"]["_:b2"]
+        del minimal_docmap["steps"]["_:b3"]
+        self.session.store_value("docmap_string", json.dumps(minimal_docmap))
+
+        fake_session.return_value = self.session
+
+        fake_datetime.return_value = datetime.strptime(
+            "2024-06-27 +0000", "%Y-%m-%d %z"
         )
         # create folders if they do not exist
         meca_file_path = "tests/files_source/95901-v1-meca.zip"
@@ -753,12 +919,12 @@ class TestModifyMecaXml(unittest.TestCase):
 
         # mock BigQuery
         rows = FakeBigQueryRowIterator(
-            [bigquery_test_data.PREPRINT_95901_V1_DATA_AVAILABILITY_RESULT]
+            bigquery_test_data.PREPRINT_95901_V1_DATA_AVAILABILITY_RESULT
         )
         client = FakeBigQueryClient(rows)
         fake_bigquery_get_client.return_value = client
 
-        fake_add_data_availability.side_effect = Exception("An exception")
+        fake_add_funding.side_effect = Exception("An exception")
 
         # do the activity
         result = self.activity.do_activity(test_activity_data.ingest_meca_data)
@@ -767,7 +933,7 @@ class TestModifyMecaXml(unittest.TestCase):
         self.assertEqual(
             self.activity.logger.logexception,
             (
-                "ModifyMecaXml, exception raised when adding data availability data for"
+                "ModifyMecaXml, exception raised when adding funding data for"
                 " article_id 95901, version 1: An exception"
             ),
         )
@@ -1055,6 +1221,62 @@ class TestGetDataAvailabilityData(unittest.TestCase):
         self.assertEqual(
             (
                 "%s, exception getting data availability data from"
+                " BigQuery for article_id %s, version %s: %s"
+            )
+            % (self.caller_name, self.article_id, self.version, exception_message),
+            self.logger.logexception,
+        )
+
+
+class TestGetFundingData(unittest.TestCase):
+    "tests for get_funding_data()"
+
+    def setUp(self):
+        self.article_id = 95901
+        self.version = 1
+        self.caller_name = "ModifyMecaXml"
+        self.logger = FakeLogger()
+
+    @patch.object(bigquery, "get_client")
+    def test_get_funding_data(self, fake_bigquery_get_client):
+        "test getting funding data from BigQuery"
+        # mock BigQuery
+        rows = FakeBigQueryRowIterator(
+            bigquery_test_data.PREPRINT_95901_V1_FUNDING_RESULT
+        )
+        client = FakeBigQueryClient(rows)
+        fake_bigquery_get_client.return_value = client
+        # invoke
+        result = activity_module.get_funding_data(
+            self.article_id,
+            self.version,
+            settings_mock,
+            self.caller_name,
+            self.logger,
+        )
+        # assert
+        self.assertIsNotNone(result)
+
+    @patch.object(bigquery, "get_funding_data")
+    @patch.object(bigquery, "get_client")
+    def test_exception(self, fake_bigquery_get_client, fake_get_data):
+        "test exception raised when getting funding data from BigQuery"
+        client = FakeBigQueryClient([])
+        fake_bigquery_get_client.return_value = client
+        exception_message = "An exception"
+        fake_get_data.side_effect = Exception(exception_message)
+        # invoke
+        activity_module.get_funding_data(
+            self.article_id,
+            self.version,
+            settings_mock,
+            self.caller_name,
+            self.logger,
+        )
+        # assert
+        self.assertEqual(
+            (
+                "%s, exception getting funding data from"
                 " BigQuery for article_id %s, version %s: %s"
             )
             % (self.caller_name, self.article_id, self.version, exception_message),
