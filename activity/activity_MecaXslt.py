@@ -49,15 +49,16 @@ class activity_MecaXslt(Activity):
 
         # check for required settings
         if run_type == "silent-correction":
-            
             if not hasattr(self.settings, "meca_xsl_silent_endpoint"):
                 self.logger.info(
-                    "%s, meca_xsl_silent_endpoint in settings is missing, skipping" % self.name
+                    "%s, meca_xsl_silent_endpoint in settings is missing, skipping"
+                    % self.name
                 )
                 return self.ACTIVITY_SUCCESS
             if not self.settings.meca_xsl_silent_endpoint:
                 self.logger.info(
-                    "%s, meca_xsl_silent_endpoint in settings is blank, skipping" % self.name
+                    "%s, meca_xsl_silent_endpoint in settings is blank, skipping"
+                    % self.name
                 )
                 return self.ACTIVITY_SUCCESS
             endpoint_url = self.settings.meca_xsl_silent_endpoint
