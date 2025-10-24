@@ -125,7 +125,9 @@ class activity_ValidatePreprintSchematron(Activity):
                 % (self.name, xml_file_path, log_message)
             )
             # add github issue comment
-            issue_comment = enhance_validation_message(log_message, enhance_message=ENHANCE_MESSAGE)
+            issue_comment = enhance_validation_message(
+                log_message, enhance_message=ENHANCE_MESSAGE
+            )
             github_provider.add_github_issue_comment(
                 self.settings, self.logger, self.name, version_doi, issue_comment
             )
@@ -241,4 +243,4 @@ def enhance_validation_message(log_message, enhance_message=False):
             )
         return "```%s\n%s\n```" % ("diff", log_message)
     # default
-    return  "```\n%s\n```" % log_message
+    return "```\n%s\n```" % log_message
