@@ -240,6 +240,59 @@ class TestPreprint(unittest.TestCase):
         self.assertIsNone(preprint.populate_from_dict(None))
 
 
+class TestFuturePreprintArticleQuery(unittest.TestCase):
+    "tests for future_preprint_article_query()"
+
+    def test_future_preprint_article_query(self):
+        "test preprint_article_query()"
+        date_string = "2023-11-28"
+        day_interval = 7
+        query = bigquery.future_preprint_article_query(date_string, day_interval)
+        expected = (
+            "SELECT * FROM "
+            "`elife-data-pipeline.prod.v_latest_reviewed_preprint_publication_date`"
+            " WHERE `publication_date` between DATE_ADD(@date_string, INTERVAL 1 DAY)"
+            " AND DATE_ADD(@date_string, INTERVAL @day_interval DAY)"
+            " ORDER BY publication_date DESC"
+        )
+        self.assertEqual(query, expected)
+
+    def test_no_arguments(self):
+        "test future_preprint_article_query() with no arguments supplied"
+        query = bigquery.future_preprint_article_query()
+        expected = (
+            "SELECT * FROM "
+            "`elife-data-pipeline.prod.v_latest_reviewed_preprint_publication_date` "
+            " ORDER BY publication_date DESC"
+        )
+        self.assertEqual(query, expected)
+
+
+class TestFuturePreprintArticleResult(unittest.TestCase):
+    "tests for bigquery.future_preprint_article_result()"
+
+    def test_future_preprint_article_result(self):
+        "test future_preprint_article_result()"
+        rows = FakeBigQueryRowIterator(
+            bigquery_preprint_test_data.PREPRINT_QUERY_RESULT
+        )
+        client = FakeBigQueryClient(rows)
+        # run the query
+        result = bigquery.future_preprint_article_result(client)
+        # check the result
+        rows = list(result)
+
+        self.assertEqual(rows[0].elife_doi, "10.7554/eLife.92362")
+        self.assertEqual(rows[0].elife_doi_version, 1)
+        self.assertEqual(rows[0].publication_date, datetime.date(2023, 11, 22))
+        self.assertEqual(rows[0].utc_publication_time, datetime.time(14, 0))
+
+        self.assertEqual(rows[1].elife_doi, "10.7554/eLife.87445")
+        self.assertEqual(rows[1].elife_doi_version, 2)
+        self.assertEqual(rows[1].publication_date, datetime.date(2023, 11, 22))
+        self.assertEqual(rows[1].utc_publication_time, datetime.time(14, 0))
+
+
 class TestGetDataAvailabilityData(unittest.TestCase):
     "test for get_data_availability_data()"
 
