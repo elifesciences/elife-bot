@@ -192,6 +192,36 @@ def preprint_objects(query_result):
     return [Preprint(row_dict=row) for row in query_result]
 
 
+def future_preprint_article_query(date_string=None, day_interval=None):
+    "query to find preprint versions with a future publication dates"
+    where_clause = ""
+    if date_string and day_interval:
+        where_clause = (
+            "WHERE `publication_date` "
+            "between DATE_ADD(@date_string, INTERVAL 1 DAY)"
+            " AND DATE_ADD(@date_string, INTERVAL @day_interval DAY)"
+        )
+    return "SELECT * FROM `{view_name}` {where_clause} ORDER BY publication_date DESC".format(
+        view_name=BIG_QUERY_PREPRINT_VIEW_NAME, where_clause=where_clause
+    )
+
+
+def future_preprint_article_result(client, day_interval=None):
+    "run a future preprint article query and return the query result"
+    # get date string for today
+    current_datetime = utils.get_current_datetime()
+    date_string = current_datetime.strftime("%Y-%m-%d")
+    query = future_preprint_article_query(date_string, day_interval)
+    job_config = QueryJobConfig(
+        query_parameters=[
+            ScalarQueryParameter("date_string", "STRING", date_string),
+            ScalarQueryParameter("day_interval", "INTEGER", day_interval),
+        ]
+    )
+    query_job = client.query(query, job_config=job_config)  # API request
+    return query_job.result()  # Waits for query to finish
+
+
 def get_data_availability_data(client, manuscript_id, version):
     "get data availability data from the view for a preprint version"
 
