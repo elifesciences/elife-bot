@@ -52,6 +52,7 @@ def start(settings):
     workflow_names.append("SilentIngestMeca")
     workflow_names.append("FinishPreprintPublication")
     workflow_names.append("FindReingestPreprint")
+    workflow_names.append("FindFuturePreprints")
 
     for workflow_name in workflow_names:
         # Import the workflow libraries
@@ -185,6 +186,7 @@ def start(settings):
     activity_names.append("FindReingestPreprint")
     activity_names.append("AddPreprintIssueLabel")
     activity_names.append("InvalidatePreprintCdn")
+    activity_names.append("FindFuturePreprints")
 
     for activity_name in activity_names:
         # Import the activity libraries

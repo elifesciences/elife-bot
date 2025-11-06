@@ -1,6 +1,7 @@
 # coding=utf-8
 
 import os
+import datetime
 import time
 import unittest
 from xml.etree import ElementTree
@@ -156,6 +157,56 @@ def sub_article_data_fixture():
         {"article": sub_article_4, "xml_root": Element("root")},
         {"article": sub_article_5, "xml_root": Element("root")},
     ]
+
+
+class TestBuildSimpleArticle(unittest.TestCase):
+    "tests for preprint.build_simple_article()"
+
+    def setUp(self):
+        self.article_id = "84364"
+        self.doi = "10.7554/eLife.84364"
+        self.title = "Title to be confirmed"
+        self.version_doi = "10.7554/eLife.84364.2"
+        self.accepted_date_struct = datetime.datetime.strptime(
+            "2023-06-14 +0000", "%Y-%m-%d %z"
+        )
+
+    def test_build_simple_article(self):
+        "test building an Article from docmap and preprint XML inputs"
+        article = preprint.build_simple_article(
+            self.article_id,
+            self.doi,
+            self.title,
+            self.version_doi,
+            self.accepted_date_struct,
+        )
+        # assertions
+        self.assertEqual(article.doi, "10.7554/eLife.84364")
+        self.assertEqual(article.version_doi, "10.7554/eLife.84364.2")
+        self.assertEqual(
+            article.get_date("accepted").date,
+            datetime.datetime(2023, 6, 14, 0, 0, tzinfo=datetime.timezone.utc),
+        )
+
+    @patch.object(Article, "add_date")
+    def test_exception(self, fake_add_date):
+        "test an exception is raised"
+        exception_message = "An exception"
+        fake_add_date.side_effect = Exception(exception_message)
+        with self.assertRaises(preprint.PreprintArticleException) as test_exception:
+            preprint.build_simple_article(
+                self.article_id,
+                self.doi,
+                self.title,
+                accepted_date_struct=self.accepted_date_struct,
+            )
+        self.assertEqual(
+            str(test_exception.exception),
+            (
+                "Could not instantiate an Article object for article_id %s: %s"
+                % (self.article_id, exception_message)
+            ),
+        )
 
 
 class TestBuildArticle(unittest.TestCase):
