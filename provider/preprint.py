@@ -51,6 +51,25 @@ def jatsgenerator_config(config_section, config_file):
     return parse_raw_config(raw_config(config_section, config_file))
 
 
+def build_simple_article(
+    article_id, doi, title, version_doi=None, accepted_date_struct=None
+):
+    "instantiate a simple Article object for using in Crossref pending publication DOI deposit"
+    try:
+        article = Article(doi)
+        article.version_doi = version_doi
+        article.manuscript = article_id
+        article.title = title
+        if accepted_date_struct:
+            article.add_date(ArticleDate("accepted", accepted_date_struct))
+    except Exception as exception:
+        raise PreprintArticleException(
+            "Could not instantiate an Article object for article_id %s: %s"
+            % (article_id, str(exception))
+        )
+    return article
+
+
 def build_article(article_id, docmap_string, article_xml_path, version=None):
     "collect data from docmap and preprint XML to populate an Article object"
     newest_version_doi = cleaner.version_doi_from_docmap(
