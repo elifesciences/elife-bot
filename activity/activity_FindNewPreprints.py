@@ -49,10 +49,6 @@ class activity_FindNewPreprints(CleanerBaseActivity):
         # Track the success of some steps
         self.statuses = {}
 
-        # Track XML files selected for pubmed XML
-        self.good_xml_files = []
-        self.bad_xml_files = []
-
         # SQS client
         self.sqs_client = None
 
@@ -126,24 +122,33 @@ class activity_FindNewPreprints(CleanerBaseActivity):
             if xml_filename in new_xml_filenames
         }
 
-        # generate preprint XML for each, log when any XML file cannot be created
-        self.generate_xml_files(new_xml_map)
-        self.statuses["generate"] = bool(self.good_xml_files)
+        # generate status based on whether new XML files names were found
+        self.statuses["generate"] = bool(new_xml_filenames)
 
         # start a workflow for the new article version
         if self.statuses.get("generate") is True:
             for new_xml_filename, detail in new_xml_map.items():
-                if new_xml_filename in self.good_xml_files:
+                if new_xml_filename in new_xml_filenames:
                     self.start_post_workflow(
                         detail.get("article_id"), detail.get("version")
                     )
 
-        # upload the new preprint XML to the published bucket folder
+        # upload the new preprint XML placeholder to the published bucket folder
         if self.statuses.get("generate") is True:
-            # Clean up outbox
             self.logger.info(
                 "%s, copying new XML files to the bucket folder" % self.name
             )
+
+            # create placeholder XML files on disk
+            for placeholder_file_name in new_xml_filenames:
+                with open(
+                    os.path.join(
+                        self.directories.get("INPUT_DIR"), placeholder_file_name
+                    ),
+                    "wb",
+                ) as open_file:
+                    open_file.write(b"")
+
             to_folder = self.bucket_folder
             # copy the XML files to the bucket
             batch_file_names = glob.glob(self.directories.get("INPUT_DIR") + "/*.xml")
@@ -161,11 +166,6 @@ class activity_FindNewPreprints(CleanerBaseActivity):
         # send email only if new XML files were generated
         if self.statuses["generate"]:
             self.statuses["email"] = self.send_admin_email(new_xml_filenames)
-        else:
-            self.logger.info(
-                "%s, no new XML files created. bad_xml_files: %s"
-                % (self.name, self.bad_xml_files)
-            )
 
         self.logger.info("%s statuses: %s" % (self.name, self.statuses))
 
@@ -202,63 +202,6 @@ class activity_FindNewPreprints(CleanerBaseActivity):
         ]
         return new_xml_filenames
 
-    def generate_xml_files(self, new_xml_map):
-        "generate XML files for each new article"
-        for new_xml_filename, detail in new_xml_map.items():
-            self.logger.info(
-                "%s, starting to generate preprint XML for "
-                "article_id %s, version %s, to XML file name %s"
-                % (
-                    self.name,
-                    detail.get("article_id"),
-                    detail.get("version"),
-                    new_xml_filename,
-                )
-            )
-
-            # generate preprint XML file
-            try:
-                xml_file_path = preprint.generate_preprint_xml(
-                    self.settings,
-                    detail.get("article_id"),
-                    detail.get("version"),
-                    self.name,
-                    self.directories,
-                    self.logger,
-                )
-            except preprint.PreprintArticleException as exception:
-                self.logger.exception(
-                    (
-                        "%s, exception raised generating preprint XML"
-                        " for article_id %s version %s: %s"
-                    )
-                    % (
-                        self.name,
-                        detail.get("article_id"),
-                        detail.get("version"),
-                        str(exception),
-                    )
-                )
-                self.bad_xml_files.append(new_xml_filename)
-                continue
-            except Exception as exception:
-                self.logger.exception(
-                    (
-                        "%s, unhandled exception raised when generating preprint XML"
-                        " for article_id %s version %s: %s"
-                    )
-                    % (
-                        self.name,
-                        detail.get("article_id"),
-                        detail.get("version"),
-                        str(exception),
-                    )
-                )
-                self.bad_xml_files.append(new_xml_filename)
-                continue
-
-            self.good_xml_files.append(new_xml_filename)
-
     def send_admin_email(self, new_xml_filenames):
         "after do_activity is finished, send emails to admin with the status"
         datetime_string = time.strftime("%Y-%m-%d %H:%M", time.gmtime())
@@ -272,8 +215,8 @@ class activity_FindNewPreprints(CleanerBaseActivity):
         body += email_provider.get_email_body_middle(
             "FindNewPreprints",
             new_xml_filenames,
-            self.good_xml_files,
-            self.bad_xml_files,
+            new_xml_filenames,
+            [],
         )
         body += email_provider.get_admin_email_body_foot(
             self.get_activityId(),

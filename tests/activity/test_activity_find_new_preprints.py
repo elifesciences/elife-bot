@@ -5,7 +5,7 @@ import unittest
 from mock import patch
 from ddt import ddt, data
 from testfixtures import TempDirectory
-from provider import cleaner, preprint, utils
+from provider import cleaner, utils
 import activity.activity_FindNewPreprints as activity_module
 from activity.activity_FindNewPreprints import (
     activity_FindNewPreprints as activity_class,
@@ -16,7 +16,6 @@ from tests.classes_mock import (
 )
 from tests.activity.classes_mock import (
     FakeLogger,
-    FakeResponse,
     FakeSession,
     FakeStorageContext,
     FakeSQSClient,
@@ -84,12 +83,9 @@ class TestFindNewPreprints(unittest.TestCase):
         return resources
 
     @patch("boto3.client")
-    @patch.object(cleaner, "get_docmap_string_with_retry")
     @patch.object(activity_module.email_provider, "smtp_connect")
-    @patch("provider.download_helper.storage_context")
     @patch("provider.outbox_provider.storage_context")
     @patch.object(activity_module, "storage_context")
-    @patch("requests.get")
     @patch.object(utils, "get_current_datetime")
     @patch.object(activity_module, "get_session")
     @patch.object(activity_class, "clean_tmp_dir")
@@ -128,12 +124,9 @@ class TestFindNewPreprints(unittest.TestCase):
         fake_clean_tmp_dir,
         fake_session,
         fake_get_current_datetime,
-        fake_get,
         fake_storage_context,
         fake_outbox_storage_context,
-        fake_download_storage_context,
         fake_email_smtp_connect,
-        fake_get_docmap,
         fake_sqs_client,
     ):
         directory = TempDirectory()
@@ -145,8 +138,6 @@ class TestFindNewPreprints(unittest.TestCase):
             date_time, "%Y-%m-%d %z"
         )
 
-        sample_html = b"<p><strong>%s</strong></p>\n" b"<p>The ....</p>\n" % b"Title"
-        fake_get.return_value = FakeResponse(200, content=sample_html)
         fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
 
         # populate the bucket previous folder file paths and files
@@ -167,11 +158,6 @@ class TestFindNewPreprints(unittest.TestCase):
             directory.path, dest_folder=directory.path
         )
         os.mkdir(os.path.join(directory.path, "preprint"))
-        fake_download_storage_context.return_value = FakeStorageContext(
-            "tests/files_source/epp", ["article-source.xml"]
-        )
-
-        fake_get_docmap.return_value = read_fixture("sample_docmap_for_87445.json")
 
         # mock the SQS client and queues
         fake_queues = {settings_mock.workflow_starter_queue: FakeSQSQueue(directory)}
@@ -221,168 +207,6 @@ class TestFindNewPreprints(unittest.TestCase):
             sorted(os.listdir(preprint_bucket_folder)),
             test_data.get("expected_bucket_files"),
         )
-
-    @patch.object(cleaner, "get_docmap_string_with_retry")
-    @patch.object(activity_module, "storage_context")
-    @patch("provider.preprint.download_original_preprint_xml")
-    @patch.object(activity_module, "get_session")
-    def test_preprint_xml_exception(
-        self,
-        fake_session,
-        fake_download,
-        fake_storage_context,
-        fake_get_docmap,
-    ):
-        "test if an exception is raised downloading preprint XML from the bucket"
-        directory = TempDirectory()
-        fake_session.return_value = self.session
-
-        resources = ["elife-preprint-92362-v1.xml"]
-
-        # populate the bucket previous folder file paths and files
-        next_docmap_index = {
-            "docmaps": [
-                json.loads(read_fixture("sample_docmap_for_84364.json")),
-                json.loads(read_fixture("sample_docmap_for_87445.json")),
-            ]
-        }
-        resources += self.populate_docmap_index_files(directory.path, next_docmap_index)
-
-        fake_storage_context.return_value = FakeStorageContext(
-            directory.path, resources
-        )
-        fake_get_docmap.return_value = read_fixture("sample_docmap_for_84364.json")
-        fake_download.side_effect = Exception("")
-
-        result = self.activity.do_activity(self.activity_data)
-        self.assertEqual(result, True)
-
-    @patch.object(cleaner, "get_docmap")
-    @patch.object(activity_module, "storage_context")
-    @patch("provider.download_helper.storage_context")
-    @patch.object(activity_module, "get_session")
-    def test_docmap_exception(
-        self,
-        fake_session,
-        fake_download_storage_context,
-        fake_storage_context,
-        fake_get_docmap,
-    ):
-        "test if an exception is raised getting the docmap string"
-        directory = TempDirectory()
-        fake_session.return_value = self.session
-
-        resources = ["elife-preprint-92362-v1.xml"]
-
-        # populate the bucket previous folder file paths and files
-        next_docmap_index = {"docmaps": []}
-        resources += self.populate_docmap_index_files(directory.path, next_docmap_index)
-
-        fake_storage_context.return_value = FakeStorageContext(
-            directory.path, resources
-        )
-        fake_download_storage_context.return_value = FakeStorageContext(
-            "tests/files_source/epp", ["article-source.xml"]
-        )
-        fake_get_docmap.side_effect = Exception("")
-
-        result = self.activity.do_activity(self.activity_data)
-        self.assertEqual(result, True)
-
-    @patch("provider.preprint.build_article")
-    @patch.object(cleaner, "get_docmap")
-    @patch.object(activity_module, "storage_context")
-    @patch("provider.download_helper.storage_context")
-    @patch.object(utils, "get_current_datetime")
-    @patch.object(activity_module, "get_session")
-    def test_build_article_exception(
-        self,
-        fake_session,
-        fake_get_current_datetime,
-        fake_download_storage_context,
-        fake_storage_context,
-        fake_get_docmap,
-        fake_build_article,
-    ):
-        "test if an exception is raised building the article object"
-        directory = TempDirectory()
-        fake_session.return_value = self.session
-        date_time = "2023-11-23 +0000"
-        fake_get_current_datetime.return_value = datetime.datetime.strptime(
-            date_time, "%Y-%m-%d %z"
-        )
-
-        resources = ["elife-preprint-92362-v1.xml"]
-
-        # populate the bucket previous folder file paths and files
-        next_docmap_index = {
-            "docmaps": [
-                json.loads(read_fixture("sample_docmap_for_84364.json")),
-                json.loads(read_fixture("sample_docmap_for_87445.json")),
-            ]
-        }
-        resources += self.populate_docmap_index_files(directory.path, next_docmap_index)
-
-        fake_storage_context.return_value = FakeStorageContext(
-            directory.path, resources
-        )
-        fake_download_storage_context.return_value = FakeStorageContext(
-            "tests/files_source/epp", ["article-source.xml"]
-        )
-        fake_get_docmap.return_value = read_fixture("sample_docmap_for_87445.json")
-        fake_build_article.side_effect = Exception("")
-
-        result = self.activity.do_activity(self.activity_data)
-        self.assertEqual(result, True)
-
-    @patch("provider.preprint.preprint_xml")
-    @patch("provider.preprint.build_article")
-    @patch.object(cleaner, "get_docmap")
-    @patch.object(activity_module, "storage_context")
-    @patch("provider.download_helper.storage_context")
-    @patch.object(utils, "get_current_datetime")
-    @patch.object(activity_module, "get_session")
-    def test_generate_preprint_xml_exception(
-        self,
-        fake_session,
-        fake_get_current_datetime,
-        fake_download_storage_context,
-        fake_storage_context,
-        fake_get_docmap,
-        fake_build_article,
-        fake_preprint_xml,
-    ):
-        "test if an exception is raised generating preprint XML"
-        directory = TempDirectory()
-        fake_session.return_value = self.session
-        date_time = "2023-11-23 +0000"
-        fake_get_current_datetime.return_value = datetime.datetime.strptime(
-            date_time, "%Y-%m-%d %z"
-        )
-
-        resources = ["elife-preprint-92362-v1.xml"]
-
-        # populate the bucket previous folder file paths and files
-        next_docmap_index = {
-            "docmaps": [
-                json.loads(read_fixture("sample_docmap_for_84364.json")),
-                json.loads(read_fixture("sample_docmap_for_87445.json")),
-            ]
-        }
-        resources += self.populate_docmap_index_files(directory.path, next_docmap_index)
-
-        fake_storage_context.return_value = FakeStorageContext(
-            directory.path, resources
-        )
-        fake_download_storage_context.return_value = FakeStorageContext(
-            "tests/files_source/epp", ["article-source.xml"]
-        )
-        fake_get_docmap.return_value = read_fixture("sample_docmap_for_87445.json")
-        fake_build_article.return_value = True
-        fake_preprint_xml.side_effect = Exception("")
-
-        result = self.activity.do_activity(self.activity_data)
-        self.assertEqual(result, True)
 
 
 class TestMissingSettings(unittest.TestCase):
