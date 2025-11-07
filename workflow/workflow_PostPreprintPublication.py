@@ -45,7 +45,6 @@ class workflow_PostPreprintPublication(Workflow):
                     start_to_close_timeout=60 * 10,
                 ),
                 define_workflow_step("ModifyMecaPublishedXml", data),
-                define_workflow_step("GeneratePreprintXml", data),
                 define_workflow_step("ScheduleCrossrefPreprint", data),
                 define_workflow_step("SchedulePreprintDownstream", data),
                 define_workflow_step(
