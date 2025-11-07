@@ -576,6 +576,7 @@ class TestConditionalStarts(unittest.TestCase):
                 "starter_FindReingestPreprint",
                 "starter_DepositCrossrefPendingPublication",
                 "starter_PubRouterDeposit",
+                "starter_FindFuturePreprints",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
@@ -583,6 +584,7 @@ class TestConditionalStarts(unittest.TestCase):
                 "FindReingestPreprint",
                 "DepositCrossrefPendingPublication",
                 "PubRouterDeposit_Scilit",
+                "FindFuturePreprints",
             ],
         },
     )
