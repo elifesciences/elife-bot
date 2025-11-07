@@ -44,7 +44,6 @@ def start(settings):
     workflow_names.append("DepositDOAJ")
     workflow_names.append("SoftwareHeritageDeposit")
     workflow_names.append("IngestAcceptedSubmission")
-    workflow_names.append("ScheduleCrossrefPreprint")
     workflow_names.append("PostPreprintPublication")
     workflow_names.append("FindNewDocmaps")
     workflow_names.append("FindReadyToFinishPreprints")

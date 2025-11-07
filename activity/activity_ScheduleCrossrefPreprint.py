@@ -46,17 +46,13 @@ class activity_ScheduleCrossrefPreprint(Activity):
         self.make_activity_directories()
 
         try:
-            if data and "standalone" in data and data["standalone"]:
-                article_id = data.get("article_id")
-                version = data.get("version")
-            else:
-                # get data from the session
-                run = data["run"]
-                session = get_session(self.settings, data, run)
-                article_id = session.get_value("article_id")
-                version = session.get_value("version")
-                article_xml_path = session.get_value("article_xml_path")
-                expanded_folder = session.get_value("expanded_folder")
+            # get data from the session
+            run = data["run"]
+            session = get_session(self.settings, data, run)
+            article_id = session.get_value("article_id")
+            version = session.get_value("version")
+            article_xml_path = session.get_value("article_xml_path")
+            expanded_folder = session.get_value("expanded_folder")
         except:
             self.logger.exception("Error starting %s activity" % self.pretty_name)
             return self.ACTIVITY_PERMANENT_FAILURE
@@ -64,100 +60,51 @@ class activity_ScheduleCrossrefPreprint(Activity):
         self.logger.info("%s, article_id: %s" % (self.name, article_id))
         self.logger.info("%s, version: %s" % (self.name, version))
 
-        # generate preprint XML if standalone
-        xml_file_path = None
-        if data and "standalone" in data and data["standalone"]:
-            # first check if required settings are available
-            if not hasattr(self.settings, "epp_data_bucket"):
-                self.logger.info(
-                    "No epp_data_bucket in settings, skipping %s for article_id %s, version %s"
-                    % (self.name, article_id, version)
-                )
-                return self.ACTIVITY_SUCCESS
-            if not self.settings.epp_data_bucket:
-                self.logger.info(
-                    (
-                        "epp_data_bucket in settings is blank, skipping %s "
-                        "for article_id %s, version %s"
-                    )
-                    % (self.name, article_id, version)
-                )
-                return self.ACTIVITY_SUCCESS
+        # configure the S3 bucket storage library
+        storage = storage_context(self.settings)
 
-            # generate preprint XML file
-            try:
-                xml_file_path = preprint.generate_preprint_xml(
-                    self.settings,
-                    article_id,
-                    version,
-                    self.name,
-                    self.directories,
-                    self.logger,
-                )
-            except preprint.PreprintArticleException as exception:
-                self.logger.exception(
-                    (
-                        "%s, exception raised generating preprint XML"
-                        " for article_id %s version %s: %s"
-                    )
-                    % (self.name, article_id, version, str(exception))
-                )
-                return self.ACTIVITY_PERMANENT_FAILURE
-            except Exception as exception:
-                self.logger.exception(
-                    (
-                        "%s, unhandled exception raised when generating preprint XML"
-                        " for article_id %s version %s: %s"
-                    )
-                    % (self.name, article_id, version, str(exception))
-                )
-                return self.ACTIVITY_PERMANENT_FAILURE
-        elif run:
-            # configure the S3 bucket storage library
-            storage = storage_context(self.settings)
+        # local path to the article XML file
+        input_xml_file_path = os.path.join(
+            self.directories.get("INPUT_DIR"), article_xml_path
+        )
+        # create folders if they do not exist
+        os.makedirs(os.path.dirname(input_xml_file_path), exist_ok=True)
 
-            # local path to the article XML file
-            input_xml_file_path = os.path.join(
-                self.directories.get("INPUT_DIR"), article_xml_path
+        # download XML from the bucket folder
+        orig_resource = (
+            self.settings.storage_provider
+            + "://"
+            + self.settings.bot_bucket
+            + "/"
+            + expanded_folder
+        )
+        storage_resource_origin = orig_resource + "/" + article_xml_path
+        self.logger.info(
+            "%s, downloading %s to %s"
+            % (self.name, storage_resource_origin, input_xml_file_path)
+        )
+        try:
+            with open(input_xml_file_path, "wb") as open_file:
+                storage.get_resource_to_file(storage_resource_origin, open_file)
+        except Exception as exception:
+            self.logger.exception(
+                "%s, input_xml_file_path is None for article %s version %s: %s"
+                % (self.name, article_id, version, str(exception))
             )
-            # create folders if they do not exist
-            os.makedirs(os.path.dirname(input_xml_file_path), exist_ok=True)
+            return self.ACTIVITY_PERMANENT_FAILURE
 
-            # download XML from the bucket folder
-            orig_resource = (
-                self.settings.storage_provider
-                + "://"
-                + self.settings.bot_bucket
-                + "/"
-                + expanded_folder
-            )
-            storage_resource_origin = orig_resource + "/" + article_xml_path
-            self.logger.info(
-                "%s, downloading %s to %s"
-                % (self.name, storage_resource_origin, input_xml_file_path)
-            )
-            try:
-                with open(input_xml_file_path, "wb") as open_file:
-                    storage.get_resource_to_file(storage_resource_origin, open_file)
-            except Exception as exception:
-                self.logger.exception(
-                    "%s, input_xml_file_path is None for article %s version %s: %s"
-                    % (self.name, article_id, version, str(exception))
-                )
-                return self.ACTIVITY_PERMANENT_FAILURE
-
-            # rename the file
-            xml_file_name = preprint.PREPRINT_XML_FILE_NAME_PATTERN.format(
-                article_id=utils.pad_msid(article_id), version=version
-            )
-            xml_file_path = input_xml_file_path.replace(
-                input_xml_file_path.rsplit(os.sep, 1)[-1], xml_file_name
-            )
-            self.logger.info(
-                "%s, moving %s to %s for article %s version %s"
-                % (self.name, input_xml_file_path, xml_file_path, article_id, version)
-            )
-            shutil.move(input_xml_file_path, xml_file_path)
+        # rename the file
+        xml_file_name = preprint.PREPRINT_XML_FILE_NAME_PATTERN.format(
+            article_id=utils.pad_msid(article_id), version=version
+        )
+        xml_file_path = input_xml_file_path.replace(
+            input_xml_file_path.rsplit(os.sep, 1)[-1], xml_file_name
+        )
+        self.logger.info(
+            "%s, moving %s to %s for article %s version %s"
+            % (self.name, input_xml_file_path, xml_file_path, article_id, version)
+        )
+        shutil.move(input_xml_file_path, xml_file_path)
 
         # upload to the posted_content outbox folder
         self.upload_file_to_outbox_folder(
