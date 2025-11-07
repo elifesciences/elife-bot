@@ -153,7 +153,6 @@ def start(settings):
     activity_names.append("AcceptedSubmissionStrikingImages")
     activity_names.append("AcceptedSubmissionDocmap")
     activity_names.append("FindNewPreprints")
-    activity_names.append("GeneratePreprintXml")
     activity_names.append("SchedulePreprintDownstream")
     activity_names.append("DownloadDocmapIndex")
     activity_names.append("FindNewDocmaps")
