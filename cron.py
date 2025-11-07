@@ -218,6 +218,18 @@ def conditional_starts(current_datetime):
                 )
             )
 
+        # FindFuturePreprints once per day 23:15 UTC
+        if current_time.tm_hour == 23:
+            conditional_start_list.append(
+                OrderedDict(
+                    [
+                        ("starter_name", "starter_FindFuturePreprints"),
+                        ("workflow_id", "FindFuturePreprints"),
+                        ("start_seconds", 60 * 31),
+                    ]
+                )
+            )
+
     elif current_time.tm_min >= 20 and current_time.tm_min <= 29:
         # Jobs to start at 20 minutes past the hour
         LOGGER.info("Twenty minutes past the hour")
