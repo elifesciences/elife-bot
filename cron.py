@@ -471,6 +471,7 @@ def start_workflow(settings, starter_name, workflow_id=None):
         "starter_FindNewDocmaps",
         "starter_FindReadyToFinishPreprints",
         "starter_FindReingestPreprint",
+        "starter_FindFuturePreprints",
     ]:
         starter_object.start(settings=settings)
 
