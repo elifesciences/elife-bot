@@ -94,14 +94,14 @@ class TestFindNewDocmaps(unittest.TestCase):
     @patch("boto3.client")
     @patch.object(activity_module.email_provider, "smtp_connect")
     @patch.object(activity_module, "storage_context")
-    @patch.object(github_provider, "find_github_issue")
+    @patch.object(github_provider, "find_github_issues")
     @patch.object(activity_module, "get_session")
     @patch.object(activity_class, "clean_tmp_dir")
     def test_do_activity_session(
         self,
         fake_clean_tmp_dir,
         fake_session,
-        fake_find_github_issue,
+        fake_find_github_issues,
         fake_storage_context,
         fake_email_smtp_connect,
         fake_sqs_client,
@@ -122,7 +122,7 @@ class TestFindNewDocmaps(unittest.TestCase):
                 ),
             }
         )
-        fake_find_github_issue.return_value = FakeGithubIssue()
+        fake_find_github_issues.return_value = [FakeGithubIssue()]
 
         # remove the published dates from JSON
         docmap_json_for_84364 = json.loads(read_fixture("sample_docmap_for_84364.json"))

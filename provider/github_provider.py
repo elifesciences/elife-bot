@@ -34,8 +34,8 @@ def detail_from_issue_title(title):
     return None, None
 
 
-def find_github_issue(token, repo_name, version_doi):
-    "find the github issue for the article version"
+def find_github_issues(token, repo_name, version_doi):
+    "find the github issues for the article version"
     github_object = Github(token)
     user = github_object.get_user(GITHUB_USER)
     repo = user.get_repo(repo_name)
@@ -43,9 +43,17 @@ def find_github_issue(token, repo_name, version_doi):
     article_id = utils.msid_from_doi(doi)
     # find the matching issue and return it
     open_issues = repo.get_issues(state="open")
+    issues = []
     for issue in open_issues:
         if match_issue_title(issue.title, article_id, version):
-            return issue
+            issues.append(issue)
+    return issues
+
+
+def find_github_issue(token, repo_name, version_doi):
+    "find the first github issue for the article version"
+    for issue in find_github_issues(token, repo_name, version_doi):
+        return issue
     return None
 
 
@@ -63,12 +71,12 @@ def add_github_issue_comment(settings, logger, caller_name, version_doi, issue_c
         and settings.preprint_issues_repo_name
     ):
         try:
-            issue = find_github_issue(
+            issues = find_github_issues(
                 settings.github_token,
                 settings.preprint_issues_repo_name,
                 version_doi,
             )
-            if issue:
+            for issue in issues:
                 add_github_comment(issue, issue_comment)
         except Exception as exception:
             logger.exception(

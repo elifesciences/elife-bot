@@ -141,17 +141,17 @@ class TestValidateJatsDtd(unittest.TestCase):
 
     @patch.object(activity_module, "get_session")
     @patch.object(meca, "post_xml_file")
-    @patch.object(github_provider, "find_github_issue")
+    @patch.object(github_provider, "find_github_issues")
     @patch.object(activity_module, "storage_context")
     def test_invalid_response(
         self,
         fake_storage_context,
-        fake_find_github_issue,
+        fake_find_github_issues,
         fake_post_xml_file,
         fake_session,
     ):
         "test response content for invalid XML"
-        fake_find_github_issue.return_value = FakeGithubIssue()
+        fake_find_github_issues.return_value = [FakeGithubIssue()]
         directory = TempDirectory()
         mock_session = FakeSession(copy.copy(SESSION_DICT))
         fake_session.return_value = mock_session
@@ -193,17 +193,17 @@ class TestValidateJatsDtd(unittest.TestCase):
 
     @patch.object(activity_module, "get_session")
     @patch.object(meca, "post_xml_file")
-    @patch.object(github_provider, "find_github_issue")
+    @patch.object(github_provider, "find_github_issues")
     @patch.object(activity_module, "storage_context")
     def test_github_exception(
         self,
         fake_storage_context,
-        fake_find_github_issue,
+        fake_find_github_issues,
         fake_post_xml_file,
         fake_session,
     ):
         "test if Github communication raises an error"
-        fake_find_github_issue.side_effect = Exception("An exception")
+        fake_find_github_issues.side_effect = [Exception("An exception")]
         directory = TempDirectory()
         mock_session = FakeSession(copy.copy(SESSION_DICT))
         fake_session.return_value = mock_session
@@ -256,17 +256,17 @@ class TestValidateJatsDtd(unittest.TestCase):
 
     @patch.object(activity_module, "get_session")
     @patch.object(meca, "post_xml_file")
-    @patch.object(github_provider, "find_github_issue")
+    @patch.object(github_provider, "find_github_issues")
     @patch.object(activity_module, "storage_context")
     def test_post_to_xsl_exception_max_attempts(
         self,
         fake_storage_context,
-        fake_find_github_issue,
+        fake_find_github_issues,
         fake_post_xml_file,
         fake_session,
     ):
         "test if POST raises an exception and is the final attempt"
-        fake_find_github_issue.return_value = FakeGithubIssue()
+        fake_find_github_issues.return_value = [FakeGithubIssue()]
         directory = TempDirectory()
         mock_session = FakeSession(copy.copy(SESSION_DICT))
         # set the session counter value

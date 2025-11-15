@@ -191,7 +191,7 @@ class TestExpandMeca(unittest.TestCase):
             % exception_string,
         )
 
-    @patch.object(github_provider, "find_github_issue")
+    @patch.object(github_provider, "find_github_issues")
     @patch.object(activity_module, "get_session")
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "meca_assume_role")
@@ -200,11 +200,11 @@ class TestExpandMeca(unittest.TestCase):
         fake_meca_assume_role,
         fake_storage_context,
         fake_session,
-        fake_find_github_issue,
+        fake_find_github_issues,
     ):
         "test an exception when assuming a role with STS"
         directory = TempDirectory()
-        fake_find_github_issue.return_value = FakeGithubIssue()
+        fake_find_github_issues.return_value = [FakeGithubIssue()]
         mock_session = FakeSession(
             test_activity_data.meca_details_session_example(
                 computer_file_url="s3://server-src-daily/95901-v1-meca.zip"

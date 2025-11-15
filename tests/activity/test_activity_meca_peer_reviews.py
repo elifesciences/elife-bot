@@ -107,14 +107,14 @@ class TestMecaPeerReviews(unittest.TestCase):
         )
 
     @patch.object(cleaner, "add_sub_article_xml")
-    @patch.object(github_provider, "find_github_issue")
+    @patch.object(github_provider, "find_github_issues")
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
     def test_xml_exception(
         self,
         fake_session,
         fake_storage_context,
-        fake_find_github_issue,
+        fake_find_github_issues,
         fake_add_sub_article_xml,
     ):
         "test exception is raised in add_sub_article_xml()"
@@ -134,7 +134,7 @@ class TestMecaPeerReviews(unittest.TestCase):
         fake_storage_context.return_value = FakeStorageContext(
             directory.path, populated_data.get("resources"), dest_folder=dest_folder
         )
-        fake_find_github_issue.return_value = FakeGithubIssue()
+        fake_find_github_issues.return_value = [FakeGithubIssue()]
         exception_string = "An exception"
         fake_add_sub_article_xml.side_effect = Exception(exception_string)
         # do the activity
