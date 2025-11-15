@@ -35,38 +35,39 @@ class activity_AddPreprintIssueLabel(Activity):
         session = get_session(self.settings, data, run)
         version_doi = session.get_value("version_doi")
 
-        # find Github issue
-        issue = None
+        # find Github issues
+        issues = None
         try:
-            issue = github_provider.find_github_issue(
+            issues = github_provider.find_github_issues(
                 self.settings.github_token,
                 self.settings.preprint_issues_repo_name,
                 version_doi,
             )
         except Exception as exception:
             self.logger.exception(
-                "%s, exception finding Github issue for version DOI %s: %s"
+                "%s, exception finding Github issues for version DOI %s: %s"
                 % (self.name, version_doi, str(exception))
             )
             return self.ACTIVITY_PERMANENT_FAILURE
 
-        if issue:
+        if issues:
             # add label
-            try:
-                github_provider.add_label_to_github_issue(issue, LABEL)
-                self.logger.info(
-                    "%s, added label to Github issue found for version DOI %s"
-                    % (self.name, version_doi)
-                )
-            except Exception as exception:
-                self.logger.exception(
-                    "%s, exception adding label to Github issue for version DOI %s: %s"
-                    % (self.name, version_doi, str(exception))
-                )
-                return self.ACTIVITY_PERMANENT_FAILURE
+            for issue in issues:
+                try:
+                    github_provider.add_label_to_github_issue(issue, LABEL)
+                    self.logger.info(
+                        "%s, added label to Github issue found for version DOI %s"
+                        % (self.name, version_doi)
+                    )
+                except Exception as exception:
+                    self.logger.exception(
+                        "%s, exception adding label to Github issue for version DOI %s: %s"
+                        % (self.name, version_doi, str(exception))
+                    )
+                    return self.ACTIVITY_PERMANENT_FAILURE
         else:
             self.logger.info(
-                "%s, no open Github issue found for version DOI %s"
+                "%s, no open Github issues found for version DOI %s"
                 % (self.name, version_doi)
             )
 

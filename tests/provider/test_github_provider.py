@@ -85,6 +85,10 @@ class TestFindGithubIssue(unittest.TestCase):
                 title="MSID: 95901 Version: 1 DOI: 10.1101/2024.01.31.xxxx95901",
                 number=2,
             ),
+            FakeGithubIssue(
+                title="MSID: 95901 Version: 1 DOI: 10.1101/2024.01.31.xxxx95901",
+                number=3,
+            ),
         ]
         version_doi = "10.7554/eLife.95901.1"
         # invoke
@@ -98,6 +102,7 @@ class TestFindGithubIssue(unittest.TestCase):
         self.assertEqual(
             result.title, "MSID: 95901 Version: 1 DOI: 10.1101/2024.01.31.xxxx95901"
         )
+        self.assertEqual(result.number, 2)
 
     @patch.object(FakeGithubRepository, "get_issues")
     @patch.object(github_provider, "Github")
@@ -124,11 +129,17 @@ class TestAddGithubIssueComment(unittest.TestCase):
     def test_add_github_issue_comment(self, fake_github, fake_get_issues):
         "test finding and adding a Github issue comment"
         fake_github.return_value = FakeGithub()
+        issue_1 = FakeGithubIssue(
+            title="MSID: 95901 Version: 1 DOI: 10.1101/2024.01.31.xxxx95901",
+            number=2,
+        )
+        issue_2 = FakeGithubIssue(
+            title="MSID: 95901 Version: 1 DOI: 10.1101/2024.01.31.xxxx95901",
+            number=3,
+        )
         fake_get_issues.return_value = [
-            FakeGithubIssue(
-                title="MSID: 95901 Version: 1 DOI: 10.1101/2024.01.31.xxxx95901",
-                number=2,
-            ),
+            issue_1,
+            issue_2,
         ]
         fake_logger = FakeLogger()
         caller_name = "test"
@@ -140,6 +151,8 @@ class TestAddGithubIssueComment(unittest.TestCase):
         # assert
         self.assertEqual(fake_logger.loginfo, ["First logger info"])
         self.assertEqual(fake_logger.logexception, "First logger exception")
+        self.assertEqual(issue_1.comment.body, issue_comment)
+        self.assertEqual(issue_2.comment.body, issue_comment)
 
     @patch.object(FakeGithubRepository, "get_issues")
     @patch.object(github_provider, "Github")

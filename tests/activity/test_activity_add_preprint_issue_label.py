@@ -24,14 +24,14 @@ class TestAddPreprintIssueLabel(unittest.TestCase):
         self.activity = activity_class(settings_mock, fake_logger, None, None, None)
 
     @patch.object(activity_module, "get_session")
-    @patch.object(github_provider, "find_github_issue")
+    @patch.object(github_provider, "find_github_issues")
     def test_do_activity(
         self,
-        fake_find_github_issue,
+        fake_find_github_issues,
         fake_session,
     ):
         github_issue = FakeGithubIssue()
-        fake_find_github_issue.return_value = github_issue
+        fake_find_github_issues.return_value = [github_issue]
         mock_session = FakeSession(SESSION_DICT)
         fake_session.return_value = mock_session
         expected_result = activity_class.ACTIVITY_SUCCESS
@@ -48,14 +48,14 @@ class TestAddPreprintIssueLabel(unittest.TestCase):
         )
 
     @patch.object(activity_module, "get_session")
-    @patch.object(github_provider, "find_github_issue")
+    @patch.object(github_provider, "find_github_issues")
     def test_do_activity_no_issue_found(
         self,
-        fake_find_github_issue,
+        fake_find_github_issues,
         fake_session,
     ):
         "test when no Github issue is found"
-        fake_find_github_issue.return_value = None
+        fake_find_github_issues.return_value = None
         mock_session = FakeSession(SESSION_DICT)
         fake_session.return_value = mock_session
         expected_result = activity_class.ACTIVITY_SUCCESS
@@ -65,21 +65,21 @@ class TestAddPreprintIssueLabel(unittest.TestCase):
         self.assertEqual(result, expected_result)
         self.assertTrue(
             (
-                "AddPreprintIssueLabel, no open Github issue found for"
+                "AddPreprintIssueLabel, no open Github issues found for"
                 " version DOI 10.7554/eLife.95901.1"
             )
             in self.activity.logger.loginfo
         )
 
     @patch.object(activity_module, "get_session")
-    @patch.object(github_provider, "find_github_issue")
+    @patch.object(github_provider, "find_github_issues")
     def test_do_activity_find_issue_exception(
         self,
-        fake_find_github_issue,
+        fake_find_github_issues,
         fake_session,
     ):
         "test exception raised finding Github issue"
-        fake_find_github_issue.side_effect = Exception("An exception")
+        fake_find_github_issues.side_effect = Exception("An exception")
         mock_session = FakeSession(SESSION_DICT)
         fake_session.return_value = mock_session
         expected_result = activity_class.ACTIVITY_PERMANENT_FAILURE
@@ -90,16 +90,16 @@ class TestAddPreprintIssueLabel(unittest.TestCase):
 
     @patch.object(github_provider, "add_label_to_github_issue")
     @patch.object(activity_module, "get_session")
-    @patch.object(github_provider, "find_github_issue")
+    @patch.object(github_provider, "find_github_issues")
     def test_do_activity_add_label_exception(
         self,
-        fake_find_github_issue,
+        fake_find_github_issues,
         fake_session,
         fake_add_label,
     ):
         "test exception raised adding a label"
         github_issue = FakeGithubIssue()
-        fake_find_github_issue.return_value = github_issue
+        fake_find_github_issues.return_value = [github_issue]
         fake_add_label.side_effect = Exception("An exception")
         mock_session = FakeSession(SESSION_DICT)
         fake_session.return_value = mock_session

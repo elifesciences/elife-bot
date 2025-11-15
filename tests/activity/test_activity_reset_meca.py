@@ -42,7 +42,7 @@ class TestResetMeca(unittest.TestCase):
         # reset the session value
         self.session.store_value("cleaner_log", None)
 
-    @patch.object(github_provider, "find_github_issue")
+    @patch.object(github_provider, "find_github_issues")
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
     @patch.object(cleaner, "storage_context")
@@ -143,10 +143,10 @@ class TestResetMeca(unittest.TestCase):
         fake_cleaner_storage_context,
         fake_session,
         fake_storage_context,
-        fake_find_github_issue,
+        fake_find_github_issues,
     ):
         directory = TempDirectory()
-        fake_find_github_issue.return_value = FakeGithubIssue()
+        fake_find_github_issues.return_value = [FakeGithubIssue()]
         fake_clean_tmp_dir.return_value = None
         fake_session.return_value = self.session
 

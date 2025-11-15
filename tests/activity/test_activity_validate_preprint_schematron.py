@@ -73,18 +73,18 @@ class TestValidatePreprintSchematron(unittest.TestCase):
 
     @patch.object(activity_module, "get_session")
     @patch.object(meca, "post_xml_file")
-    @patch.object(github_provider, "find_github_issue")
+    @patch.object(github_provider, "find_github_issues")
     @patch.object(activity_module, "storage_context")
     def test_do_activity(
         self,
         fake_storage_context,
-        fake_find_github_issue,
+        fake_find_github_issues,
         fake_post_xml_file,
         fake_session,
     ):
         directory = TempDirectory()
         github_issue = FakeGithubIssue()
-        fake_find_github_issue.return_value = github_issue
+        fake_find_github_issues.return_value = [github_issue]
         mock_session = FakeSession(SESSION_DICT)
         fake_session.return_value = mock_session
         destination_path = os.path.join(
@@ -117,18 +117,18 @@ class TestValidatePreprintSchematron(unittest.TestCase):
 
     @patch.object(activity_module, "get_session")
     @patch.object(meca, "post_xml_file")
-    @patch.object(github_provider, "find_github_issue")
+    @patch.object(github_provider, "find_github_issues")
     @patch.object(activity_module, "storage_context")
     def test_post_xml_file_content_empty(
         self,
         fake_storage_context,
-        fake_find_github_issue,
+        fake_find_github_issues,
         fake_post_xml_file,
         fake_session,
     ):
         "test if POST response content returned is empty"
         directory = TempDirectory()
-        fake_find_github_issue.return_value = FakeGithubIssue()
+        fake_find_github_issues.return_value = [FakeGithubIssue()]
         mock_session = FakeSession(SESSION_DICT)
         fake_session.return_value = mock_session
         destination_path = os.path.join(
@@ -155,18 +155,18 @@ class TestValidatePreprintSchematron(unittest.TestCase):
 
     @patch.object(activity_module, "get_session")
     @patch.object(meca, "post_xml_file")
-    @patch.object(github_provider, "find_github_issue")
+    @patch.object(github_provider, "find_github_issues")
     @patch.object(activity_module, "storage_context")
     def test_post_xml_file_exception(
         self,
         fake_storage_context,
-        fake_find_github_issue,
+        fake_find_github_issues,
         fake_post_xml_file,
         fake_session,
     ):
         "test if POST raises an exception"
         directory = TempDirectory()
-        fake_find_github_issue.return_value = FakeGithubIssue()
+        fake_find_github_issues.return_value = [FakeGithubIssue()]
         mock_session = FakeSession(SESSION_DICT)
         fake_session.return_value = mock_session
         destination_path = os.path.join(
@@ -193,18 +193,18 @@ class TestValidatePreprintSchematron(unittest.TestCase):
 
     @patch.object(activity_module, "get_session")
     @patch.object(meca, "post_xml_file")
-    @patch.object(github_provider, "find_github_issue")
+    @patch.object(github_provider, "find_github_issues")
     @patch.object(activity_module, "storage_context")
     def test_invalid_response(
         self,
         fake_storage_context,
-        fake_find_github_issue,
+        fake_find_github_issues,
         fake_post_xml_file,
         fake_session,
     ):
         "test blank response content"
         directory = TempDirectory()
-        fake_find_github_issue.return_value = FakeGithubIssue()
+        fake_find_github_issues.return_value = [FakeGithubIssue()]
         mock_session = FakeSession(copy.copy(SESSION_DICT))
         fake_session.return_value = mock_session
         destination_path = os.path.join(
@@ -232,18 +232,18 @@ class TestValidatePreprintSchematron(unittest.TestCase):
 
     @patch.object(activity_module, "get_session")
     @patch.object(meca, "post_xml_file")
-    @patch.object(github_provider, "find_github_issue")
+    @patch.object(github_provider, "find_github_issues")
     @patch.object(activity_module, "storage_context")
     def test_github_exception(
         self,
         fake_storage_context,
-        fake_find_github_issue,
+        fake_find_github_issues,
         fake_post_xml_file,
         fake_session,
     ):
         "test if Github communication raises an error"
         directory = TempDirectory()
-        fake_find_github_issue.side_effect = Exception("An exception")
+        fake_find_github_issues.side_effect = [Exception("An exception")]
         mock_session = FakeSession(copy.copy(SESSION_DICT))
         fake_session.return_value = mock_session
         destination_path = os.path.join(
@@ -284,18 +284,18 @@ class TestValidatePreprintSchematron(unittest.TestCase):
 
     @patch.object(activity_module, "get_session")
     @patch.object(meca, "post_xml_file")
-    @patch.object(github_provider, "find_github_issue")
+    @patch.object(github_provider, "find_github_issues")
     @patch.object(activity_module, "storage_context")
     def test_post_to_xsl_exception_max_attempts(
         self,
         fake_storage_context,
-        fake_find_github_issue,
+        fake_find_github_issues,
         fake_post_xml_file,
         fake_session,
     ):
         "test if POST raises an exception and is the final attempt"
         directory = TempDirectory()
-        fake_find_github_issue.side_effect = Exception("An exception")
+        fake_find_github_issues.side_effect = Exception("An exception")
         mock_session = FakeSession(copy.copy(SESSION_DICT))
         # set the session counter value
         mock_session.store_value(activity_module.SESSION_ATTEMPT_COUNTER_NAME, 1000000)
