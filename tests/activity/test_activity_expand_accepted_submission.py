@@ -1,5 +1,6 @@
 import os
 import unittest
+from collections import OrderedDict
 from xml.etree.ElementTree import ParseError
 from mock import patch
 from testfixtures import TempDirectory
@@ -128,15 +129,15 @@ class TestExpandAcceptedSubmission(unittest.TestCase):
     @patch.object(activity_module, "get_session")
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module.download_helper, "storage_context")
-    @patch.object(FakeStorageContext, "set_resource_from_filename")
-    def test_do_activity_set_resource_exception(
+    @patch.object(cleaner, "unzip_zip")
+    def test_do_activity_copying_directory_to_s3(
         self,
-        fake_set_resource,
+        fake_unzip_zip,
         fake_download_storage_context,
         fake_storage_context,
         fake_session,
     ):
-        "test if an IsADirectoryError exception is raised copying files to S3"
+        "test avoiding to copy a directory to S3"
         directory = TempDirectory()
         fake_download_storage_context.return_value = FakeStorageContext(
             dest_folder=directory.path
@@ -146,20 +147,35 @@ class TestExpandAcceptedSubmission(unittest.TestCase):
         )
         mock_session = FakeSession({})
         fake_session.return_value = mock_session
-        fake_set_resource.side_effect = IsADirectoryError("An exception")
+        # mock the asset_file_name_map to include a directory
+        mock_xml_path = (
+            "%s/30-01-2019-RA-eLife-45644/30-01-2019-RA-eLife-45644.xml"
+            % self.activity.directories.get("TEMP_DIR")
+        )
+        # create folders if they do not exist
+        os.makedirs(os.path.dirname(mock_xml_path), exist_ok=True)
+        fake_unzip_zip.return_value = OrderedDict(
+            [
+                (
+                    "30-01-2019-RA-eLife-45644/30-01-2019-RA-eLife-45644/",
+                    "%s/30-01-2019-RA-eLife-45644/"
+                    % self.activity.directories.get("TEMP_DIR"),
+                ),
+                (
+                    "30-01-2019-RA-eLife-45644/30-01-2019-RA-eLife-45644.xml",
+                    mock_xml_path,
+                ),
+            ]
+        )
+        # write a mock XML file to satisify the copying process
+        with open(mock_xml_path, "w", encoding="utf-8") as open_file:
+            open_file.write("<root/>")
+
         # invoke
         result = self.activity.do_activity(
             test_case_data.ingest_accepted_submission_data
         )
         self.assertEqual(True, result)
-        self.assertTrue(
-            (
-                "IsADirectoryError exception raised trying to copy"
-                " %s/30-01-2019-RA-eLife-45644/transparent_reporting_Sakalauskaite.docx"
-            )
-            % self.activity.directories.get("TEMP_DIR")
-            in self.activity.logger.logexception
-        )
 
     @patch.object(activity_module, "get_session")
     @patch.object(activity_module, "storage_context")
