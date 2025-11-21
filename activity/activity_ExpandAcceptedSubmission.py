@@ -119,7 +119,16 @@ class activity_ExpandAcceptedSubmission(AcceptedBaseActivity):
                     "%s uploading %s to %s"
                     % (self.name, source_path, storage_resource_dest)
                 )
-                storage.set_resource_from_filename(storage_resource_dest, source_path)
+                try:
+                    storage.set_resource_from_filename(
+                        storage_resource_dest, source_path
+                    )
+                except IsADirectoryError:
+                    # do not try and copy a folder
+                    self.logger.exception(
+                        "%s IsADirectoryError exception raised trying to copy %s for %s"
+                        % (self.name, source_path, input_filename)
+                    )
 
             session.store_value("expanded_folder", expanded_folder)
 
@@ -132,7 +141,16 @@ class activity_ExpandAcceptedSubmission(AcceptedBaseActivity):
             return self.ACTIVITY_PERMANENT_FAILURE
 
         # check PRC status and store in the session
-        xml_file_path = cleaner.article_xml_asset(asset_file_name_map)[1]
+        try:
+            xml_file_path = cleaner.article_xml_asset(asset_file_name_map)[1]
+        except Exception:
+            self.logger.exception(
+                "%s Exception locating the article XML for zip %s"
+                % (self.name, input_filename)
+            )
+            self.clean_tmp_dir()
+            return self.ACTIVITY_PERMANENT_FAILURE
+
         try:
             prc_status = cleaner.is_prc(xml_file_path, input_filename)
         except ParseError:
