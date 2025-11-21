@@ -106,6 +106,12 @@ class activity_ExpandAcceptedSubmission(AcceptedBaseActivity):
 
             for asset_file_name in asset_file_name_map.items():
                 source_path = asset_file_name[1]
+                if source_path.endswith("/"):
+                    self.logger.info(
+                        "%s, not uploading %s because it is a directory in %s"
+                        % (self.name, source_path, input_filename)
+                    )
+                    continue
                 dest_path = expanded_folder + "/" + asset_file_name[0]
 
                 storage_resource_dest = (
@@ -119,16 +125,8 @@ class activity_ExpandAcceptedSubmission(AcceptedBaseActivity):
                     "%s uploading %s to %s"
                     % (self.name, source_path, storage_resource_dest)
                 )
-                try:
-                    storage.set_resource_from_filename(
-                        storage_resource_dest, source_path
-                    )
-                except IsADirectoryError:
-                    # do not try and copy a folder
-                    self.logger.exception(
-                        "%s IsADirectoryError exception raised trying to copy %s for %s"
-                        % (self.name, source_path, input_filename)
-                    )
+
+                storage.set_resource_from_filename(storage_resource_dest, source_path)
 
             session.store_value("expanded_folder", expanded_folder)
 
