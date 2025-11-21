@@ -128,6 +128,74 @@ class TestExpandAcceptedSubmission(unittest.TestCase):
     @patch.object(activity_module, "get_session")
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module.download_helper, "storage_context")
+    @patch.object(FakeStorageContext, "set_resource_from_filename")
+    def test_do_activity_set_resource_exception(
+        self,
+        fake_set_resource,
+        fake_download_storage_context,
+        fake_storage_context,
+        fake_session,
+    ):
+        "test if an IsADirectoryError exception is raised copying files to S3"
+        directory = TempDirectory()
+        fake_download_storage_context.return_value = FakeStorageContext(
+            dest_folder=directory.path
+        )
+        fake_storage_context.return_value = FakeStorageContext(
+            dest_folder=directory.path
+        )
+        mock_session = FakeSession({})
+        fake_session.return_value = mock_session
+        fake_set_resource.side_effect = IsADirectoryError("An exception")
+        # invoke
+        result = self.activity.do_activity(
+            test_case_data.ingest_accepted_submission_data
+        )
+        self.assertEqual(True, result)
+        self.assertTrue(
+            (
+                "IsADirectoryError exception raised trying to copy"
+                " %s/30-01-2019-RA-eLife-45644/transparent_reporting_Sakalauskaite.docx"
+            )
+            % self.activity.directories.get("TEMP_DIR")
+            in self.activity.logger.logexception
+        )
+
+    @patch.object(activity_module, "get_session")
+    @patch.object(activity_module, "storage_context")
+    @patch.object(activity_module.download_helper, "storage_context")
+    @patch.object(cleaner, "article_xml_asset")
+    def test_do_activity_article_xml_asset_exception(
+        self,
+        fake_article_xml_asset,
+        fake_download_storage_context,
+        fake_storage_context,
+        fake_session,
+    ):
+        "test an exception getting finding the article XML"
+        directory = TempDirectory()
+        fake_download_storage_context.return_value = FakeStorageContext(
+            dest_folder=directory.path
+        )
+        fake_storage_context.return_value = FakeStorageContext(
+            dest_folder=directory.path
+        )
+        mock_session = FakeSession({})
+        fake_session.return_value = mock_session
+        fake_article_xml_asset.side_effect = Exception("An exception")
+        # invoke
+        result = self.activity.do_activity(
+            test_case_data.ingest_accepted_submission_data
+        )
+        self.assertEqual(self.activity.ACTIVITY_PERMANENT_FAILURE, result)
+        self.assertTrue(
+            "Exception locating the article XML for zip"
+            in self.activity.logger.logexception
+        )
+
+    @patch.object(activity_module, "get_session")
+    @patch.object(activity_module, "storage_context")
+    @patch.object(activity_module.download_helper, "storage_context")
     @patch.object(cleaner, "is_prc")
     def test_do_activity_is_prc_exception(
         self,
