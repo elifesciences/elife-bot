@@ -99,6 +99,7 @@ class activity_ModifyMecaXml(MecaBaseActivity):
             xml_file_path,
             return_doctype_dict=True,
             return_processing_instructions=True,
+            insert_pis=True,
         )
         self.statuses["xml_root"] = True
 

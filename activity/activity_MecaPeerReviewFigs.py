@@ -129,6 +129,7 @@ class activity_MecaPeerReviewFigs(MecaBaseActivity):
             xml_file_path,
             return_doctype_dict=True,
             return_processing_instructions=True,
+            insert_pis=True,
         )
 
         cleaner.pretty_sub_article_xml(xml_root)

@@ -293,6 +293,7 @@ class activity_ModifyArticleSubjects(Activity):
             article_xml_file,
             return_doctype_dict=True,
             return_processing_instructions=True,
+            insert_pis=True,
         )
 
         # Modify subject values

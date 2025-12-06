@@ -82,7 +82,10 @@ def convert_xml(xml_file, file_name_map):
     xmlio.register_xmlns()
 
     root, doctype_dict, processing_instructions = xmlio.parse(
-        xml_file, return_doctype_dict=True, return_processing_instructions=True
+        xml_file,
+        return_doctype_dict=True,
+        return_processing_instructions=True,
+        insert_pis=True,
     )
 
     # Convert xlink href values
@@ -304,7 +307,10 @@ def alter_xml_related_object(xml_file, logger):
     xmlio.register_xmlns()
 
     root, doctype_dict, processing_instructions = xmlio.parse(
-        xml_file, return_doctype_dict=True, return_processing_instructions=True
+        xml_file,
+        return_doctype_dict=True,
+        return_processing_instructions=True,
+        insert_pis=True,
     )
 
     # Convert related-object tag
@@ -335,7 +341,10 @@ def remove_version_doi_tag(xml_file, logger):
     xmlio.register_xmlns()
 
     root, doctype_dict, processing_instructions = xmlio.parse(
-        xml_file, return_doctype_dict=True, return_processing_instructions=True
+        xml_file,
+        return_doctype_dict=True,
+        return_processing_instructions=True,
+        insert_pis=True,
     )
 
     # Convert related-object tag
@@ -364,7 +373,10 @@ def convert_history_event_tags(xml_file, logger):
     xmlio.register_xmlns()
 
     root, doctype_dict, processing_instructions = xmlio.parse(
-        xml_file, return_doctype_dict=True, return_processing_instructions=True
+        xml_file,
+        return_doctype_dict=True,
+        return_processing_instructions=True,
+        insert_pis=True,
     )
 
     #
