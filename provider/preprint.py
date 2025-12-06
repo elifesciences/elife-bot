@@ -222,6 +222,7 @@ def set_pdf_self_uri(xml_file_path, pdf_file_name, identifier):
         xml_file_path,
         return_doctype_dict=True,
         return_processing_instructions=True,
+        insert_pis=True,
     )
 
     set_pdf_self_uri_tag(xml_root, pdf_file_name, identifier)

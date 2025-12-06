@@ -635,7 +635,10 @@ def convert_xml(doi_id, xml_file, new_filenames, settings, logger):
     xmlio.register_xmlns()
 
     root, doctype_dict, processing_instructions = xmlio.parse(
-        xml_file, return_doctype_dict=True, return_processing_instructions=True
+        xml_file,
+        return_doctype_dict=True,
+        return_processing_instructions=True,
+        insert_pis=True,
     )
 
     soup = article_soup(xml_file)

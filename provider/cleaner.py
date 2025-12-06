@@ -234,7 +234,10 @@ def change_inline_graphic_xlink_hrefs(xml_file_path, href_to_file_name_map, iden
     "replace xlink:href values of inline-graphic tags with new values"
     # parse XML file
     root, doctype_dict, processing_instructions = xmlio.parse(
-        xml_file_path, return_doctype_dict=True, return_processing_instructions=True
+        xml_file_path,
+        return_doctype_dict=True,
+        return_processing_instructions=True,
+        insert_pis=True,
     )
     for href, new_file_name in href_to_file_name_map.items():
         for inline_graphic_tag in root.findall(
@@ -403,7 +406,10 @@ def add_file_tags_to_xml(xml_file_path, file_detail_list, identifier):
     "add file tags to the XML file"
     # parse XML file
     root, doctype_dict, processing_instructions = xmlio.parse(
-        xml_file_path, return_doctype_dict=True, return_processing_instructions=True
+        xml_file_path,
+        return_doctype_dict=True,
+        return_processing_instructions=True,
+        insert_pis=True,
     )
     add_file_tags(root, file_detail_list)
     # write XML file to disk
@@ -457,7 +463,10 @@ def parse_manifest(xml_file_path):
     "parse MECA manifest XML"
     ElementTree.register_namespace("", "http://manuscriptexchange.org")
     return xmlio.parse(
-        xml_file_path, return_doctype_dict=True, return_processing_instructions=True
+        xml_file_path,
+        return_doctype_dict=True,
+        return_processing_instructions=True,
+        insert_pis=True,
     )
 
 
