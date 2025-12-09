@@ -78,13 +78,38 @@ class activity_DepositCrossrefMinimal(Activity):
 
         article_xml_files = glob.glob(self.directories.get("INPUT_DIR") + "/*.xml")
 
+        self.logger.info(
+            "%s, article_xml_files in the INPUT_DIR: %s"
+            % (self.name, article_xml_files)
+        )
+        self.logger.info(
+            "%s, article_xml_files length: %s" % (self.name, len(article_xml_files))
+        )
+
         crossref_config = crossref.elifecrossref_config(self.settings)
 
         article_object_map = self.get_article_objects(
             article_xml_files, crossref_config
         )
+
+        self.logger.info(
+            "%s, article_object_map length: %s" % (self.name, len(article_object_map))
+        )
+        self.logger.info(
+            "%s, article_object_map keys: %s" % (self.name, article_object_map.keys())
+        )
+
         generate_article_object_map = crossref.approve_to_generate_list(
             article_object_map, crossref_config, self.bad_xml_files
+        )
+
+        self.logger.info(
+            "%s, generate_article_object_map length: %s"
+            % (self.name, len(generate_article_object_map))
+        )
+        self.logger.info(
+            "%s, generate_article_object_map keys: %s"
+            % (self.name, generate_article_object_map.keys())
         )
 
         # build Crossref deposit objects
@@ -95,6 +120,13 @@ class activity_DepositCrossrefMinimal(Activity):
             self.bad_xml_files,
             submission_type="journal",
         )
+
+        self.logger.info(
+            "%s, crossref_object_list length: %s"
+            % (self.name, len(crossref_object_list))
+        )
+        self.logger.info("%s, good_xml_files: %s" % (self.name, self.good_xml_files))
+        self.logger.info("%s, bad_xml_files: %s" % (self.name, self.bad_xml_files))
 
         # generate status will be True if no unhandled exception was raised
         self.statuses["generate"] = True
@@ -127,6 +159,8 @@ class activity_DepositCrossrefMinimal(Activity):
                 )
             except:
                 self.statuses["publish"] = False
+        else:
+            self.logger.info("%s, no articles approved for publishing" % self.name)
 
         if self.statuses.get("publish") is True:
             # Clean up outbox
@@ -151,6 +185,8 @@ class activity_DepositCrossrefMinimal(Activity):
                 batch_file_names,
             )
             self.statuses["outbox"] = True
+        else:
+            self.logger.info("%s, not all articles published" % self.name)
 
         # Set the activity status of this activity based on successes
         self.statuses["activity"] = bool(
