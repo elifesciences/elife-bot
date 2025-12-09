@@ -211,7 +211,6 @@ class TestDigestProvider(unittest.TestCase):
         versions_data = copy.copy(test_data.lax_article_versions_response_data)
         # delete the vor data
         del versions_data[2]
-        print(versions_data)
         fake_article_versions.return_value = 200, versions_data
         published = digest_provider.published_date_from_lax(settings_mock, "08411")
         self.assertEqual(published, None)

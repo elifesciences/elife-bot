@@ -124,7 +124,6 @@ class TestPackagePOA(unittest.TestCase):
         fake_copy_pdf_to_output_dir.return_value = None
         self.fake_copy_pdf_to_hw_staging_dir(test_data.get("poa_decap_pdf"))
         file_path = self.fake_download_poa_zip(test_data.get("filename"))
-        print(file_path)
         self.assertEqual(
             self.poa.process_poa_zipfile(file_path), test_data.get("expected")
         )

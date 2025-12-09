@@ -23,7 +23,6 @@ class TestDownstreamStart(unittest.TestCase):
         )
         self.assertEqual(self.activity.ACTIVITY_SUCCESS, result)
 
-        print(self.activity.logger.loginfo)
         self.assertEqual(
             self.activity.logger.loginfo[-5:],
             [

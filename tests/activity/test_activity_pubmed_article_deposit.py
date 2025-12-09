@@ -271,7 +271,6 @@ class TestPubmedArticleDeposit(unittest.TestCase):
                     )
                 if test_data.get("expected_email_body_contains"):
                     body = helpers.body_from_multipart_email_string(first_email_content)
-                    print(body)
                     for expected_to_contain in test_data.get(
                         "expected_email_body_contains"
                     ):
