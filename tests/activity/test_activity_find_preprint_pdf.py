@@ -74,7 +74,6 @@ class TestFindPreprintPdf(unittest.TestCase):
         # check assertions
         self.assertEqual(result, expected_result)
 
-        print("\nDEBUG loginfo: %s" % self.activity.logger.loginfo)
         # assertions on log
         self.assertTrue(
             "FindPreprintPDF, from workflow input data got pdf_url %s" % pdf_url
