@@ -3,7 +3,7 @@ import json
 import time
 import unittest
 from xml.etree import ElementTree
-from xml.etree.ElementTree import ParseError
+from xml.parsers.expat import ExpatError
 from collections import OrderedDict
 import zipfile
 from mock import patch
@@ -121,7 +121,7 @@ class TestParseArticleXml(unittest.TestCase):
                 "<article><title>To &#x001D;nd odd entities.</title>"
                 '<p>A <ext-link xlink:href="https://example.org/">link</ext-link>.</article>'
             )
-        with self.assertRaises(ParseError):
+        with self.assertRaises(ExpatError):
             cleaner.parse_article_xml(xml_file_path)
         with open(self.logfile, "r") as open_file:
             log_contents = open_file.read()
