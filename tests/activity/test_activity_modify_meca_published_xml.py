@@ -433,7 +433,7 @@ class TestModifyPubDate(unittest.TestCase):
 
     def test_insert_after_pub_date(self):
         "test adding pub-date tags after existing pub-date tag"
-        keep_pub_date_tag = (
+        epub_pub_date_tag = (
             '<pub-date date-type="epub" iso-8601-date="2024-06-19">'
             "<day>19</day><month>06</month><year>2024</year>"
             "</pub-date>"
@@ -452,7 +452,7 @@ class TestModifyPubDate(unittest.TestCase):
             "<elocation-id>RP95901</elocation-id>"
             "</article-meta>"
             "</front>"
-            "</article>" % (keep_pub_date_tag, remove_pub_date_tag)
+            "</article>" % (epub_pub_date_tag, remove_pub_date_tag)
         )
         doi = "10.7554/eLife.95901"
         expected = (
@@ -461,12 +461,11 @@ class TestModifyPubDate(unittest.TestCase):
             "<article-meta>"
             "<author-notes />"
             "%s"
-            "%s"
             "<elocation-id>RP95901</elocation-id>"
             "</article-meta>"
             "</front>"
             "</article>"
-        ) % (keep_pub_date_tag, PUB_DATE_XML)
+        ) % PUB_DATE_XML
         # invoke
         activity_module.modify_pub_date(xml_root, HISTORY_DATA, doi)
         # assert
