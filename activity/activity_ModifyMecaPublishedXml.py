@@ -120,9 +120,6 @@ class activity_ModifyMecaPublishedXml(MecaBaseActivity):
             xml_root, display_channel=None, article_categories=article_categories
         )
 
-        # remove pub-date tag if it has a year only
-        clear_year_only_pub_date(xml_root)
-
         # get history data including up to the current version
         history_data = cleaner.docmap_preprint_history_from_docmap(docmap_string)
         history_data = cleaner.prune_history_data(history_data, doi, int(version) + 1)
@@ -251,10 +248,8 @@ def modify_pub_date(xml_root, history_data, doi):
 
 
 def clear_pub_date_tags(xml_root):
-    "remove pub-date tags of certain date-type values"
-    pub_date_types = ["original-publication", "update"]
+    "remove pub-date tags in article-meta"
     article_meta_tag = xml_root.find(".//front/article-meta")
     if article_meta_tag:
         for pub_date_tag in article_meta_tag.findall("pub-date"):
-            if pub_date_tag.get("date-type") in pub_date_types:
-                article_meta_tag.remove(pub_date_tag)
+            article_meta_tag.remove(pub_date_tag)
