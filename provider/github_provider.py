@@ -1,3 +1,4 @@
+import base64
 import re
 from github import Github
 from github import GithubException
@@ -131,13 +132,31 @@ def update_github(settings, logger, repo_file, content):
         logger.info("Exception: file " + repo_file + ". Error: " + str(exception))
         raise
 
+    # check for file size over limit will have encoding of none
+    if xml_file.encoding == "base64":
+        repo_file_content = xml_file.decoded_content
+    else:
+        # use alternate method for large files
+        try:
+            repo_file_content = base64.b64decode(
+                article_xml_repo.get_git_blob(xml_file.sha).content
+            )
+        except Exception as exception:
+            logger.info(
+                "Exception: using get_git_blob for file "
+                + repo_file
+                + ". Error: "
+                + str(exception)
+            )
+            raise
+
     try:
         # check for changes first
         if isinstance(content, str):
             # encode content to compare bytestring to bytestring
-            if content == utils.unicode_encode(xml_file.decoded_content):
+            if content == utils.unicode_encode(repo_file_content):
                 return "No changes in file " + repo_file
-        elif content == xml_file.decoded_content:
+        elif content == repo_file_content:
             return "No changes in file " + repo_file
 
         # there are changes

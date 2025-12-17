@@ -327,6 +327,9 @@ class FakeGithubRepository:
     def get_contents(self, path):
         return FakeGithubContentFile()
 
+    def get_git_blob(self, sha):
+        return FakeGithubGitBlob()
+
     def update_file(
         self, path, message, content, sha, branch=None, committer=None, author=None
     ):
@@ -344,8 +347,17 @@ class FakeGithubRepository:
 class FakeGithubContentFile:
     "mock object for github.ContentFile.ContentFile"
 
-    def __init__(self):
+    def __init__(self, encoding="base64"):
         self.decoded_content = b"<article/>"
+        self.sha = "sha"
+        self.encoding = encoding
+
+
+class FakeGithubGitBlob:
+    "mock object for github.GitBlob.GitBlob"
+
+    def __init__(self):
+        self.content = b"PGFydGljbGUvPg=="  # base64.b64encode(b"<article/>")
         self.sha = "sha"
 
 
