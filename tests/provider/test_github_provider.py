@@ -5,6 +5,8 @@ from provider import github_provider
 from tests import settings_mock
 from tests.activity.classes_mock import (
     FakeGithub,
+    FakeGithubContentFile,
+    FakeGithubGitBlob,
     FakeGithubIssue,
     FakeGithubRepository,
     FakeLogger,
@@ -290,6 +292,72 @@ class TestUpdateGithub(unittest.TestCase):
         )
         self.assertEqual(
             result, "File %s successfully updated. Commit: None" % repo_file
+        )
+
+    @patch.object(FakeGithubRepository, "get_git_blob")
+    @patch.object(FakeGithubRepository, "get_contents")
+    def test_no_changes_to_large_file(
+        self, fake_get_contents, fake_get_git_blob, mock_github
+    ):
+        "test comparing a large file from the reposistory"
+        repo_file = "file.txt"
+        # bytestring content
+        content = b"<article/>"
+        mock_github.return_value = FakeGithub()
+        # use a ContentFile with encoding of none
+        fake_get_contents.return_value = FakeGithubContentFile(encoding="none")
+        fake_get_git_blob.return_value = FakeGithubGitBlob()
+        # invoke
+        result = github_provider.update_github(
+            settings_mock, self.logger, repo_file, content
+        )
+        # assert
+        self.assertEqual(result, "No changes in file %s" % repo_file)
+
+    @patch.object(FakeGithubRepository, "get_git_blob")
+    @patch.object(FakeGithubRepository, "get_contents")
+    def test_get_large_file(self, fake_get_contents, fake_get_git_blob, mock_github):
+        "test updating a large file from the reposistory"
+        repo_file = "file.txt"
+        content = b"<article>Updated</article>"
+        mock_github.return_value = FakeGithub()
+        # use a ContentFile with encoding of none
+        fake_get_contents.return_value = FakeGithubContentFile(encoding="none")
+        fake_get_git_blob.return_value = FakeGithubGitBlob()
+        # invoke
+        result = github_provider.update_github(
+            settings_mock, self.logger, repo_file, content
+        )
+        # assert
+        self.assertEqual(
+            result, "File %s successfully updated. Commit: None" % repo_file
+        )
+
+    @patch.object(FakeGithubRepository, "get_git_blob")
+    @patch.object(FakeGithubRepository, "get_contents")
+    def test_get_large_file_exception(
+        self, fake_get_contents, fake_get_git_blob, mock_github
+    ):
+        "test exception raised when getting large file"
+        repo_file = "file.txt"
+        content = b"<article>Updated</article>"
+        mock_github.return_value = FakeGithub()
+        # use a ContentFile with encoding of none
+        fake_get_contents.return_value = FakeGithubContentFile(encoding="none")
+        fake_status = 500
+        fake_data = "data"
+        fake_get_git_blob.side_effect = GithubException(
+            status=fake_status, data=fake_data, headers="headers"
+        )
+        # invoke
+        with self.assertRaises(Exception):
+            github_provider.update_github(
+                settings_mock, self.logger, repo_file, content
+            )
+        self.assertEqual(
+            self.logger.loginfo[-1],
+            'Exception: using get_git_blob for file %s. Error: %s "%s"'
+            % (repo_file, fake_status, fake_data),
         )
 
     @patch.object(FakeGithubRepository, "get_contents")
