@@ -238,6 +238,104 @@ class TesetPostToEndpoint(unittest.TestCase):
         )
 
 
+class TestPostFileDataToEndpoint(unittest.TestCase):
+    "tests for post_file_data_to_endpoint()"
+
+    def setUp(self):
+        self.directory = TempDirectory()
+        start_xml = b"<root/>"
+        self.transformed_xml = b"<root>Modified.</root>"
+        self.file_path = os.path.join(self.directory.path, "file.xml")
+        with open(self.file_path, "wb") as open_file:
+            open_file.write(start_xml)
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    @patch("requests.post")
+    def test_post_data(self, fake_post):
+        "test post_file_data_to_endpoint()"
+        status_code = 200
+        logger = FakeLogger()
+        fake_post.return_value = FakeResponse(status_code, content=self.transformed_xml)
+        result = meca.post_file_data_to_endpoint(
+            self.file_path,
+            settings_mock.meca_dtd_endpoint,
+            settings_mock.user_agent,
+            "test",
+            logger,
+        )
+        self.assertEqual(result, self.transformed_xml)
+
+    @patch("requests.post")
+    def test_status_code_400(self, fake_post):
+        "test response status_code 400"
+        status_code = 400
+        logger = FakeLogger()
+        fake_post.return_value = FakeResponse(status_code, content=self.transformed_xml)
+        with self.assertRaises(Exception):
+            meca.post_file_data_to_endpoint(
+                self.file_path,
+                settings_mock.meca_xsl_endpoint,
+                settings_mock.user_agent,
+                "test",
+                logger,
+            )
+
+    @patch("requests.post")
+    def test_bad_response(self, fake_post):
+        "test if response content is None"
+        logger = FakeLogger()
+        fake_post.return_value = None
+        result = meca.post_file_data_to_endpoint(
+            self.file_path,
+            settings_mock.meca_xsl_endpoint,
+            settings_mock.user_agent,
+            "test",
+            logger,
+        )
+        self.assertEqual(result, None)
+
+
+class TesetPostToPreprintPdfEndpoint(unittest.TestCase):
+    "tests for post_to_preprint_pdf_endpoint()"
+
+    def setUp(self):
+        self.xml_file_path = "article.xml"
+        self.endpoint_url = settings_mock.meca_dtd_endpoint
+        self.caller_name = "GeneratePreprintPDF"
+
+    @patch.object(meca, "post_file_data_to_endpoint")
+    def test_post(self, fake_post_file_data):
+        "test normal response content returned"
+        logger = FakeLogger()
+        response_content = b""
+        fake_post_file_data.return_value = response_content
+        # invoke
+        result = meca.post_to_preprint_pdf_endpoint(
+            self.xml_file_path, self.endpoint_url, None, self.caller_name, logger
+        )
+        # assert
+        self.assertEqual(result, response_content)
+
+    @patch.object(meca, "post_file_data_to_endpoint")
+    def test_exception(self, fake_post_file_data):
+        "test exception raised"
+        logger = FakeLogger()
+        fake_post_file_data.side_effect = Exception("An exception")
+        # invoke
+        result = meca.post_to_preprint_pdf_endpoint(
+            self.xml_file_path, self.endpoint_url, None, self.caller_name, logger
+        )
+        # assert
+        self.assertEqual(result, None)
+        self.assertEqual(
+            logger.logexception,
+            "%s, posting %s to preprint PDF endpoint %s: An exception"
+            % (self.caller_name, self.xml_file_path, self.endpoint_url),
+        )
+
+
 class TestLogToSession(unittest.TestCase):
     "tests for log_to_session()"
 
