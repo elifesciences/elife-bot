@@ -292,6 +292,8 @@ meca_sts_role_session_name = "bot"
 
 reviewed_preprint_api_endpoint = "https://api/path/{article_id}v{version}"
 
+generate_preprint_pdf_api_endpoint = "https://api/generate_preprint_pdf/"
+
 
 @mock_aws
 def aws_conn(service, service_creation_kwargs):
