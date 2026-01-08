@@ -138,6 +138,67 @@ def post_to_endpoint(xml_file_path, endpoint_url, user_agent, caller_name, logge
     return response_content
 
 
+def post_file_data_to_endpoint(
+    file_path, endpoint_url, user_agent, caller_name, logger
+):
+    "POST data from the file_path to an endpoint and return the response content"
+    headers = {"Content-Type": "application/xml"}
+    if user_agent:
+        headers["user-agent"] = user_agent
+    logger.info(
+        "%s, request to endpoint: POST data from file %s to %s",
+        (caller_name, file_path, endpoint_url),
+    )
+    response = None
+    with open(file_path, "rb") as open_file:
+        response = requests.post(
+            endpoint_url,
+            timeout=REQUESTS_TIMEOUT,
+            headers=headers,
+            data=open_file.read(),
+        )
+    if response and response.status_code not in [200]:
+        raise Exception(
+            "%s, error posting data from file %s to endpoint %s: %s, %s"
+            % (
+                caller_name,
+                file_path,
+                endpoint_url,
+                response.status_code,
+                response.content,
+            )
+        )
+    if response and response.status_code == 200:
+        return response.content
+    return None
+
+
+def post_to_preprint_pdf_endpoint(
+    xml_file_path, endpoint_url, user_agent, caller_name, logger
+):
+    "post XML file to PDF generation endpoint, catch exceptions, return response content"
+    try:
+        response_content = post_file_data_to_endpoint(
+            xml_file_path,
+            endpoint_url,
+            user_agent,
+            caller_name,
+            logger,
+        )
+    except Exception as exception:
+        logger.exception(
+            "%s, posting %s to preprint PDF endpoint %s: %s"
+            % (
+                caller_name,
+                xml_file_path,
+                endpoint_url,
+                str(exception),
+            )
+        )
+        response_content = None
+    return response_content
+
+
 def log_to_session(log_message, session):
     "save the message to the session"
     # add the log_message to the session variable
