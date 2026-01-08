@@ -185,6 +185,7 @@ def start(settings):
     activity_names.append("AddPreprintIssueLabel")
     activity_names.append("InvalidatePreprintCdn")
     activity_names.append("FindFuturePreprints")
+    activity_names.append("GeneratePreprintPDF")
 
     for activity_name in activity_names:
         # Import the activity libraries
