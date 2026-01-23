@@ -1,7 +1,5 @@
 import json
 import os
-from xml.etree.ElementTree import Element
-from elifetools import xmlio
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 from provider import cleaner, meca, preprint, utils
@@ -32,7 +30,7 @@ class activity_ReplacePreprintPDF(MecaBaseActivity):
         }
 
         self.statuses = {
-            "pdf_url": None,
+            "pdf_s3_path": None,
             "pdf_href": None,
             "download_pdf": None,
             "replace_pdf": None,
@@ -53,17 +51,17 @@ class activity_ReplacePreprintPDF(MecaBaseActivity):
         version_doi = session.get_value("version_doi")
         article_id = session.get_value("article_id")
         version = session.get_value("version")
-        pdf_url = session.get_value("pdf_url")
+        pdf_s3_path = session.get_value("pdf_s3_path")
         expanded_folder = session.get_value("expanded_folder")
 
-        if not pdf_url:
+        if not pdf_s3_path:
             self.logger.error(
-                "%s, no pdf_url found in the session for %s, failing the workflow"
+                "%s, no pdf_s3_path found in the session for %s, failing the workflow"
                 % (self.name, version_doi)
             )
             return self.ACTIVITY_PERMANENT_FAILURE
 
-        self.statuses["pdf_url"] = True
+        self.statuses["pdf_s3_path"] = True
 
         self.make_activity_directories()
 
@@ -108,14 +106,20 @@ class activity_ReplacePreprintPDF(MecaBaseActivity):
         to_file = os.path.join(self.directories.get("INPUT_DIR"), new_pdf_href)
         # create folders if they do not exist
         os.makedirs(os.path.dirname(to_file), exist_ok=True)
-        # download the PDF at pdf_url
+        # download the PDF at pdf_s3_path
+        pdf_resource_origin = (
+            self.settings.storage_provider
+            + "://"
+            + self.settings.bot_bucket
+            + "/"
+            + pdf_s3_path
+        )
         self.logger.info(
             "%s, downloading %s to %s for %s"
-            % (self.name, pdf_url, to_file, version_doi)
+            % (self.name, pdf_s3_path, to_file, version_doi)
         )
-        utils.download_file(
-            pdf_url, to_file, user_agent=getattr(self.settings, "user_agent", None)
-        )
+        with open(to_file, "wb") as open_file:
+            storage.get_resource_to_file(pdf_resource_origin, open_file)
         self.statuses["download_pdf"] = True
 
         # replace PDF file in the S3 expanded folder
@@ -126,12 +130,7 @@ class activity_ReplacePreprintPDF(MecaBaseActivity):
         new_s3_resource = resource_prefix + "/" + new_pdf_href
         storage.set_resource_from_filename(new_s3_resource, to_file)
         # remove old PDF file
-        if old_pdf_href == new_pdf_href:
-            self.logger.info(
-                "%s, old pdf %s the same name as new pdf %s for %s"
-                % (self.name, old_pdf_href, new_pdf_href, version_doi)
-            )
-        elif old_pdf_href:
+        if old_pdf_href:
             self.logger.info(
                 "%s, removing old pdf %s from the bucket expanded folder"
                 % (self.name, old_pdf_href)

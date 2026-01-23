@@ -2,9 +2,7 @@
 
 import unittest
 import os
-import shutil
 import copy
-from xml.etree import ElementTree
 import zipfile
 from mock import patch
 from testfixtures import TempDirectory
@@ -16,7 +14,6 @@ from tests import list_files
 from tests.activity import helpers, settings_mock, test_activity_data
 from tests.activity.classes_mock import (
     FakeLogger,
-    FakeResponse,
     FakeSession,
     FakeStorageContext,
 )
@@ -48,7 +45,6 @@ class TestReplacePreprintPdf(unittest.TestCase):
         # clean the temporary directory
         self.activity.clean_tmp_dir()
 
-    @patch("requests.get")
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
     @patch.object(activity_class, "clean_tmp_dir")
@@ -57,15 +53,12 @@ class TestReplacePreprintPdf(unittest.TestCase):
         fake_clean_tmp_dir,
         fake_session,
         fake_storage_context,
-        fake_get,
     ):
         "test if there is a pdf_url in the session"
         directory = TempDirectory()
         fake_clean_tmp_dir.return_value = None
 
-        pdf_url = "https://example.org/raw/master/data/95901/v1/95901-v1.pdf"
         session_dict = copy.copy(SESSION_DICT)
-        session_dict["pdf_url"] = pdf_url
         fake_session.return_value = FakeSession(session_dict)
 
         # populate the meca zip file and bucket folders for testing
@@ -77,13 +70,6 @@ class TestReplacePreprintPdf(unittest.TestCase):
             directory.path, populated_data.get("resources"), dest_folder=directory.path
         )
 
-        fake_response = FakeResponse(200)
-        # a PDF file to test with
-        pdf_fixture = "tests/files_source/elife-00353-v1.pdf"
-        with open(pdf_fixture, "rb") as open_file:
-            fake_response.content = open_file.read()
-        fake_get.return_value = fake_response
-
         expected_result = activity_class.ACTIVITY_SUCCESS
         # do the activity
         result = self.activity.do_activity(test_activity_data.ingest_meca_data)
@@ -94,7 +80,7 @@ class TestReplacePreprintPdf(unittest.TestCase):
         self.assertDictEqual(
             self.activity.statuses,
             {
-                "pdf_url": True,
+                "pdf_s3_path": True,
                 "pdf_href": True,
                 "download_pdf": True,
                 "replace_pdf": True,
@@ -123,10 +109,13 @@ class TestReplacePreprintPdf(unittest.TestCase):
         self.assertTrue(
             (
                 "ReplacePreprintPDF,"
-                " downloading https://example.org/raw/master/data/95901/v1/95901-v1.pdf"
+                " downloading %s"
                 " to %s/content/elife-preprint-95901-v1.pdf for 10.7554/eLife.95901.1"
             )
-            % self.activity.directories.get("INPUT_DIR")
+            % (
+                SESSION_DICT.get("pdf_s3_path"),
+                self.activity.directories.get("INPUT_DIR"),
+            )
             in self.activity.logger.loginfo,
         )
 
@@ -171,7 +160,7 @@ class TestReplacePreprintPdf(unittest.TestCase):
         )
         self.assertEqual(
             os.stat(bucket_new_pdf_path).st_size,
-            os.stat(pdf_fixture).st_size,
+            os.stat(helpers.PDF_FIXTURE).st_size,
             "bucket PDF file size did not match the PDF fixture",
         )
 
@@ -229,118 +218,6 @@ class TestReplacePreprintPdf(unittest.TestCase):
                 "unexpectedly found %s in manifest XML" % fragment,
             )
 
-    @patch("requests.get")
-    @patch.object(activity_module, "storage_context")
-    @patch.object(activity_module, "get_session")
-    def test_same_pdf_file_name(
-        self,
-        fake_session,
-        fake_storage_context,
-        fake_get,
-    ):
-        "test if the new PDF file name is the same as the old PDF file name"
-        directory = TempDirectory()
-
-        pdf_url = "https://example.org/raw/master/data/95901/v1/95901-v1.pdf"
-        session_dict = copy.copy(SESSION_DICT)
-        session_dict["pdf_url"] = pdf_url
-        fake_session.return_value = FakeSession(session_dict)
-
-        # populate the meca zip file and bucket folders for testing
-        meca_file_path = "tests/files_source/95901-v1-meca.zip"
-        populated_data = helpers.populate_meca_test_data(
-            meca_file_path, SESSION_DICT, test_data={}, temp_dir=directory.path
-        )
-
-        # rename the PDF file
-        old_pdf_file_name = "24301711.pdf"
-        new_pdf_file_name = "elife-preprint-95901-v1.pdf"
-        content_subfolder = os.path.join(session_dict.get("expanded_folder"), "content")
-        pdf_resource_path = os.path.join(content_subfolder, old_pdf_file_name)
-        pdf_file_path = os.path.join(directory.path, pdf_resource_path)
-        new_pdf_file_path = os.path.join(
-            directory.path, content_subfolder, new_pdf_file_name
-        )
-        shutil.move(
-            pdf_file_path,
-            new_pdf_file_path,
-        )
-        populated_data["resources"] = [
-            resource.replace(old_pdf_file_name, new_pdf_file_name)
-            for resource in populated_data.get("resources")
-        ]
-
-        # rewrite the PDF tag from the manifest.xml
-        manifest_file_path = os.path.join(
-            directory.path, session_dict.get("expanded_folder"), "manifest.xml"
-        )
-        with open(manifest_file_path, "r", encoding="utf-8") as open_file:
-            manifest_content = open_file.read()
-        with open(manifest_file_path, "w", encoding="utf-8") as open_file:
-            manifest_content = open_file.write(
-                manifest_content.replace(old_pdf_file_name, new_pdf_file_name)
-            )
-
-        # finish configuring the bucket storage fixtures
-        fake_storage_context.return_value = FakeStorageContext(
-            directory.path, populated_data.get("resources"), dest_folder=directory.path
-        )
-
-        fake_response = FakeResponse(200)
-        # a PDF file to test with
-        pdf_fixture = "tests/files_source/elife-00353-v1.pdf"
-        with open(pdf_fixture, "rb") as open_file:
-            fake_response.content = open_file.read()
-        fake_get.return_value = fake_response
-
-        expected_result = activity_class.ACTIVITY_SUCCESS
-        # do the activity
-        result = self.activity.do_activity(test_activity_data.ingest_meca_data)
-        # check assertions
-        self.assertEqual(result, expected_result)
-
-        # assertions on statuses
-        self.assertDictEqual(
-            self.activity.statuses,
-            {
-                "pdf_url": True,
-                "pdf_href": True,
-                "download_pdf": True,
-                "replace_pdf": None,
-                "modify_manifest_xml": True,
-                "upload_manifest_xml": True,
-                "modify_article_xml": True,
-                "upload_article_xml": True,
-            },
-        )
-
-        # assertions on bucket contents
-        bucket_expanded_folder_path = os.path.join(
-            directory.path, session_dict.get("expanded_folder")
-        )
-        bucket_new_pdf_path = os.path.join(
-            bucket_expanded_folder_path, "content/elife-preprint-95901-v1.pdf"
-        )
-        self.assertTrue(
-            os.path.exists(bucket_new_pdf_path),
-            "New PDF missing from the bucket expanded folder",
-        )
-        self.assertEqual(
-            os.stat(bucket_new_pdf_path).st_size,
-            os.stat(pdf_fixture).st_size,
-            "bucket PDF file size did not match the PDF fixture",
-        )
-
-        # assertions on log
-        self.assertTrue(
-            (
-                "ReplacePreprintPDF, old pdf content/elife-preprint-95901-v1.pdf the same"
-                " name as new pdf content/elife-preprint-95901-v1.pdf for 10.7554/eLife.95901.1"
-            )
-            in self.activity.logger.loginfo,
-        )
-
-    @patch("requests.get")
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
     @patch.object(activity_class, "clean_tmp_dir")
@@ -349,15 +226,12 @@ class TestReplacePreprintPdf(unittest.TestCase):
         fake_clean_tmp_dir,
         fake_session,
         fake_storage_context,
-        fake_get,
     ):
         "test if there is no PDF file in the MECA package"
         directory = TempDirectory()
         fake_clean_tmp_dir.return_value = None
 
-        pdf_url = "https://example.org/raw/master/data/95901/v1/95901-v1.pdf"
         session_dict = copy.copy(SESSION_DICT)
-        session_dict["pdf_url"] = pdf_url
         fake_session.return_value = FakeSession(session_dict)
 
         # populate the meca zip file and bucket folders for testing
@@ -387,13 +261,6 @@ class TestReplacePreprintPdf(unittest.TestCase):
             directory.path, populated_data.get("resources"), dest_folder=directory.path
         )
 
-        fake_response = FakeResponse(200)
-        # a PDF file to test with
-        pdf_fixture = "tests/files_source/elife-00353-v1.pdf"
-        with open(pdf_fixture, "rb") as open_file:
-            fake_response.content = open_file.read()
-        fake_get.return_value = fake_response
-
         expected_result = activity_class.ACTIVITY_SUCCESS
         # do the activity
         result = self.activity.do_activity(test_activity_data.ingest_meca_data)
@@ -404,7 +271,7 @@ class TestReplacePreprintPdf(unittest.TestCase):
         self.assertDictEqual(
             self.activity.statuses,
             {
-                "pdf_url": True,
+                "pdf_s3_path": True,
                 "pdf_href": True,
                 "download_pdf": True,
                 "replace_pdf": None,
@@ -428,7 +295,7 @@ class TestReplacePreprintPdf(unittest.TestCase):
         )
         self.assertEqual(
             os.stat(bucket_new_pdf_path).st_size,
-            os.stat(pdf_fixture).st_size,
+            os.stat(helpers.PDF_FIXTURE).st_size,
             "bucket PDF file size did not match the PDF fixture",
         )
 
@@ -461,12 +328,13 @@ class TestReplacePreprintPdf(unittest.TestCase):
             )
 
     @patch.object(activity_module, "get_session")
-    def test_do_activity_no_pdf_url(
+    def test_do_activity_no_pdf_s3_path(
         self,
         fake_session,
     ):
-        "test if no pdf_url is in the session"
+        "test if no pdf_s3_path is in the session"
         session_dict = copy.copy(SESSION_DICT)
+        del session_dict["pdf_s3_path"]
         fake_session.return_value = FakeSession(session_dict)
 
         expected_result = activity_class.ACTIVITY_PERMANENT_FAILURE
@@ -478,7 +346,7 @@ class TestReplacePreprintPdf(unittest.TestCase):
         self.assertEqual(
             self.activity.logger.logerror,
             (
-                "ReplacePreprintPDF, no pdf_url found in the session for"
+                "ReplacePreprintPDF, no pdf_s3_path found in the session for"
                 " 10.7554/eLife.95901.1, failing the workflow"
             ),
         )

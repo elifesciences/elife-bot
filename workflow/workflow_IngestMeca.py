@@ -55,6 +55,7 @@ class workflow_IngestMeca(Workflow):
                 define_workflow_step("ValidateJatsDtd", data),
                 define_workflow_step("ValidatePreprintSchematron", data),
                 define_workflow_step("GeneratePreprintPDF", data),
+                define_workflow_step("ReplacePreprintPDF", data),
                 define_workflow_step(
                     "OutputMeca",
                     data,

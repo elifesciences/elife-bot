@@ -43,7 +43,6 @@ class activity_SchedulePreprintDownstream(Activity):
             article_id = session.get_value("article_id")
             version = session.get_value("version")
             article_xml_path = session.get_value("article_xml_path")
-            pdf_url = session.get_value("pdf_url")
             expanded_folder = session.get_value("expanded_folder")
         except:
             self.logger.exception("Error starting %s activity" % self.pretty_name)
@@ -69,7 +68,7 @@ class activity_SchedulePreprintDownstream(Activity):
             )
 
             outbox_list = downstream.choose_outboxes(
-                status, first_by_status, rules, run_type, pdf_url=pdf_url
+                status, first_by_status, rules, run_type
             )
 
             for outbox in outbox_list:

@@ -63,6 +63,9 @@ class TestExpandMeca(unittest.TestCase):
             "transfer.xml",
         ]
         expected_session_dict = test_activity_data.ingest_meca_session_example()
+        # remove session values not expected at this stage
+        del expected_session_dict["pdf_s3_path"]
+
         # do the activity
         result = self.activity.do_activity(test_activity_data.ingest_meca_data)
         # assertions
@@ -141,6 +144,9 @@ class TestExpandMeca(unittest.TestCase):
             from_computer_file_url,
             to_computer_file_url,
         )
+        # remove session values not expected at this stage
+        del expected_session_dict["pdf_s3_path"]
+
         # do the activity
         result = self.activity.do_activity(test_activity_data.ingest_meca_data)
         # assertions

@@ -45,6 +45,8 @@ class workflow_PostPreprintPublication(Workflow):
                     start_to_close_timeout=60 * 10,
                 ),
                 define_workflow_step("ModifyMecaPublishedXml", data),
+                define_workflow_step("GeneratePreprintPDF", data),
+                define_workflow_step("ReplacePreprintPDF", data),
                 define_workflow_step("ScheduleCrossrefPreprint", data),
                 define_workflow_step("SchedulePreprintDownstream", data),
                 define_workflow_step(
@@ -55,8 +57,9 @@ class workflow_PostPreprintPublication(Workflow):
                     schedule_to_start_timeout=30,
                     start_to_close_timeout=60 * 10,
                 ),
-                define_workflow_step("FindPreprintPDF", data),
-                define_workflow_step("ConfirmPreprintPDF", data),
+                define_workflow_step("ArchivePreprint", data),
+                define_workflow_step("PreprintRepository", data),
+                define_workflow_step("DepositPreprintAssets", data),
             ],
             "finish": {"requirements": None},
         }

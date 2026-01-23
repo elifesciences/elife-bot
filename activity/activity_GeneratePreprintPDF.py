@@ -27,6 +27,9 @@ class activity_GeneratePreprintPDF(Activity):
             "INPUT_DIR": os.path.join(self.get_tmp_dir(), "input_dir"),
         }
 
+        # S3 folder name to contain the pdf file
+        self.s3_pdf_file_folder = "pdf"
+
         self.statuses = {}
 
     def do_activity(self, data=None):
@@ -111,11 +114,11 @@ class activity_GeneratePreprintPDF(Activity):
             )
             # return a success to ignore the blank result
             return self.ACTIVITY_SUCCESS
-        else:
-            self.logger.info(
-                "%s, for article_id %s version %s response_content length %s"
-                % (self.name, article_id, version, len(response_content))
-            )
+
+        self.logger.info(
+            "%s, for article_id %s version %s response_content length %s"
+            % (self.name, article_id, version, len(response_content))
+        )
 
         # if successful response, save the PDF file to disk
         try:
@@ -141,13 +144,22 @@ class activity_GeneratePreprintPDF(Activity):
             # return a success if an exception is raised
             return self.ACTIVITY_SUCCESS
 
-        # temporarily, upload the PDF file to S3
+        # upload the PDF file to S3
+        # bucket folder relative to the expanded_folder path
+        pdf_expanded_folder = "%s/%s/" % (
+            expanded_folder.rsplit("/", 1)[0],
+            self.s3_pdf_file_folder,
+        )
+        self.logger.info(
+            "%s, for article_id %s version %s uploading to pdf_expanded_folder: %s"
+            % (self.name, article_id, version, pdf_expanded_folder)
+        )
         try:
-            bucket_name = self.settings.poa_packaging_bucket
+            bucket_name = self.settings.bot_bucket
             upload_file_names = glob.glob(
                 os.path.join(self.directories.get("TEMP_DIR"), "*.pdf")
             )
-            upload_file_to_folder = "_sample_preprint_pdf/"
+            upload_file_to_folder = pdf_expanded_folder
             outbox_provider.upload_files_to_s3_folder(
                 self.settings,
                 bucket_name,
@@ -162,9 +174,12 @@ class activity_GeneratePreprintPDF(Activity):
             # return a success if an exception is raised
             return self.ACTIVITY_SUCCESS
 
-        # todo ! save S3 PDF file path into the session
-        # session.store_value("pdf_url_TODO_NEW_VALUE_NAME_HERE", pdf_url)
-
-        # todo ! use the PDF file
+        # save S3 PDF file path into the session
+        pdf_s3_path = "%s%s" % (pdf_expanded_folder, pdf_file_name)
+        self.logger.info(
+            "%s, for article_id %s version %s session pdf_s3_path: %s"
+            % (self.name, article_id, version, pdf_s3_path)
+        )
+        session.store_value("pdf_s3_path", pdf_s3_path)
 
         return self.ACTIVITY_SUCCESS

@@ -90,6 +90,10 @@ def ingest_meca_session_example(
         "article_xml_path": "content/24301711.xml",
         "version_doi": "10.7554/eLife.95901.1",
         "computer_file_url": computer_file_url,
+        "pdf_s3_path": (
+            "expanded_meca/95901-v1/"
+            "1ee54f9a-cb28-4c8e-8232-4b317cf4beda/pdf/elife-preprint-95901-v1.pdf"
+        ),
     }
 
 
