@@ -30,14 +30,12 @@ def input_data(article_id=None, version=None, standalone=None, run_type=None):
     return activity_data
 
 
-def session_data(article_id=None, version=None, pdf_url=None):
+def session_data(article_id=None, version=None):
     sess_data = test_activity_data.post_preprint_publication_session_example()
     if article_id:
         sess_data["article_id"] = article_id
     if version:
         sess_data["version"] = version
-    if pdf_url:
-        sess_data["pdf_url"] = pdf_url
     return sess_data
 
 
@@ -56,18 +54,10 @@ class TestSchedulePreprintDownstream(unittest.TestCase):
     @patch.object(activity_module, "get_session")
     @data(
         {
-            "comment": "pre-finished preprint article example",
+            "comment": "published preprint article example",
             "article_id": "84364",
             "version": 2,
-            "expected_outbox_folders": ["publication_email"],
-            "expected_result": activity_object.ACTIVITY_SUCCESS,
-        },
-        {
-            "comment": "finished preprint article example",
-            "article_id": "84364",
-            "version": 2,
-            "pdf_url": "https://example.org/raw/master/data/84364/v2/84364-v2.pdf",
-            "expected_outbox_folders": ["clockss_preprint"],
+            "expected_outbox_folders": ["clockss_preprint", "publication_email"],
             "expected_result": activity_object.ACTIVITY_SUCCESS,
         },
     )
@@ -82,7 +72,6 @@ class TestSchedulePreprintDownstream(unittest.TestCase):
         session_dict = session_data(
             test_data.get("article_id"),
             test_data.get("version"),
-            test_data.get("pdf_url"),
         )
 
         # create folders if they do not exist
@@ -167,7 +156,6 @@ class TestSchedulePreprintDownstream(unittest.TestCase):
         session_dict = session_data(
             test_data.get("article_id"),
             test_data.get("version"),
-            test_data.get("pdf_url"),
         )
 
         # create folders if they do not exist

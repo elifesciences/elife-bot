@@ -200,6 +200,9 @@ def add_files_to_meca_zip(zip_file_path, output_dir, file_details):
     return new_zip_file_path
 
 
+PDF_FIXTURE = "tests/files_source/elife-00353-v1.pdf"
+
+
 def populate_meca_test_data(meca_file_path, session_dict, test_data, temp_dir):
     "for testing, repackage zip file and extract files into mock bucket folders"
     populated_data = {}
@@ -237,6 +240,20 @@ def populate_meca_test_data(meca_file_path, session_dict, test_data, temp_dir):
         )
         for file_path in zip_file_paths
     ]
+
+    # add a generated PDF to the bucket
+    if session_dict.get("pdf_s3_path"):
+        pdf_resource_folder = os.path.join(
+            temp_dir,
+            os.path.dirname(session_dict.get("pdf_s3_path")),
+        )
+        os.makedirs(pdf_resource_folder, exist_ok=True)
+        pdf_fixture = PDF_FIXTURE
+        shutil.copy(
+            pdf_fixture,
+            os.path.join(temp_dir, session_dict.get("pdf_s3_path")),
+        )
+        populated_data["resources"].append(session_dict.get("pdf_s3_path"))
 
     # write additional XML to the XML file
     if test_data.get("sub_article_xml"):
