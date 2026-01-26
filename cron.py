@@ -311,16 +311,16 @@ def conditional_starts(current_datetime):
             )
 
         # CNPIEC deposits once per day 23:30 UTC
-        if current_time.tm_hour == 23:
-            conditional_start_list.append(
-                OrderedDict(
-                    [
-                        ("starter_name", "starter_PubRouterDeposit"),
-                        ("workflow_id", "PubRouterDeposit_CNPIEC"),
-                        ("start_seconds", 60 * 31),
-                    ]
-                )
-            )
+        # if current_time.tm_hour == 23:
+        #    conditional_start_list.append(
+        #        OrderedDict(
+        #            [
+        #                ("starter_name", "starter_PubRouterDeposit"),
+        #                ("workflow_id", "PubRouterDeposit_CNPIEC"),
+        #                ("start_seconds", 60 * 31),
+        #            ]
+        #        )
+        #    )
 
     elif current_time.tm_min >= 45 and current_time.tm_min <= 59:
         # Bottom quarter of the hour
