@@ -238,6 +238,7 @@ def change_inline_graphic_xlink_hrefs(xml_file_path, href_to_file_name_map, iden
         return_doctype_dict=True,
         return_processing_instructions=True,
         insert_pis=True,
+        insert_comments=True,
     )
     for href, new_file_name in href_to_file_name_map.items():
         for inline_graphic_tag in root.findall(
@@ -410,6 +411,7 @@ def add_file_tags_to_xml(xml_file_path, file_detail_list, identifier):
         return_doctype_dict=True,
         return_processing_instructions=True,
         insert_pis=True,
+        insert_comments=True,
     )
     add_file_tags(root, file_detail_list)
     # write XML file to disk
@@ -467,6 +469,7 @@ def parse_manifest(xml_file_path):
         return_doctype_dict=True,
         return_processing_instructions=True,
         insert_pis=True,
+        insert_comments=True,
     )
 
 

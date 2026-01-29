@@ -294,6 +294,7 @@ class activity_ModifyArticleSubjects(Activity):
             return_doctype_dict=True,
             return_processing_instructions=True,
             insert_pis=True,
+            insert_comments=True,
         )
 
         # Modify subject values

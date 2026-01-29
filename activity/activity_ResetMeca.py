@@ -208,6 +208,7 @@ class activity_ResetMeca(MecaBaseActivity):
             return_doctype_dict=True,
             return_processing_instructions=True,
             insert_pis=True,
+            insert_comments=True,
         )
 
         cleaner.pretty_sub_article_xml(xml_root)
