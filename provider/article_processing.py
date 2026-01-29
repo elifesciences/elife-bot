@@ -86,6 +86,7 @@ def convert_xml(xml_file, file_name_map):
         return_doctype_dict=True,
         return_processing_instructions=True,
         insert_pis=True,
+        insert_comments=True,
     )
 
     # Convert xlink href values
@@ -311,6 +312,7 @@ def alter_xml_related_object(xml_file, logger):
         return_doctype_dict=True,
         return_processing_instructions=True,
         insert_pis=True,
+        insert_comments=True,
     )
 
     # Convert related-object tag
@@ -345,6 +347,7 @@ def remove_version_doi_tag(xml_file, logger):
         return_doctype_dict=True,
         return_processing_instructions=True,
         insert_pis=True,
+        insert_comments=True,
     )
 
     # Convert related-object tag
@@ -377,6 +380,7 @@ def convert_history_event_tags(xml_file, logger):
         return_doctype_dict=True,
         return_processing_instructions=True,
         insert_pis=True,
+        insert_comments=True,
     )
 
     #

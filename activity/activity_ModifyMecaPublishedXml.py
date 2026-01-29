@@ -106,6 +106,7 @@ class activity_ModifyMecaPublishedXml(MecaBaseActivity):
             return_doctype_dict=True,
             return_processing_instructions=True,
             insert_pis=True,
+            insert_comments=True,
         )
         self.statuses["xml_root"] = True
 

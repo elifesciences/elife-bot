@@ -131,6 +131,7 @@ class activity_MecaPeerReviews(MecaBaseActivity):
             return_doctype_dict=True,
             return_processing_instructions=True,
             insert_pis=True,
+            insert_comments=True,
         )
 
         # remove ext-link tag if it wraps an inline-graphic tag

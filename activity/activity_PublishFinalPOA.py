@@ -639,6 +639,7 @@ def convert_xml(doi_id, xml_file, new_filenames, settings, logger):
         return_doctype_dict=True,
         return_processing_instructions=True,
         insert_pis=True,
+        insert_comments=True,
     )
 
     soup = article_soup(xml_file)
