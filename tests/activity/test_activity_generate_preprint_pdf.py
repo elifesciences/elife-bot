@@ -27,6 +27,7 @@ class TestGeneratePreprintPdf(unittest.TestCase):
 
     def setUp(self):
         fake_logger = FakeLogger()
+        activity_module.SLEEP_SECONDS = 0.001
         self.activity = activity_class(settings_mock, fake_logger, None, None, None)
 
     def tearDown(self):
@@ -188,7 +189,7 @@ class TestGeneratePreprintPdf(unittest.TestCase):
         fake_post_to_endpoint.side_effect = RuntimeError(exception_message)
 
         fake_session.return_value = FakeSession(session_dict)
-        expected_result = activity_class.ACTIVITY_SUCCESS
+        expected_result = activity_class.ACTIVITY_TEMPORARY_FAILURE
         # do the activity
         result = self.activity.do_activity(test_activity_data.ingest_meca_data)
         # check assertions
@@ -202,6 +203,64 @@ class TestGeneratePreprintPdf(unittest.TestCase):
                 " to endpoint https://api/generate_preprint_pdf/: %s"
             )
             % exception_message,
+        )
+
+    @patch.object(activity_module, "storage_context")
+    @patch.object(activity_module, "get_session")
+    @patch.object(meca, "post_to_preprint_pdf_endpoint")
+    def test_endpoint_exception_max_attempts(
+        self,
+        fake_post_to_endpoint,
+        fake_session,
+        fake_storage_context,
+    ):
+        "test if POST raises an exception and is the final attempt"
+        directory = TempDirectory()
+
+        # remove pdf_s3_path from session
+        session_dict = copy.copy(SESSION_DICT)
+        # set the session counter value
+        session_dict[activity_module.SESSION_ATTEMPT_COUNTER_NAME] = 1000000
+
+        # create folders if they do not exist
+        meca_file_path = "tests/files_source/95901-v1-meca.zip"
+        resource_folder = os.path.join(
+            directory.path,
+            session_dict.get("expanded_folder"),
+        )
+        # create folders if they do not exist
+        os.makedirs(resource_folder, exist_ok=True)
+        # unzip the test fixture files
+        zip_file_paths = helpers.unzip_fixture(meca_file_path, resource_folder)
+        resources = [
+            os.path.join(
+                test_activity_data.ingest_meca_session_example().get("expanded_folder"),
+                file_path,
+            )
+            for file_path in zip_file_paths
+        ]
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources, dest_folder=directory.path
+        )
+
+        exception_message = "An exception"
+        fake_post_to_endpoint.side_effect = RuntimeError(exception_message)
+
+        fake_session.return_value = FakeSession(session_dict)
+        expected_result = activity_class.ACTIVITY_PERMANENT_FAILURE
+        # do the activity
+        result = self.activity.do_activity(test_activity_data.ingest_meca_data)
+        # check assertions
+        self.assertEqual(result, expected_result)
+
+        # assertions on log
+        self.assertEqual(
+            self.activity.logger.logexception,
+            (
+                "GeneratePreprintPDF, POST to endpoint_url https://api/generate_preprint_pdf/"
+                " attempts reached MAX_ATTEMPTS of 4 for file %s/content/24301711.xml"
+                % self.activity.directories.get("INPUT_DIR")
+            ),
         )
 
     @patch("provider.preprint.generate_new_pdf_href")

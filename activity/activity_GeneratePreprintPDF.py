@@ -1,10 +1,21 @@
 import os
 import glob
 import json
+import time
 from provider import outbox_provider, preprint, meca
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 from activity.objects import Activity
+
+
+# session variable name to store the number of attempts
+SESSION_ATTEMPT_COUNTER_NAME = "generate_preprint_pdf_attempt_count"
+
+# maximum endpoint request attempts
+MAX_ATTEMPTS = 4
+
+# time in seconds to sleep between endpoint request attempts
+SLEEP_SECONDS = 10
 
 
 class activity_GeneratePreprintPDF(Activity):
@@ -112,8 +123,40 @@ class activity_GeneratePreprintPDF(Activity):
                 "%s, for article_id %s version %s got no response_content"
                 % (self.name, article_id, version)
             )
-            # return a success to ignore the blank result
-            return self.ACTIVITY_SUCCESS
+
+            # count the number of attempts
+            if not session.get_value(SESSION_ATTEMPT_COUNTER_NAME):
+                session.store_value(SESSION_ATTEMPT_COUNTER_NAME, 1)
+            else:
+                # increment
+                session.store_value(
+                    SESSION_ATTEMPT_COUNTER_NAME,
+                    int(session.get_value(SESSION_ATTEMPT_COUNTER_NAME)) + 1,
+                )
+                self.logger.info(
+                    "%s, POST to endpoint_url attempts for file %s: %s"
+                    % (
+                        self.name,
+                        xml_file_path,
+                        session.get_value(SESSION_ATTEMPT_COUNTER_NAME),
+                    )
+                )
+
+            if int(session.get_value(SESSION_ATTEMPT_COUNTER_NAME)) < MAX_ATTEMPTS:
+                # Clean up disk
+                self.clean_tmp_dir()
+                # sleep a short time
+                time.sleep(SLEEP_SECONDS)
+                # return a temporary failure
+                return self.ACTIVITY_TEMPORARY_FAILURE
+            if int(session.get_value(SESSION_ATTEMPT_COUNTER_NAME)) >= MAX_ATTEMPTS:
+                # maximum number of attempts are completed
+                self.logger.exception(
+                    "%s, POST to endpoint_url %s attempts reached MAX_ATTEMPTS of %s for file %s"
+                    % (self.name, endpoint_url, MAX_ATTEMPTS, xml_file_path)
+                )
+                self.clean_tmp_dir()
+                return self.ACTIVITY_PERMANENT_FAILURE
 
         self.logger.info(
             "%s, for article_id %s version %s response_content length %s"
@@ -181,5 +224,8 @@ class activity_GeneratePreprintPDF(Activity):
             % (self.name, article_id, version, pdf_s3_path)
         )
         session.store_value("pdf_s3_path", pdf_s3_path)
+
+        # Clean up disk
+        self.clean_tmp_dir()
 
         return self.ACTIVITY_SUCCESS
