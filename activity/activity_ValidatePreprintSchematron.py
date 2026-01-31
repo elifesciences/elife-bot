@@ -2,6 +2,7 @@ import os
 import json
 import re
 import time
+from elifetools import xmlio
 from provider import github_provider, meca
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
@@ -98,6 +99,12 @@ class activity_ValidatePreprintSchematron(Activity):
         with open(xml_file_path, "wb") as open_file:
             storage.get_resource_to_file(storage_resource_origin, open_file)
         self.statuses["download"] = True
+
+        # add XML namespaces if missing
+        self.logger.info(
+            "%s, modifying XML namespaces in %s" % (self.name, xml_file_path)
+        )
+        modify_xml_namespaces(xml_file_path)
 
         endpoint_url = self.settings.preprint_schematron_endpoint
         self.logger.info(
@@ -244,3 +251,43 @@ def enhance_validation_message(log_message, enhance_message=False):
         return "```%s\n%s\n```" % ("diff", log_message)
     # default
     return "```\n%s\n```" % log_message
+
+
+XML_NAMESPACES = {
+    "ali": "http://www.niso.org/schemas/ali/1.0/",
+    "mml": "http://www.w3.org/1998/Math/MathML",
+    "xlink": "http://www.w3.org/1999/xlink",
+    "xsi": "http://www.w3.org/2001/XMLSchema-instance",
+}
+
+
+def modify_xml_namespaces(xml_file):
+    "add XML namespaces even if not already found in the XML"
+    # parse XML file
+    root, doctype_dict, processing_instructions = xmlio.parse(
+        xml_file,
+        return_doctype_dict=True,
+        return_processing_instructions=True,
+        insert_pis=True,
+        insert_comments=True,
+    )
+
+    # set a default doctype if not supplied
+    if not doctype_dict:
+        doctype_dict = {"name": "article", "pubid": None, "system": None}
+
+    # add XML namespaces
+    for prefix in XML_NAMESPACES:
+        ns_attrib = "xmlns:%s" % prefix
+        root.set(ns_attrib, XML_NAMESPACES.get(prefix))
+
+    # output the XML to file
+    reparsed_string = xmlio.output(
+        root,
+        output_type=None,
+        doctype_dict=doctype_dict,
+        processing_instructions=processing_instructions,
+    )
+
+    with open(xml_file, "wb") as open_file:
+        open_file.write(reparsed_string)
