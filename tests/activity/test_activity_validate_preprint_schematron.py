@@ -474,17 +474,21 @@ class TestModifyXmlNamespaces(unittest.TestCase):
             '<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) Journal Archiving and'
             ' Interchange DTD v1.3 20210610//EN"  "JATS-archivearticle1-mathml3.dtd">'
             '<article xmlns:xlink="http://www.w3.org/1999/xlink"'
-            ' article-type="research-article" dtd-version="1.3" xml:lang="en"/>'
+            ' article-type="research-article" dtd-version="1.3" xml:lang="en">'
+            '<p><inline-graphic xlink:href="local.jpg"/></p>'
+            "</article>"
         )
         expected = (
             '<?xml version="1.0" encoding="UTF-8"?>'
             '<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) Journal Archiving and'
             ' Interchange DTD v1.3 20210610//EN"  "JATS-archivearticle1-mathml3.dtd">'
-            '<article xmlns:ali="http://www.niso.org/schemas/ali/1.0/"'
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink"'
+            ' xmlns:ali="http://www.niso.org/schemas/ali/1.0/"'
             ' xmlns:mml="http://www.w3.org/1998/Math/MathML"'
-            ' xmlns:xlink="http://www.w3.org/1999/xlink"'
             ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
-            ' article-type="research-article" dtd-version="1.3" xml:lang="en"/>'
+            ' article-type="research-article" dtd-version="1.3" xml:lang="en">'
+            '<p><inline-graphic xlink:href="local.jpg"/></p>'
+            "</article>"
         )
         with open(xml_file_path, "w", encoding="utf-8") as open_file:
             open_file.write(xml_string)
