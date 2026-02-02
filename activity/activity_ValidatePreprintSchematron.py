@@ -2,6 +2,7 @@ import os
 import json
 import re
 import time
+from xml.etree import ElementTree
 from elifetools import xmlio
 from provider import github_provider, meca
 from provider.execution_context import get_session
@@ -263,6 +264,15 @@ XML_NAMESPACES = {
 
 def modify_xml_namespaces(xml_file):
     "add XML namespaces even if not already found in the XML"
+
+    # register namespaces
+    xmlio.register_xmlns()
+
+    # collect existing namespaces
+    used_namespaces = dict(
+        [node for _, node in ElementTree.iterparse(xml_file, events=["start-ns"])]
+    )
+
     # parse XML file
     root, doctype_dict, processing_instructions = xmlio.parse(
         xml_file,
@@ -279,7 +289,8 @@ def modify_xml_namespaces(xml_file):
     # add XML namespaces
     for prefix in XML_NAMESPACES:
         ns_attrib = "xmlns:%s" % prefix
-        root.set(ns_attrib, XML_NAMESPACES.get(prefix))
+        if prefix not in used_namespaces:
+            root.set(ns_attrib, XML_NAMESPACES.get(prefix))
 
     # output the XML to file
     reparsed_string = xmlio.output(
