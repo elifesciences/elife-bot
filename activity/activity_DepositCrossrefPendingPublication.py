@@ -97,7 +97,7 @@ class activity_DepositCrossrefPendingPublication(Activity):
 
         # add an accepted date if not set
         for article_object in article_object_map.values():
-            if "accepted" not in article_object.dates:
+            if not article_object.get_date("accepted"):
                 # add an accepted date
                 accepted_date_struct = utils.get_current_datetime().timetuple()
                 article_object.add_date(ArticleDate("accepted", accepted_date_struct))
