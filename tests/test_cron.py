@@ -599,11 +599,13 @@ class TestConditionalStarts(unittest.TestCase):
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
                 "starter_FindReingestPreprint",
+                "starter_PubRouterDeposit",
             ],
             "expected_workflow_ids": [
                 "cron_FiveMinute",
                 "DepositCrossref",
                 "FindReingestPreprint",
+                "PubRouterDeposit_CNPIEC",
             ],
         },
     )
