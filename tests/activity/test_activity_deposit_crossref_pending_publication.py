@@ -1,10 +1,12 @@
+import datetime
 import os
+import re
 import time
 import unittest
 from mock import patch
 from testfixtures import TempDirectory
 from elifearticle.article import Article
-from provider import crossref
+from provider import crossref, utils
 import activity.activity_DepositCrossrefPendingPublication as activity_module
 from activity.activity_DepositCrossrefPendingPublication import (
     activity_DepositCrossrefPendingPublication,
@@ -114,6 +116,107 @@ class TestDepositCrossrefPendingPublication(unittest.TestCase):
                     comment=test_data.get("comment"),
                 ),
             )
+        # Count crossref XML file in the tmp directory
+        file_count = len(os.listdir(self.tmp_dir()))
+        self.assertEqual(file_count, test_data.get("expected_file_count"))
+        if file_count > 0 and test_data.get("expected_crossref_xml_contains"):
+            # Open the first crossref XML and check some of its contents
+            crossref_xml_filename_path = os.path.join(
+                self.tmp_dir(), sorted(os.listdir(self.tmp_dir()))[0]
+            )
+            with open(crossref_xml_filename_path, "rb") as open_file:
+                crossref_xml = open_file.read().decode("utf8")
+                for expected in test_data.get("expected_crossref_xml_contains"):
+                    self.assertTrue(
+                        expected in crossref_xml,
+                        "{expected} not found in crossref_xml {path}".format(
+                            expected=expected, path=crossref_xml_filename_path
+                        ),
+                    )
+
+    @patch.object(utils, "get_current_datetime")
+    @patch.object(activity_module.email_provider, "smtp_connect")
+    @patch("provider.crossref.doi_does_not_exist")
+    @patch("requests.post")
+    @patch("provider.outbox_provider.storage_context")
+    @patch.object(activity_DepositCrossrefPendingPublication, "clean_tmp_dir")
+    def test_do_activity_no_accepted_date(
+        self,
+        fake_clean_tmp_dir,
+        fake_storage_context,
+        fake_post_request,
+        fake_doi_does_not_exist,
+        fake_email_smtp_connect,
+        fake_get_current_datetime,
+    ):
+        "test if there is no accepted date in the XML"
+        accepted_date = "2026-02-01"
+        test_data = {
+            "comment": "Article 64719",
+            "article_xml_filename": "08-11-2020-FA-eLife-64719.xml",
+            "post_status_code": 200,
+            "expected_result": True,
+            "expected_file_count": 2,
+            "expected_crossref_xml_contains": [
+                "<pending_publication>",
+                "<acceptance_date>",
+                "<month>02</month>",
+                "<day>01</day>",
+                "<year>2026</year>",
+                "<doi>10.7554/eLife.64719</doi>",
+                "</pending_publication>",
+            ],
+        }
+        directory = TempDirectory()
+        # prepare XML fixture data to not have an accepted date
+        temp_dir = os.path.join(directory.path, "temp")
+        os.mkdir(temp_dir)
+        xml_file_name = "elife-64719.xml"
+        xml_file_path = os.path.join(temp_dir, xml_file_name)
+        with open(
+            os.path.join(self.outbox_folder, test_data.get("article_xml_filename")),
+            "r",
+            encoding="utf-8",
+        ) as open_file:
+            xml_string = open_file.read()
+        # remove the accepted date XML
+        xml_string = re.sub(
+            (
+                r'<date date-type="accepted">\n'
+                r".*<day>.*?</day>\n"
+                r".*<month>.*?</month>\n"
+                r".*<year>.*?</year>\n"
+                r".*</date>"
+            ),
+            "",
+            xml_string,
+        )
+        with open(xml_file_path, "w", encoding="utf-8") as open_file:
+            open_file.write(xml_string)
+
+        fake_clean_tmp_dir.return_value = None
+        fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
+        resources = helpers.populate_storage(
+            from_dir=temp_dir,
+            to_dir=directory.path,
+            filenames=[xml_file_name],
+            sub_dir="crossref_pending_publication/outbox",
+        )
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources, dest_folder=directory.path
+        )
+        # mock the POST to endpoint
+        fake_post_request.return_value = FakeResponse(test_data.get("post_status_code"))
+        fake_doi_does_not_exist.return_value = True
+        fake_get_current_datetime.return_value = datetime.datetime.strptime(
+            accepted_date, "%Y-%m-%d"
+        )
+
+        # do the activity
+        result = self.activity.do_activity()
+        # check assertions
+        self.assertEqual(result, test_data.get("expected_result"))
+
         # Count crossref XML file in the tmp directory
         file_count = len(os.listdir(self.tmp_dir()))
         self.assertEqual(file_count, test_data.get("expected_file_count"))

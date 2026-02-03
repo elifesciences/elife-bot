@@ -4,6 +4,7 @@ import json
 import time
 import glob
 from collections import OrderedDict
+from elifearticle.article import ArticleDate
 from activity.objects import Activity
 from provider import (
     crossref,
@@ -93,6 +94,13 @@ class activity_DepositCrossrefPendingPublication(Activity):
         article_object_map = self.get_article_objects(article_xml_files)
         # change article title values
         article_object_map = article_title_rewrite(article_object_map)
+
+        # add an accepted date if not set
+        for article_object in article_object_map.values():
+            if not article_object.get_date("accepted"):
+                # add an accepted date
+                accepted_date_struct = utils.get_current_datetime().timetuple()
+                article_object.add_date(ArticleDate("accepted", accepted_date_struct))
 
         # duplicate and modify the article for a version DOI deposit
         article_version_object_map = {}
