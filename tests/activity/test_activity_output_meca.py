@@ -27,8 +27,10 @@ class TestOutputMeca(unittest.TestCase):
 
     @patch.object(activity_module, "get_session")
     @patch.object(activity_module, "storage_context")
-    def test_do_activity(self, fake_storage_context, fake_session):
+    @patch.object(activity_class, "clean_tmp_dir")
+    def test_do_activity(self, fake_clean_tmp_dir, fake_storage_context, fake_session):
         directory = TempDirectory()
+        fake_clean_tmp_dir.return_value = None
         # expand input meca file zip into the bucket expanded folder
         meca_file_path = "tests/files_source/95901-v1-meca.zip"
         resource_folder = os.path.join(
@@ -80,6 +82,27 @@ class TestOutputMeca(unittest.TestCase):
             output_zip_namelist = open_zipfile.namelist()
         self.assertEqual(len(output_zip_namelist), 12)
         self.assertEqual(sorted(zip_file_paths), sorted(output_zip_namelist))
+
+        article_xml_path = os.path.join(
+            self.activity.directories.get("INPUT_DIR"), "content", "24301711.xml"
+        )
+        self.assertTrue(
+            ("OutputMeca, modifying XML namespaces in %s" % article_xml_path)
+            in self.activity.logger.loginfo
+        )
+
+        with open(article_xml_path, "r", encoding="utf-8") as open_file:
+            xml_content = open_file.read()
+        self.assertTrue(
+            (
+                '<article xmlns:xlink="http://www.w3.org/1999/xlink"'
+                ' xmlns:ali="http://www.niso.org/schemas/ali/1.0/"'
+                ' xmlns:mml="http://www.w3.org/1998/Math/MathML"'
+                ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
+                ' article-type="research-article" dtd-version="1.3" xml:lang="en">'
+            )
+            in xml_content
+        )
 
 
 class TestMissingSettings(unittest.TestCase):

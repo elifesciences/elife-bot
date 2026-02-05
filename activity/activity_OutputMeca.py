@@ -1,7 +1,6 @@
 import os
 import json
-import zipfile
-from provider import article_processing, meca
+from provider import article_processing, preprint, meca
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 from activity.objects import Activity
@@ -61,6 +60,7 @@ class activity_OutputMeca(Activity):
         # load session data
         run = data["run"]
         session = get_session(self.settings, data, run)
+        article_xml_path = session.get_value("article_xml_path")
         expanded_folder = session.get_value("expanded_folder")
         article_id = session.get_value("article_id")
         version = session.get_value("version")
@@ -114,6 +114,16 @@ class activity_OutputMeca(Activity):
                 pass
 
         self.statuses["download"] = True
+
+        # local path to the article XML file
+        xml_file_path = os.path.join(
+            self.directories.get("INPUT_DIR"), article_xml_path
+        )
+        # add XML namespaces if missing
+        self.logger.info(
+            "%s, modifying XML namespaces in %s" % (self.name, xml_file_path)
+        )
+        preprint.modify_xml_namespaces(xml_file_path)
 
         # generate new meca file name
         meca_file_name = meca.meca_file_name(article_id, version)

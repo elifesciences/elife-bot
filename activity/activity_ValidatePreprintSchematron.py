@@ -2,9 +2,7 @@ import os
 import json
 import re
 import time
-from xml.etree import ElementTree
-from elifetools import xmlio
-from provider import github_provider, meca
+from provider import github_provider, preprint, meca
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 from activity.objects import Activity
@@ -105,7 +103,7 @@ class activity_ValidatePreprintSchematron(Activity):
         self.logger.info(
             "%s, modifying XML namespaces in %s" % (self.name, xml_file_path)
         )
-        modify_xml_namespaces(xml_file_path)
+        preprint.modify_xml_namespaces(xml_file_path)
 
         endpoint_url = self.settings.preprint_schematron_endpoint
         self.logger.info(
@@ -252,53 +250,3 @@ def enhance_validation_message(log_message, enhance_message=False):
         return "```%s\n%s\n```" % ("diff", log_message)
     # default
     return "```\n%s\n```" % log_message
-
-
-XML_NAMESPACES = {
-    "ali": "http://www.niso.org/schemas/ali/1.0/",
-    "mml": "http://www.w3.org/1998/Math/MathML",
-    "xlink": "http://www.w3.org/1999/xlink",
-    "xsi": "http://www.w3.org/2001/XMLSchema-instance",
-}
-
-
-def modify_xml_namespaces(xml_file):
-    "add XML namespaces even if not already found in the XML"
-
-    # register namespaces
-    xmlio.register_xmlns()
-
-    # collect existing namespaces
-    used_namespaces = dict(
-        [node for _, node in ElementTree.iterparse(xml_file, events=["start-ns"])]
-    )
-
-    # parse XML file
-    root, doctype_dict, processing_instructions = xmlio.parse(
-        xml_file,
-        return_doctype_dict=True,
-        return_processing_instructions=True,
-        insert_pis=True,
-        insert_comments=True,
-    )
-
-    # set a default doctype if not supplied
-    if not doctype_dict:
-        doctype_dict = {"name": "article", "pubid": None, "system": None}
-
-    # add XML namespaces
-    for prefix in XML_NAMESPACES:
-        ns_attrib = "xmlns:%s" % prefix
-        if prefix not in used_namespaces:
-            root.set(ns_attrib, XML_NAMESPACES.get(prefix))
-
-    # output the XML to file
-    reparsed_string = xmlio.output(
-        root,
-        output_type=None,
-        doctype_dict=doctype_dict,
-        processing_instructions=processing_instructions,
-    )
-
-    with open(xml_file, "wb") as open_file:
-        open_file.write(reparsed_string)
