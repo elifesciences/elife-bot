@@ -123,7 +123,13 @@ class activity_OutputMeca(Activity):
         self.logger.info(
             "%s, modifying XML namespaces in %s" % (self.name, xml_file_path)
         )
-        preprint.modify_xml_namespaces(xml_file_path)
+        try:
+            preprint.modify_xml_namespaces(xml_file_path)
+        except Exception as exception:
+            self.logger.exception(
+                "%s, exception raised in modify_xml_namespaces for file %s: %s"
+                % (self.name, xml_file_path, str(exception))
+            )
 
         # generate new meca file name
         meca_file_name = meca.meca_file_name(article_id, version)

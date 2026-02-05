@@ -6,6 +6,7 @@ import shutil
 import zipfile
 from mock import patch
 from testfixtures import TempDirectory
+from provider import preprint
 import activity.activity_OutputMeca as activity_module
 from activity.activity_OutputMeca import (
     activity_OutputMeca as activity_class,
@@ -102,6 +103,79 @@ class TestOutputMeca(unittest.TestCase):
                 ' article-type="research-article" dtd-version="1.3" xml:lang="en">'
             )
             in xml_content
+        )
+
+    @patch.object(preprint, "modify_xml_namespaces")
+    @patch.object(activity_module, "get_session")
+    @patch.object(activity_module, "storage_context")
+    @patch.object(activity_class, "clean_tmp_dir")
+    def test_xml_namespaces_exception(
+        self,
+        fake_clean_tmp_dir,
+        fake_storage_context,
+        fake_session,
+        fake_modify_xml_namespaces,
+    ):
+        "test if modifying XML namespaces raises an exception"
+        directory = TempDirectory()
+        fake_clean_tmp_dir.return_value = None
+        # expand input meca file zip into the bucket expanded folder
+        meca_file_path = "tests/files_source/95901-v1-meca.zip"
+        resource_folder = os.path.join(
+            directory.path,
+            test_activity_data.ingest_meca_session_example().get("expanded_folder"),
+        )
+
+        zip_file_paths = helpers.unzip_fixture(meca_file_path, resource_folder)
+        resources = [
+            os.path.join(
+                test_activity_data.ingest_meca_session_example().get("expanded_folder"),
+                file_path,
+            )
+            for file_path in zip_file_paths
+        ]
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources, dest_folder=directory.path
+        )
+
+        # mock the session
+        fake_session.return_value = FakeSession(
+            test_activity_data.ingest_meca_session_example()
+        )
+
+        fake_modify_xml_namespaces.side_effect = Exception("An exception")
+
+        expected_result = self.activity.ACTIVITY_SUCCESS
+        expected_download_status = True
+
+        # do the activity
+        result = self.activity.do_activity(test_activity_data.ingest_meca_data)
+
+        # check assertions
+        self.assertEqual(
+            result,
+            expected_result,
+        )
+
+        article_xml_path = os.path.join(
+            self.activity.directories.get("INPUT_DIR"), "content", "24301711.xml"
+        )
+
+        self.assertTrue(
+            ("OutputMeca, modifying XML namespaces in %s" % article_xml_path)
+            in self.activity.logger.loginfo
+        )
+
+        self.assertEqual(
+            self.activity.logger.logexception,
+            (
+                "%s, exception raised in modify_xml_namespaces for file %s:"
+                " An exception"
+            )
+            % (
+                self.activity.name,
+                article_xml_path,
+            ),
         )
 
 
