@@ -157,6 +157,10 @@ class TestOutputMeca(unittest.TestCase):
             expected_result,
         )
 
+        article_xml_path = os.path.join(
+            self.activity.directories.get("INPUT_DIR"), "content", "24301711.xml"
+        )
+
         self.assertTrue(
             ("OutputMeca, modifying XML namespaces in %s" % article_xml_path)
             in self.activity.logger.loginfo
@@ -170,9 +174,7 @@ class TestOutputMeca(unittest.TestCase):
             )
             % (
                 self.activity.name,
-                os.path.join(
-                    self.activity.directories.get("INPUT_DIR"), "content/24301711.xml"
-                ),
+                article_xml_path,
             ),
         )
 
