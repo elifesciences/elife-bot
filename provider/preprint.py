@@ -1,5 +1,6 @@
 "functions for generating preprint XML"
 import os
+import re
 from xml.etree.ElementTree import Element
 import requests
 from elifetools import xmlio, utils as etoolsutils
@@ -258,3 +259,73 @@ def repair_entities(xml_file_path, caller_name, logger):
     if repaired_xml_string:
         with open(xml_file_path, "wb") as open_file:
             open_file.write(repaired_xml_string)
+
+
+XML_NAMESPACES = {
+    "ali": "http://www.niso.org/schemas/ali/1.0/",
+    "mml": "http://www.w3.org/1998/Math/MathML",
+    "xlink": "http://www.w3.org/1999/xlink",
+    "xsi": "http://www.w3.org/2001/XMLSchema-instance",
+}
+
+
+def format_namespace_uri(attribute):
+    "from a tag attribute value return the namespace URI"
+    if attribute and "{" in attribute:
+        return re.match(r"{.*?}", attribute)[0].replace("{", "").replace("}", "")
+    return None
+
+
+def attribute_namespace_uris(attributes):
+    "from a set of attribute values return namespace URIs found in them"
+    namespace_attributes = {attrib for attrib in attributes if attrib.startswith("{")}
+    return {format_namespace_uri(attrib) for attrib in namespace_attributes if attrib}
+
+
+def find_used_namespace_uris(xml_root):
+    "from the Element find the namespace URIs used in tag attributes"
+    all_attributes = set()
+    # collect all unique tag attributes
+    for tag in xml_root.iter("*"):
+        all_attributes = all_attributes.union(all_attributes, set(tag.attrib.keys()))
+    return attribute_namespace_uris(all_attributes)
+
+
+def modify_xml_namespaces(xml_file):
+    "add XML namespaces even if not already found in the XML"
+
+    # register namespaces
+    xmlio.register_xmlns()
+
+    # parse XML file
+    root, doctype_dict, processing_instructions = xmlio.parse(
+        xml_file,
+        return_doctype_dict=True,
+        return_processing_instructions=True,
+        insert_pis=True,
+        insert_comments=True,
+    )
+
+    # find namespace URIs used in tag attributes
+    used_namespace_uris = find_used_namespace_uris(root)
+
+    # set a default doctype if not supplied
+    if not doctype_dict:
+        doctype_dict = {"name": "article", "pubid": None, "system": None}
+
+    # add XML namespaces
+    for prefix in XML_NAMESPACES:
+        ns_attrib = "xmlns:%s" % prefix
+        if XML_NAMESPACES.get(prefix) not in used_namespace_uris:
+            root.set(ns_attrib, XML_NAMESPACES.get(prefix))
+
+    # output the XML to file
+    reparsed_string = xmlio.output(
+        root,
+        output_type=None,
+        doctype_dict=doctype_dict,
+        processing_instructions=processing_instructions,
+    )
+
+    with open(xml_file, "wb") as open_file:
+        open_file.write(reparsed_string)

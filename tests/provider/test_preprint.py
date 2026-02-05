@@ -777,3 +777,127 @@ class TestRepairEntities(unittest.TestCase):
             ("%s, unhandled exception repairing entities in %s/article.xml: %s")
             % (self.caller_name, directory.path, exception_message),
         )
+
+
+class TestFormatNamespaceUri(unittest.TestCase):
+    "tests for format_namespace_uri()"
+
+    def test_format_namespace_uri(self):
+        passes = {
+            "id": None,
+            "{http://www.w3.org/1999/xlink}href": "http://www.w3.org/1999/xlink",
+        }
+        for attribute, expected in passes.items():
+            self.assertEqual(preprint.format_namespace_uri(attribute), expected)
+
+
+class TestAttributeNamespaceUris(unittest.TestCase):
+    "tests for attribute_namespace_uris()"
+
+    def test_attribute_namespace_uris(self):
+        attributes = {
+            "fig-type",
+            "article-type",
+            "kwd-group-type",
+            "dtd-version",
+            "orientation",
+            "ref-type",
+            "subj-group-type",
+            "rid",
+            "publication-type",
+            "abbrev-type",
+            "sec-type",
+            "content-type",
+            "pub-type",
+            "ext-link-type",
+            "count",
+            "{http://www.w3.org/1999/xlink}role",
+            "corresp",
+            "date-type",
+            "{http://www.w3.org/XML/1998/namespace}lang",
+            "notes-type",
+            "license-type",
+            "journal-id-type",
+            "pub-id-type",
+            "contrib-id-type",
+            "{http://www.w3.org/1999/xlink}href",
+            "contrib-type",
+            "position",
+            "id",
+        }
+        expected = {
+            "http://www.w3.org/XML/1998/namespace",
+            "http://www.w3.org/1999/xlink",
+        }
+        # invoke
+        result = preprint.attribute_namespace_uris(attributes)
+        # assert
+        self.assertSetEqual(result, expected)
+
+
+class TestFindUsedNamespaceUris(unittest.TestCase):
+    "tests for find_used_namespace_uris()"
+
+    def test_find_used_namespace_uris(self):
+        root = ElementTree.fromstring(
+            '<root xmlns:xlink="http://www.w3.org/1999/xlink">'
+            '<sec id="test"/>'
+            '<license license-type="creative-commons"'
+            ' xlink:href="http://creativecommons.org/licenses/by/4.0/"/>'
+            "</root>"
+        )
+        expected = {"http://www.w3.org/1999/xlink"}
+        # invoke
+        result = preprint.find_used_namespace_uris(root)
+        # assert
+        self.assertSetEqual(result, expected)
+
+    def test_no_xml_attributes(self):
+        "test if no namespaces or attributes"
+        root = ElementTree.fromstring("<root/>")
+        expected = set()
+        # invoke
+        result = preprint.find_used_namespace_uris(root)
+        # assert
+        self.assertSetEqual(result, expected)
+
+
+class TestModifyXmlNamespaces(unittest.TestCase):
+    "tests for modify_xml_namespaces()"
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    def test_modify_xml_namespaces(self):
+        "test adding namespaces to XML file"
+        directory = TempDirectory()
+        xml_file_path = os.path.join(directory.path, "test.xml")
+        xml_string = (
+            '<?xml version="1.0" ?>'
+            '<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) Journal Archiving and'
+            ' Interchange DTD v1.3 20210610//EN"  "JATS-archivearticle1-mathml3.dtd">'
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink"'
+            ' article-type="research-article" dtd-version="1.3" xml:lang="en">'
+            '<p><inline-graphic xlink:href="local.jpg"/></p>'
+            "</article>"
+        )
+        expected = (
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            '<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) Journal Archiving and'
+            ' Interchange DTD v1.3 20210610//EN"  "JATS-archivearticle1-mathml3.dtd">'
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink"'
+            ' xmlns:ali="http://www.niso.org/schemas/ali/1.0/"'
+            ' xmlns:mml="http://www.w3.org/1998/Math/MathML"'
+            ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
+            ' article-type="research-article" dtd-version="1.3" xml:lang="en">'
+            '<p><inline-graphic xlink:href="local.jpg"/></p>'
+            "</article>"
+        )
+        with open(xml_file_path, "w", encoding="utf-8") as open_file:
+            open_file.write(xml_string)
+        # invoke
+        preprint.modify_xml_namespaces(xml_file_path)
+        # assert
+        with open(xml_file_path, "r", encoding="utf-8") as open_file:
+            output_xml_string = open_file.read()
+        self.assertEqual(output_xml_string, expected)
