@@ -6,7 +6,7 @@ import json
 import os
 from mock import patch
 from testfixtures import TempDirectory
-from provider import github_provider, meca
+from provider import github_provider, meca, preprint
 import activity.activity_ValidatePreprintSchematron as activity_module
 from activity.activity_ValidatePreprintSchematron import (
     activity_ValidatePreprintSchematron as activity_class,
@@ -152,6 +152,60 @@ class TestValidatePreprintSchematron(unittest.TestCase):
         result = self.activity.do_activity(test_activity_data.ingest_meca_data)
         # check assertions
         self.assertEqual(result, expected_result)
+
+    @patch.object(preprint, "modify_xml_namespaces")
+    @patch.object(activity_module, "get_session")
+    @patch.object(meca, "post_xml_file")
+    @patch.object(github_provider, "find_github_issues")
+    @patch.object(activity_module, "storage_context")
+    def test_xml_namespaces_exception(
+        self,
+        fake_storage_context,
+        fake_find_github_issues,
+        fake_post_xml_file,
+        fake_session,
+        fake_modify_xml_namespaces,
+    ):
+        "test if modifying XML namespaces raises an exception"
+        directory = TempDirectory()
+        fake_find_github_issues.return_value = [FakeGithubIssue()]
+        mock_session = FakeSession(SESSION_DICT)
+        fake_session.return_value = mock_session
+        destination_path = os.path.join(
+            directory.path,
+            SESSION_DICT.get("expanded_folder"),
+            SESSION_DICT.get("article_xml_path"),
+        )
+        # create folders if they do not exist
+        os.makedirs(os.path.dirname(destination_path), exist_ok=True)
+        xml_string = b"<root/>"
+        with open(destination_path, "wb") as open_file:
+            open_file.write(xml_string)
+        fake_storage_context.return_value = FakeStorageContext(
+            directory=directory.path,
+            dest_folder=directory.path,
+            resources=[SESSION_DICT.get("article_xml_path")],
+        )
+        fake_post_xml_file.return_value = b"{}"
+        fake_modify_xml_namespaces.side_effect = Exception("An exception")
+        expected_result = activity_class.ACTIVITY_SUCCESS
+        # do the activity
+        result = self.activity.do_activity(test_activity_data.ingest_meca_data)
+        # check assertions
+        self.assertEqual(result, expected_result)
+        self.assertEqual(
+            self.activity.logger.logexception,
+            (
+                "%s, exception raised in modify_xml_namespaces for file %s:"
+                " An exception"
+            )
+            % (
+                self.activity.name,
+                os.path.join(
+                    self.activity.directories.get("INPUT_DIR"), "content/24301711.xml"
+                ),
+            ),
+        )
 
     @patch.object(activity_module, "get_session")
     @patch.object(meca, "post_xml_file")
