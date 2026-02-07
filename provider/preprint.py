@@ -283,11 +283,13 @@ def attribute_namespace_uris(attributes):
 
 
 def find_used_namespace_uris(xml_root):
-    "from the Element find the namespace URIs used in tag attributes"
+    "from the Element find the namespace URIs used in tag attributes and tag names"
     all_attributes = set()
     # collect all unique tag attributes
     for tag in xml_root.iter("*"):
-        all_attributes = all_attributes.union(all_attributes, set(tag.attrib.keys()))
+        # add tag name to the set too
+        all_attributes.add(str(tag.tag))
+        all_attributes = all_attributes.union(set(tag.attrib.keys()))
     return attribute_namespace_uris(all_attributes)
 
 

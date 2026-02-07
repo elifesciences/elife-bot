@@ -876,21 +876,28 @@ class TestModifyXmlNamespaces(unittest.TestCase):
             '<?xml version="1.0" ?>'
             '<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) Journal Archiving and'
             ' Interchange DTD v1.3 20210610//EN"  "JATS-archivearticle1-mathml3.dtd">'
-            '<article xmlns:xlink="http://www.w3.org/1999/xlink"'
+            '<article xmlns:ali="http://www.niso.org/schemas/ali/1.0/"'
+            ' xmlns:xlink="http://www.w3.org/1999/xlink"'
             ' article-type="research-article" dtd-version="1.3" xml:lang="en">'
-            '<p><inline-graphic xlink:href="local.jpg"/></p>'
+            "<ali:free_to_read/>"
+            '<license xlink:href="https://creativecommons.org/licenses/by/4.0/">'
+            "<ali:license_ref>https://creativecommons.org/licenses/by/4.0/</ali:license_ref>"
+            "</license>"
             "</article>"
         )
         expected = (
             '<?xml version="1.0" encoding="UTF-8"?>'
             '<!DOCTYPE article PUBLIC "-//NLM//DTD JATS (Z39.96) Journal Archiving and'
             ' Interchange DTD v1.3 20210610//EN"  "JATS-archivearticle1-mathml3.dtd">'
-            '<article xmlns:xlink="http://www.w3.org/1999/xlink"'
-            ' xmlns:ali="http://www.niso.org/schemas/ali/1.0/"'
+            '<article xmlns:ali="http://www.niso.org/schemas/ali/1.0/"'
+            ' xmlns:xlink="http://www.w3.org/1999/xlink"'
             ' xmlns:mml="http://www.w3.org/1998/Math/MathML"'
             ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"'
             ' article-type="research-article" dtd-version="1.3" xml:lang="en">'
-            '<p><inline-graphic xlink:href="local.jpg"/></p>'
+            "<ali:free_to_read/>"
+            '<license xlink:href="https://creativecommons.org/licenses/by/4.0/">'
+            "<ali:license_ref>https://creativecommons.org/licenses/by/4.0/</ali:license_ref>"
+            "</license>"
             "</article>"
         )
         with open(xml_file_path, "w", encoding="utf-8") as open_file:
