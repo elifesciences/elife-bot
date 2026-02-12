@@ -1,4 +1,5 @@
 import base64
+import datetime
 import re
 from github import Github
 from github import GithubException
@@ -35,7 +36,7 @@ def detail_from_issue_title(title):
     return None, None
 
 
-def find_github_issues(token, repo_name, version_doi):
+def find_github_issues(token, repo_name, version_doi, state="open", since=None):
     "find the github issues for the article version"
     github_object = Github(token)
     user = github_object.get_user(GITHUB_USER)
@@ -43,9 +44,9 @@ def find_github_issues(token, repo_name, version_doi):
     doi, version = utils.version_doi_parts(version_doi)
     article_id = utils.msid_from_doi(doi)
     # find the matching issue and return it
-    open_issues = repo.get_issues(state="open")
+    issue_list = repo.get_issues(state=state, since=since)
     issues = []
-    for issue in open_issues:
+    for issue in issue_list:
         if match_issue_title(issue.title, article_id, version):
             issues.append(issue)
     return issues
@@ -63,6 +64,19 @@ def add_github_comment(issue, message):
     issue.create_comment(message)
 
 
+def find_all_github_issues_since(token, repo_name, version_doi, since=None):
+    "find all github issues for the article version updated since since"
+    return find_github_issues(token, repo_name, version_doi, state="all", since=since)
+
+
+def find_all_github_issues(token, repo_name, version_doi):
+    "find all github issues for the article version"
+    return find_github_issues(token, repo_name, version_doi, state="all")
+
+
+UPDATED_SINCE_DAYS = 30
+
+
 def add_github_issue_comment(settings, logger, caller_name, version_doi, issue_comment):
     "add the message as a github preprint issue comment"
     if (
@@ -77,7 +91,36 @@ def add_github_issue_comment(settings, logger, caller_name, version_doi, issue_c
                 settings.preprint_issues_repo_name,
                 version_doi,
             )
+            if not issues:
+                # also search in all issues created recently
+                updated_since = utils.get_current_datetime() - datetime.timedelta(
+                    days=UPDATED_SINCE_DAYS
+                )
+                logger.info(
+                    "%s, searching for %s in all Github issues updated since %s"
+                    % (caller_name, version_doi, updated_since)
+                )
+                issues = find_all_github_issues_since(
+                    settings.github_token,
+                    settings.preprint_issues_repo_name,
+                    version_doi,
+                    since=updated_since,
+                )
+            if not issues:
+                # also search in all issues
+                logger.info(
+                    "%s, searching for %s in all Github issues"
+                    % (caller_name, version_doi)
+                )
+                issues = find_all_github_issues(
+                    settings.github_token,
+                    settings.preprint_issues_repo_name,
+                    version_doi,
+                )
             for issue in issues:
+                # reopen closed comments
+                if issue.state == "closed":
+                    issue.edit(state="open")
                 add_github_comment(issue, issue_comment)
         except Exception as exception:
             logger.exception(

@@ -1,7 +1,8 @@
 import unittest
+import datetime
 from mock import patch
 from github import GithubException
-from provider import github_provider
+from provider import github_provider, utils
 from tests import settings_mock
 from tests.activity.classes_mock import (
     FakeGithub,
@@ -123,6 +124,38 @@ class TestFindGithubIssue(unittest.TestCase):
         self.assertEqual(result, None)
 
 
+class TestFindAllGithubIssuesSince(unittest.TestCase):
+    "tests for find_all_github_issues_since()"
+
+    @patch.object(FakeGithubRepository, "get_issues")
+    @patch.object(github_provider, "Github")
+    def test_find_all_github_issues_since(self, fake_github, fake_get_issues):
+        "test finding all Github issues since an updated date"
+        fake_github.return_value = FakeGithub()
+        fake_get_issues.return_value = []
+        # invoke
+        version_doi = "10.7554/eLife.95901.1"
+        result = github_provider.find_all_github_issues_since(None, None, version_doi)
+        # assert
+        self.assertEqual(result, [])
+
+
+class TestFindAllGithubIssues(unittest.TestCase):
+    "tests for find_all_github_issues()"
+
+    @patch.object(FakeGithubRepository, "get_issues")
+    @patch.object(github_provider, "Github")
+    def test_find_all_github_issues(self, fake_github, fake_get_issues):
+        "test finding all Github issues"
+        fake_github.return_value = FakeGithub()
+        fake_get_issues.return_value = []
+        # invoke
+        version_doi = "10.7554/eLife.95901.1"
+        result = github_provider.find_all_github_issues(None, None, version_doi)
+        # assert
+        self.assertEqual(result, [])
+
+
 class TestAddGithubIssueComment(unittest.TestCase):
     "tests for add_github_issue_comment()"
 
@@ -155,6 +188,90 @@ class TestAddGithubIssueComment(unittest.TestCase):
         self.assertEqual(fake_logger.logexception, "First logger exception")
         self.assertEqual(issue_1.comment.body, issue_comment)
         self.assertEqual(issue_2.comment.body, issue_comment)
+
+    @patch.object(github_provider, "find_all_github_issues_since")
+    @patch.object(utils, "get_current_datetime")
+    @patch.object(FakeGithubRepository, "get_issues")
+    @patch.object(github_provider, "Github")
+    def test_add_github_issue_comment_since(
+        self, fake_github, fake_get_issues, fake_get_current_datetime, fake_find_since
+    ):
+        "test finding and adding a Github issue comment if issues is closed and recently updated"
+        fake_github.return_value = FakeGithub()
+        fake_get_current_datetime.return_value = datetime.datetime.strptime(
+            "2026-02-01", "%Y-%m-%d"
+        )
+        fake_get_issues.return_value = []
+        issue_1 = FakeGithubIssue(
+            title="MSID: 95901 Version: 1 DOI: 10.1101/2024.01.31.xxxx95901",
+            number=2,
+            state="closed",
+        )
+        fake_find_since.return_value = [
+            issue_1,
+        ]
+        fake_logger = FakeLogger()
+        caller_name = "test"
+        version_doi = "10.7554/eLife.95901.1"
+        issue_comment = "Test comment."
+        # invoke
+        github_provider.add_github_issue_comment(
+            settings_mock, fake_logger, caller_name, version_doi, issue_comment
+        )
+        # assert
+        self.assertEqual(
+            fake_logger.loginfo[-1],
+            (
+                "test, searching for 10.7554/eLife.95901.1"
+                " in all Github issues updated since 2026-01-02 00:00:00"
+            ),
+        )
+        self.assertEqual(fake_logger.logexception, "First logger exception")
+        self.assertEqual(issue_1.comment.body, issue_comment)
+
+    @patch.object(github_provider, "find_all_github_issues")
+    @patch.object(github_provider, "find_all_github_issues_since")
+    @patch.object(utils, "get_current_datetime")
+    @patch.object(FakeGithubRepository, "get_issues")
+    @patch.object(github_provider, "Github")
+    def test_add_github_issue_comment_all(
+        self,
+        fake_github,
+        fake_get_issues,
+        fake_get_current_datetime,
+        fake_find_since,
+        fake_find_all,
+    ):
+        "test finding and adding a Github issue comment if issues is closed"
+        fake_github.return_value = FakeGithub()
+        fake_get_current_datetime.return_value = datetime.datetime.strptime(
+            "2026-02-01", "%Y-%m-%d"
+        )
+        fake_get_issues.return_value = []
+        fake_find_since.return_value = []
+        issue_1 = FakeGithubIssue(
+            title="MSID: 95901 Version: 1 DOI: 10.1101/2024.01.31.xxxx95901",
+            number=2,
+            state="closed",
+        )
+        fake_find_all.return_value = [
+            issue_1,
+        ]
+        fake_logger = FakeLogger()
+        caller_name = "test"
+        version_doi = "10.7554/eLife.95901.1"
+        issue_comment = "Test comment."
+        # invoke
+        github_provider.add_github_issue_comment(
+            settings_mock, fake_logger, caller_name, version_doi, issue_comment
+        )
+        # assert
+        self.assertEqual(
+            fake_logger.loginfo[-1],
+            ("test, searching for 10.7554/eLife.95901.1 in all Github issues"),
+        )
+        self.assertEqual(fake_logger.logexception, "First logger exception")
+        self.assertEqual(issue_1.comment.body, issue_comment)
 
     @patch.object(FakeGithubRepository, "get_issues")
     @patch.object(github_provider, "Github")

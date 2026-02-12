@@ -371,12 +371,13 @@ class FakeIssueComment:
 class FakeGithubIssue:
     "mock object for github.Issue.Issue"
 
-    def __init__(self, title=None, number=None):
+    def __init__(self, title=None, number=None, state="open"):
         self.title = title
         self.number = number
         self.comment = None
         self.assignees = []
         self.labels = []
+        self.state = state
 
     def __repr__(self) -> str:
         return "{class_name}({params})".format(
@@ -396,3 +397,7 @@ class FakeGithubIssue:
     def add_to_labels(self, label):
         if label not in self.labels:
             self.labels.append(label)
+
+    def edit(self, **kwargs):
+        if kwargs.get("state"):
+            self.state = kwargs.get("state")
