@@ -133,9 +133,12 @@ class TestFindAllGithubIssuesSince(unittest.TestCase):
         "test finding all Github issues since an updated date"
         fake_github.return_value = FakeGithub()
         fake_get_issues.return_value = []
+        since = datetime.datetime.strptime("2026-02-01", "%Y-%m-%d")
         # invoke
         version_doi = "10.7554/eLife.95901.1"
-        result = github_provider.find_all_github_issues_since(None, None, version_doi)
+        result = github_provider.find_all_github_issues_since(
+            None, None, version_doi, since
+        )
         # assert
         self.assertEqual(result, [])
 

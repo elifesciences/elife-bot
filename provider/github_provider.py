@@ -44,7 +44,10 @@ def find_github_issues(token, repo_name, version_doi, state="open", since=None):
     doi, version = utils.version_doi_parts(version_doi)
     article_id = utils.msid_from_doi(doi)
     # find the matching issue and return it
-    issue_list = repo.get_issues(state=state, since=since)
+    if since:
+        issue_list = repo.get_issues(state=state, since=since)
+    else:
+        issue_list = repo.get_issues(state=state)
     issues = []
     for issue in issue_list:
         if match_issue_title(issue.title, article_id, version):
