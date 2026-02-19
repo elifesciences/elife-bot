@@ -1,5 +1,4 @@
 import json
-import re
 import os
 import zipfile
 from xml.etree import ElementTree

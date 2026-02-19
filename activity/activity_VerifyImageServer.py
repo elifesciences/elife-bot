@@ -1,5 +1,4 @@
 import json
-import requests
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 from provider import article_structure, iiif, utils

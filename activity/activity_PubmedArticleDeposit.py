@@ -7,7 +7,7 @@ from elifepubmed import generate
 from elifepubmed.conf import config, parse_raw_config
 import provider.article as articlelib
 from provider.sftp import SFTP
-from provider import downstream, email_provider, lax_provider, outbox_provider, utils
+from provider import email_provider, lax_provider, outbox_provider, utils
 from activity.objects import Activity
 
 

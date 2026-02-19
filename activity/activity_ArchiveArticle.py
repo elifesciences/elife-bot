@@ -1,6 +1,5 @@
 import os
 import json
-import zipfile
 from datetime import datetime
 from provider import article_processing, utils
 from provider.storage_provider import storage_context

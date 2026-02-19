@@ -1,18 +1,14 @@
 import json
 from zipfile import ZipFile
-import uuid
-import re
 import os
 from os.path import isfile, join
 from os import listdir, makedirs
 from os import path
-import datetime
 from S3utility.s3_notification_info import S3NotificationInfo
 from provider.execution_context import get_session
-import requests
 from provider.storage_provider import storage_context
 from provider.article_structure import ArticleInfo
-from provider import lax_provider, utils
+from provider import utils
 from activity.objects import Activity
 
 """
