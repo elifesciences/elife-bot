@@ -2,7 +2,6 @@ import os
 import json
 import time
 from digestparser import output
-import digestparser.utils as digest_utils
 from S3utility.s3_notification_info import parse_activity_data
 from provider import digest_provider, download_helper, email_provider, utils
 from activity.objects import Activity

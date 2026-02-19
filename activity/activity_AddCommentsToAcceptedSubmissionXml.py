@@ -1,6 +1,5 @@
 import os
 import json
-import shutil
 from xml.etree.ElementTree import ParseError, SubElement
 from provider import cleaner
 from provider.execution_context import get_session

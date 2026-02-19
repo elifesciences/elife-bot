@@ -1,7 +1,6 @@
 import json
 from provider.execution_context import get_session
 from provider.lax_provider import message_from_lax
-from uuid import UUID
 from activity.objects import Activity
 
 """

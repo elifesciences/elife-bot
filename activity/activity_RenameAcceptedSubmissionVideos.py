@@ -1,6 +1,5 @@
 import os
 import json
-import shutil
 from xml.etree.ElementTree import ParseError
 from elifecleaner.transform import ArticleZipFile
 from provider.execution_context import get_session

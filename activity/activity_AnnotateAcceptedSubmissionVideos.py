@@ -1,6 +1,5 @@
 import os
 import json
-import shutil
 from xml.etree.ElementTree import ParseError
 from provider import cleaner, glencoe_check
 from provider.cleaner import SettingsException

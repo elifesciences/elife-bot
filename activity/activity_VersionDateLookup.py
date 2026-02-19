@@ -1,15 +1,4 @@
-import json
-from zipfile import ZipFile
-import uuid
-import re
-import os
-from os.path import isfile, join
-from os import listdir, makedirs
-from os import path
-import datetime
 from provider.execution_context import get_session
-import requests
-from provider.storage_provider import storage_context
 from provider.article_structure import ArticleInfo
 import provider.lax_provider as lax_provider
 from activity.objects import Activity
@@ -121,6 +110,3 @@ class activity_VersionDateLookup(Activity):
         except Exception as e:
             error_message = "Exception when looking up version Date. Message: " + str(e)
             return version_date, error_message
-
-    def execute_function(self, the_function, arg1, arg2):
-        return the_function(arg1, arg2)

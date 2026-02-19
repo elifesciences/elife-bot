@@ -1,6 +1,5 @@
 import os
 import json
-import shutil
 from provider import article_processing, cleaner
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context

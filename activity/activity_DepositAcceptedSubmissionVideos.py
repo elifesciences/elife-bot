@@ -1,7 +1,6 @@
 import os
 import json
 import glob
-import shutil
 import zipfile
 from xml.etree.ElementTree import ParseError
 from provider.execution_context import get_session

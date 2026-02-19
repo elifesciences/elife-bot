@@ -1,6 +1,5 @@
 import os
 import json
-import shutil
 import time
 from xml.etree.ElementTree import ParseError
 from provider.execution_context import get_session
