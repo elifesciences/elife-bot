@@ -174,13 +174,9 @@ def year(date_struct):
     return str(date_struct.tm_year)
 
 
-def doaj_post_request(
-    url, article_id, data, api_key, verify_ssl=False, logger=None, user_agent=None
-):
+def doaj_post_request(url, article_id, data, api_key, verify_ssl=False, logger=None):
     "POST JSON data to DOAJ API endpoint"
     headers = {"Content-Type": "application/json"}
-    if user_agent:
-        headers["user-agent"] = user_agent
     params = {"api_key": api_key}
     response = requests.post(
         url, params=params, json=data, verify=verify_ssl, headers=headers
