@@ -6,16 +6,18 @@ class FastlyApi:
     def __init__(self, fastly_api_key):
         self._fastly_api_key = fastly_api_key
 
-    def purge(self, surrogate_key, service_id):
+    def purge(self, surrogate_key, service_id, user_agent=None):
         url = "https://api.fastly.com/service/%s/purge/%s" % (service_id, surrogate_key)
-
+        headers = {
+            "Accept": "application/json",
+            "Fastly-Key": self._fastly_api_key,
+            "Fastly-Soft-Purge": "1",
+        }
+        if user_agent:
+            headers["user-agent"] = user_agent
         response = requests.post(
             url,
-            headers={
-                "Accept": "application/json",
-                "Fastly-Key": self._fastly_api_key,
-                "Fastly-Soft-Purge": "1",
-            },
+            headers=headers,
         )
         response.raise_for_status()
         return response
@@ -31,12 +33,13 @@ KEYS = [
 def purge(article_id, version, settings):
     responses = []
     api = FastlyApi(settings.fastly_api_key)
+    user_agent = getattr(settings, "user_agent", None)
     for service_id in settings.fastly_service_ids:
         for key in KEYS:
             surrogate_key = key.format(
                 article_id=utils.pad_msid(article_id), version=version
             )
-            responses.append(api.purge(surrogate_key, service_id))
+            responses.append(api.purge(surrogate_key, service_id, user_agent))
 
     return responses
 

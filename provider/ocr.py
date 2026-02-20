@@ -34,6 +34,7 @@ def mathpix_table_post_request(
     options_json=None,
     verify_ssl=False,
     logger=None,
+    user_agent=None,
 ):
     "POST to Mathpix API endpoint using table options"
     return mathpix_post_request(
@@ -44,6 +45,7 @@ def mathpix_table_post_request(
         options_json=TABLE_OPTIONS_JSON,
         verify_ssl=verify_ssl,
         logger=logger,
+        user_agent=user_agent,
     )
 
 
@@ -55,6 +57,7 @@ def mathpix_post_request(
     options_json=None,
     verify_ssl=False,
     logger=None,
+    user_agent=None,
 ):
     "POST JSON data to Mathpix API endpoint"
 
@@ -63,6 +66,8 @@ def mathpix_post_request(
         options_json = DEFAULT_OPTIONS_JSON
 
     headers = {"app_id": app_id, "app_key": app_key}
+    if user_agent:
+        headers["user-agent"] = user_agent
     data = {"options_json": json.dumps(options_json)}
     with open(file_path, "rb") as open_file:
         files = {"file": open_file}

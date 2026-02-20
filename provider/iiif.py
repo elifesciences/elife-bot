@@ -10,9 +10,12 @@ def endpoint(settings, iiif_path_for_article, figure):
     return settings.path_to_iiif_server + iiif_path_for_figure
 
 
-def try_endpoint(endpoint_uri, logger):
+def try_endpoint(endpoint_uri, logger, user_agent=None):
+    headers = None
+    if user_agent:
+        headers = {"user-agent": user_agent}
     try:
-        response = requests.head(endpoint_uri)
+        response = requests.head(endpoint_uri, headers=headers)
         if response.status_code == 504:
             raise ShortRetryException("Response code was %s" % response.status_code)
         if response.status_code == 404:

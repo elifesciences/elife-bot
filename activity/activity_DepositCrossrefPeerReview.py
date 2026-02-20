@@ -339,8 +339,12 @@ class activity_DepositCrossrefPeerReview(Activity):
         payload = crossref.crossref_data_payload(
             self.settings.crossref_login_id, self.settings.crossref_login_passwd
         )
+        user_agent = getattr(self.settings, "user_agent", None)
         return crossref.upload_files_to_endpoint(
-            self.settings.crossref_url, payload, xml_files
+            self.settings.crossref_url,
+            payload,
+            xml_files,
+            user_agent,
         )
 
     def send_admin_email(self, outbox_s3_key_names, http_detail_list):
@@ -404,13 +408,14 @@ def prune_article_object_map(article_object_map, settings, logger):
     """remove any articles from the map that should not be deposited as peer reviews"""
     # prune any articles with no review_articles
     good_article_object_map = OrderedDict()
+    user_agent = getattr(settings, "user_agent", None)
     for file_name, article in article_object_map.items():
         good = True
         # check it has review articles
         good = has_review_articles(article, logger)
         # check DOI exists
         if good:
-            good = check_doi_exists(article, logger)
+            good = check_doi_exists(article, logger, user_agent)
         # check VoR is published
         if good:
             if not preprint.is_article_preprint(article):
@@ -433,8 +438,8 @@ def has_review_articles(article, logger):
     return False
 
 
-def check_doi_exists(article, logger):
-    if crossref.doi_exists(article.doi, logger):
+def check_doi_exists(article, logger, user_agent=None):
+    if crossref.doi_exists(article.doi, logger, user_agent):
         return True
     logger.info(
         "Pruning article %s from Crossref peer review deposit, DOI does not exist"

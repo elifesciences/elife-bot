@@ -64,8 +64,17 @@ def article_json(article_id, settings, auth=False):
     url = settings.lax_article_endpoint.replace(
         "{article_id}", utils.pad_msid(article_id)
     )
+    user_agent = getattr(settings, "user_agent", None)
+    headers = None
+    if user_agent:
+        headers = {"user-agent": user_agent}
     return lax_request(
-        url, article_id, settings.verify_ssl, None, lax_auth_key(settings, auth)
+        url,
+        article_id,
+        settings.verify_ssl,
+        None,
+        lax_auth_key(settings, auth),
+        headers=headers,
     )
 
 
@@ -80,6 +89,9 @@ def article_versions(article_id, settings, auth=False):
         and settings.lax_article_versions_accept_header
     ):
         headers["Accept"] = settings.lax_article_versions_accept_header
+    user_agent = getattr(settings, "user_agent", None)
+    if user_agent:
+        headers["user-agent"] = user_agent
     return lax_request(
         url,
         article_id,
@@ -95,8 +107,17 @@ def article_related(article_id, settings, auth=False):
     url = settings.lax_article_related.replace(
         "{article_id}", utils.pad_msid(article_id)
     )
+    user_agent = getattr(settings, "user_agent", None)
+    headers = None
+    if user_agent:
+        headers = {"user-agent": user_agent}
     return lax_request(
-        url, article_id, settings.verify_ssl, None, lax_auth_key(settings, auth)
+        url,
+        article_id,
+        settings.verify_ssl,
+        None,
+        lax_auth_key(settings, auth),
+        headers=headers,
     )
 
 

@@ -143,7 +143,12 @@ class article:
             + ".xml"
         )
         xml_filename = xml_file_url.split("/")[-1]
-        response = requests.get(xml_file_url)
+
+        user_agent = getattr(self.settings, "user_agent", None)
+        headers = None
+        if user_agent:
+            headers = {"user-agent": user_agent}
+        response = requests.get(xml_file_url, headers=headers)
         if response.status_code == 200:
             filename_plus_path = to_dir + os.sep + xml_filename
             with open(filename_plus_path, "wb") as open_file:

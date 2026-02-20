@@ -159,6 +159,7 @@ class activity_PostDecisionLetterJATS(Activity):
                 "decision letter JATS",
                 params=params,
                 content_type=content_type,
+                user_agent=getattr(self.settings, "user_agent", None),
             )
 
     def send_email(self, doi, jats_content):

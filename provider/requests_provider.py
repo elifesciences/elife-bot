@@ -23,14 +23,14 @@ def jats_post_payload(content_type, doi, jats_content, api_key, account_key):
     return payload
 
 
-def get_as_params(url, payload):
+def get_as_params(url, payload, headers=None):
     """transmit the payload as a GET with URL parameters"""
-    return requests.get(url, params=payload)
+    return requests.get(url, params=payload, headers=headers)
 
 
-def post_as_params(url, payload):
+def post_as_params(url, payload, headers=None):
     """post the payload as URL parameters"""
-    return requests.post(url, params=payload)
+    return requests.post(url, params=payload, headers=headers)
 
 
 def post_as_data(url, payload, params=None, headers=None):
@@ -38,9 +38,9 @@ def post_as_data(url, payload, params=None, headers=None):
     return requests.post(url, data=payload, params=params, headers=headers)
 
 
-def post_as_json(url, payload):
+def post_as_json(url, payload, headers=None):
     """post the payload as JSON data"""
-    return requests.post(url, json=payload)
+    return requests.post(url, json=payload, headers=headers)
 
 
 def post_to_endpoint(
@@ -50,9 +50,12 @@ def post_to_endpoint(
     identifier,
     params=None,
     content_type="application/x-www-form-urlencoded",
+    user_agent=None,
 ):
     """issue the POST"""
     headers = {"Content-Type": content_type}
+    if user_agent:
+        headers["user-agent"] = user_agent
     try:
         resp = post_as_data(url, payload, params=params, headers=headers)
     except:

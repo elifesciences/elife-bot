@@ -111,14 +111,16 @@ class activity_DepositCrossrefPendingPublication(Activity):
                 article_version.version_doi = None
                 article_version_object_map[xml_file] = article_version
 
+        user_agent = getattr(self.settings, "user_agent", None)
+
         # check which DOIs already exist
         generate_article_object_map = prune_article_object_map(
-            article_object_map, self.logger
+            article_object_map, self.logger, user_agent
         )
 
         # check which version DOIs already exist
         generate_article_version_object_map = prune_article_object_map(
-            article_version_object_map, self.logger
+            article_version_object_map, self.logger, user_agent
         )
 
         # files not to be published are those missing from both lists after pruning
@@ -293,8 +295,12 @@ class activity_DepositCrossrefPendingPublication(Activity):
         payload = crossref.crossref_data_payload(
             self.settings.crossref_login_id, self.settings.crossref_login_passwd
         )
+        user_agent = getattr(self.settings, "user_agent", None)
         return crossref.upload_files_to_endpoint(
-            self.settings.crossref_url, payload, xml_files
+            self.settings.crossref_url,
+            payload,
+            xml_files,
+            user_agent,
         )
 
     def send_admin_email(self, outbox_s3_key_names, http_detail_list):
@@ -355,12 +361,12 @@ class activity_DepositCrossrefPendingPublication(Activity):
         return True
 
 
-def prune_article_object_map(article_object_map, logger):
+def prune_article_object_map(article_object_map, logger, user_agent=None):
     """remove any articles from the map that should not be deposited as pending_publication"""
     good_article_object_map = OrderedDict()
     for file_name, article in article_object_map.items():
         # check DOI does not exist at Crossref
-        if check_doi_does_not_exist(article, logger):
+        if check_doi_does_not_exist(article, logger, user_agent):
             good_article_object_map[file_name] = article
     return good_article_object_map
 
@@ -372,8 +378,8 @@ def article_title_rewrite(article_object_map):
     return article_object_map
 
 
-def check_doi_does_not_exist(article, logger):
-    if crossref.doi_does_not_exist(article.doi, logger):
+def check_doi_does_not_exist(article, logger, user_agent=None):
+    if crossref.doi_does_not_exist(article.doi, logger, user_agent):
         return True
     logger.info(
         "Ignoring article %s from Crossref pending publication deposit, DOI already exists"

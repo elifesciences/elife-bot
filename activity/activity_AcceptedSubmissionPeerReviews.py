@@ -1,9 +1,8 @@
 import os
 import json
-import shutil
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
-from provider import cleaner, utils
+from provider import cleaner
 from activity.objects import AcceptedBaseActivity
 
 
@@ -79,7 +78,10 @@ class activity_AcceptedSubmissionPeerReviews(AcceptedBaseActivity):
             % (self.name, input_filename)
         )
         terms_yaml = getattr(self.settings, "assessment_terms_yaml", None)
-        xml_root = cleaner.add_sub_article_xml(docmap_string, xml_file_path, terms_yaml)
+        user_agent = getattr(self.settings, "user_agent", None)
+        xml_root = cleaner.add_sub_article_xml(
+            docmap_string, xml_file_path, terms_yaml, user_agent=user_agent
+        )
         self.statuses["xml_root"] = True
 
         # remove ext-link tag if it wraps an inline-graphic tag

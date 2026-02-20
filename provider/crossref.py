@@ -161,17 +161,21 @@ def crossref_data_payload(
     }
 
 
-def upload_files_to_endpoint(url, payload, xml_files):
+def upload_files_to_endpoint(url, payload, xml_files, user_agent=None):
     """Using an HTTP POST, deposit the file to the Crossref endpoint"""
 
     # Default return status
     status = True
     http_detail_list = []
 
+    headers = None
+    if user_agent:
+        headers = {"user-agent": user_agent}
+
     for xml_file in xml_files:
         files = {"file": open(xml_file, "rb")}
 
-        response = requests.post(url, data=payload, files=files)
+        response = requests.post(url, data=payload, files=files, headers=headers)
 
         # Check for good HTTP status code
         if response.status_code != 200:
@@ -340,11 +344,14 @@ def crossref_xml_to_disk(c_xml, output_dir, pretty=False, indent=""):
         open_file.write(xml_string.encode("utf-8"))
 
 
-def doi_exists(doi, logger):
+def doi_exists(doi, logger, user_agent=None):
     """given a DOI check if it exists in Crossref"""
     exists = False
     doi_url = utils.get_doi_url(doi)
-    response = requests.head(doi_url)
+    headers = None
+    if user_agent:
+        headers = {"user-agent": user_agent}
+    response = requests.head(doi_url, headers=headers)
     if 300 <= response.status_code < 400:
         exists = True
     elif response.status_code < 300 or response.status_code >= 500:
@@ -352,11 +359,14 @@ def doi_exists(doi, logger):
     return exists
 
 
-def doi_does_not_exist(doi, logger):
+def doi_does_not_exist(doi, logger, user_agent=None):
     """given a DOI check if it does not exist at Crossref"""
     does_not_exist = None
     doi_url = utils.get_doi_url(doi)
-    response = requests.head(doi_url)
+    headers = None
+    if user_agent:
+        headers = {"user-agent": user_agent}
+    response = requests.head(doi_url, headers=headers)
     logger.info("Status code for %s was %s" % (doi, response.status_code))
     if 200 <= response.status_code < 400:
         does_not_exist = False

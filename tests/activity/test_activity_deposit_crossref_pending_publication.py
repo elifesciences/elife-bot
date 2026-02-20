@@ -17,7 +17,7 @@ from tests.activity import helpers, settings_mock
 import tests.activity.test_activity_data as activity_test_data
 
 
-def mock_doi_does_not_exists(doi, logger):
+def mock_doi_does_not_exists(doi, logger, user_agent):
     "return True or False for specific DOI values"
     if doi == "10.7554/eLife.64719":
         return False

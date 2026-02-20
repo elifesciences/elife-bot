@@ -371,6 +371,7 @@ class activity_AcceptedSubmissionPeerReviewOcr(AcceptedBaseActivity):
 def ocr_files(file_to_path_map, options_type, settings, logger, identifier):
     "post request to an endpoint for each file and return data"
     file_to_data_map = {}
+    user_agent = getattr(settings, "user_agent", None)
     for file_name, file_path in file_to_path_map.items():
         logger.info(
             "OCR file from %s: file_name %s, file_path %s"
@@ -383,6 +384,7 @@ def ocr_files(file_to_path_map, options_type, settings, logger, identifier):
                     app_id=settings.mathpix_app_id,
                     app_key=settings.mathpix_app_key,
                     file_path=file_path,
+                    user_agent=user_agent,
                 )
             else:
                 response = ocr.mathpix_post_request(
@@ -390,6 +392,7 @@ def ocr_files(file_to_path_map, options_type, settings, logger, identifier):
                     app_id=settings.mathpix_app_id,
                     app_key=settings.mathpix_app_key,
                     file_path=file_path,
+                    user_agent=user_agent,
                 )
 
         except Exception as exception:

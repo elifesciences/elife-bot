@@ -220,6 +220,7 @@ class activity_PushSWHDeposit(Activity):
                 atom_file_path=atom_file_path,
                 in_progress=in_progress,
                 logger=self.logger,
+                user_agent=getattr(self.settings, "user_agent", None),
             )
             self.logger.info(
                 "%s, finished post request to %s, file paths: %s"

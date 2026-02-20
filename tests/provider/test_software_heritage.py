@@ -242,7 +242,10 @@ class TestSWHOriginExists(unittest.TestCase):
     def test_swh_origin_exists_200(self, mock_requests_head):
         mock_requests_head.return_value = FakeResponse(200)
         origin_exists = software_heritage.swh_origin_exists(
-            self.url_pattern, self.origin, logger=self.logger
+            self.url_pattern,
+            self.origin,
+            logger=self.logger,
+            user_agent=getattr(settings_mock, "user_agent", None),
         )
         self.assertEqual(origin_exists, True)
         self.assertEqual(

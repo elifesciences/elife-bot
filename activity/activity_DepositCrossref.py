@@ -4,9 +4,8 @@ from collections import OrderedDict
 import json
 import time
 import glob
-from elifearticle.article import Preprint
 from activity.objects import Activity
-from provider import crossref, downstream, email_provider, outbox_provider, utils
+from provider import crossref, email_provider, outbox_provider, utils
 
 """
 DepositCrossref activity
@@ -258,8 +257,12 @@ class activity_DepositCrossref(Activity):
         payload = crossref.crossref_data_payload(
             self.settings.crossref_login_id, self.settings.crossref_login_passwd
         )
+        user_agent = getattr(self.settings, "user_agent", None)
         return crossref.upload_files_to_endpoint(
-            self.settings.crossref_url, payload, xml_files
+            self.settings.crossref_url,
+            payload,
+            xml_files,
+            user_agent,
         )
 
     def send_admin_email(self, outbox_s3_key_names, http_detail_list):

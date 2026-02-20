@@ -121,11 +121,13 @@ class activity_VerifyImageServer(Activity):
             return self.ACTIVITY_PERMANENT_FAILURE
 
     def retrieve_endpoints_check(self, original_figures, iiif_path_for_article):
+        user_agent = getattr(self.settings, "user_agent", None)
         return list(
             [
                 iiif.try_endpoint(
                     iiif.endpoint(self.settings, iiif_path_for_article, fig),
                     self.logger,
+                    user_agent,
                 )
                 for fig in original_figures
             ]

@@ -59,8 +59,13 @@ def validate_sources(gc_data):
 def metadata(msid, settings):
     doi = "10.7554/eLife." + pad_msid(msid)
     url = settings.video_url + doi
+    user_agent = getattr(settings, "user_agent", None)
 
-    resp = requests.get(url)
+    headers = None
+    if user_agent:
+        headers = {"user-agent": user_agent}
+
+    resp = requests.get(url, headers=headers)
 
     assert resp.status_code != 404, "article has no videos - url requested: %s" % url
     assert (

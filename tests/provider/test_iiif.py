@@ -36,7 +36,9 @@ class TestIiif(unittest.TestCase):
     @patch("requests.head")
     def test_try_endpoint_ok(self, request_mock):
         self._given_responses(request_mock, 200)
-        success, test_endpoint = iiif.try_endpoint("test_endpoint", self.fake_logger)
+        success, test_endpoint = iiif.try_endpoint(
+            "test_endpoint", self.fake_logger, "user_agent"
+        )
         self.assertEqual(success, True)
         self.assertEqual(test_endpoint, "test_endpoint")
 
