@@ -559,21 +559,40 @@ def docmap_url(settings, article_id):
     )
 
 
-def sub_article_data(docmap_string, article=None, version_doi=None, generate_dois=True):
+def sub_article_data(
+    docmap_string,
+    article=None,
+    version_doi=None,
+    generate_dois=True,
+    user_agent=None,
+):
     # add sub-article data from the docmap and get requests to the article object
     return sub_article.sub_article_data(
-        docmap_string, article, version_doi, generate_dois
+        docmap_string,
+        article,
+        version_doi,
+        generate_dois,
+        user_agent=user_agent,
     )
 
 
 def add_sub_article_xml(
-    docmap_string, article_xml, terms_yaml=None, version_doi=None, generate_dois=True
+    docmap_string,
+    article_xml,
+    terms_yaml=None,
+    version_doi=None,
+    generate_dois=True,
+    user_agent=None,
 ):
     if terms_yaml:
         # set the path to the YAML file containing assessment terms data
         assessment_terms.ASSESSMENT_TERMS_YAML = terms_yaml
     return sub_article.add_sub_article_xml(
-        docmap_string, article_xml, version_doi=version_doi, generate_dois=generate_dois
+        docmap_string,
+        article_xml,
+        version_doi=version_doi,
+        generate_dois=generate_dois,
+        user_agent=user_agent,
     )
 
 

@@ -203,10 +203,14 @@ def swh_post_request(
     in_progress=False,
     verify_ssl=False,
     logger=None,
+    user_agent=None,
 ):
     "POST data to SWH API endpoint"
 
     headers = {"In-Progress": "%s" % str(in_progress).lower()}
+
+    if user_agent:
+        headers["user-agent"] = user_agent
 
     zip_file_name = zip_file_path.split(os.sep)[-1] if zip_file_path else None
     atom_file_name = atom_file_path.split(os.sep)[-1] if atom_file_path else None
@@ -267,15 +271,22 @@ def swh_post_request(
     return response
 
 
-def swh_origin_exists(url_pattern, origin, verify_ssl=False, logger=None):
+def swh_origin_exists(
+    url_pattern, origin, verify_ssl=False, logger=None, user_agent=None
+):
     "check Software Heritage API for whether an origin already exists"
     url = url_pattern.format(origin=origin)
+
+    headers = None
+    if user_agent:
+        headers = {"user-agent": user_agent}
 
     if logger:
         logger.info("Checking if SWH origin exists at API URL %s" % url)
     response = requests.head(
         url,
         verify=verify_ssl,
+        headers=headers,
     )
     if logger:
         logger.info("SWH origin status code %s" % response.status_code)

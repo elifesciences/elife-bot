@@ -103,6 +103,7 @@ def mock_mathpix_post_request(
     options_json=None,
     verify_ssl=False,
     logger=None,
+    user_agent=None,
 ):
     "return a FakeResponse containing the response data based on the file_name"
     response = FakeResponse(201)

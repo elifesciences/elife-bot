@@ -185,9 +185,11 @@ def validate_image(digest_content):
     return False
 
 
-def digest_get_request(url, verify_ssl, digest_id, auth_key=None):
+def digest_get_request(url, verify_ssl, digest_id, auth_key=None, user_agent=None):
     "common get request logic to digests API"
     headers = digest_auth_header(auth_key)
+    if user_agent:
+        headers["user-agent"] = user_agent
     response = requests.get(url, verify=verify_ssl, headers=headers)
     LOGGER.info("Request to digest API: GET %s", url)
     LOGGER.info(
@@ -208,14 +210,22 @@ def digest_get_request(url, verify_ssl, digest_id, auth_key=None):
 def get_digest(digest_id, settings):
     "get digest from the endpoint"
     url = settings.digest_endpoint.replace("{digest_id}", str(digest_id))
-    return digest_get_request(url, settings.verify_ssl, digest_id)
+    user_agent = getattr(settings, "user_agent", None)
+    return digest_get_request(
+        url, settings.verify_ssl, digest_id, user_agent=user_agent
+    )
 
 
 def get_digest_preview(digest_id, settings):
     "get digest from the endpoint, including digests in preview"
     url = settings.digest_endpoint.replace("{digest_id}", str(digest_id))
+    user_agent = getattr(settings, "user_agent", None)
     return digest_get_request(
-        url, settings.verify_ssl, digest_id, digest_auth_key(settings, auth=True)
+        url,
+        settings.verify_ssl,
+        digest_id,
+        digest_auth_key(settings, auth=True),
+        user_agent=user_agent,
     )
 
 
@@ -237,10 +247,14 @@ def digest_content_type_header():
     return {"Content-Type": "application/vnd.elife.digest+json; version=1"}
 
 
-def digest_put_request(url, verify_ssl, digest_id, data, auth_key=None):
+def digest_put_request(
+    url, verify_ssl, digest_id, data, auth_key=None, user_agent=None
+):
     "put request logic to digests API"
     headers = digest_auth_header(auth_key)
     headers.update(digest_content_type_header())
+    if user_agent:
+        headers["user-agent"] = user_agent
     response = requests.put(url, json=data, verify=verify_ssl, headers=headers)
     LOGGER.info("Put to digest API: PUT %s\n%s", url, pformat(data))
     LOGGER.info(
@@ -260,8 +274,14 @@ def digest_put_request(url, verify_ssl, digest_id, data, auth_key=None):
 def put_digest(digest_id, data, settings, auth=True):
     "put digest to the endpoint"
     url = settings.digest_endpoint.replace("{digest_id}", str(digest_id))
+    user_agent = getattr(settings, "user_agent", None)
     return digest_put_request(
-        url, settings.verify_ssl, digest_id, data, digest_auth_key(settings, auth)
+        url,
+        settings.verify_ssl,
+        digest_id,
+        data,
+        digest_auth_key(settings, auth),
+        user_agent=user_agent,
     )
 
 

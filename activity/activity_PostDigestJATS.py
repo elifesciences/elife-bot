@@ -179,6 +179,7 @@ class activity_PostDigestJATS(Activity):
                 "digest JATS",
                 params=params,
                 content_type=content_type,
+                user_agent=getattr(self.settings, "user_agent", None),
             )
 
     def send_email(self, digest_content, jats_content):

@@ -276,7 +276,11 @@ class activity_CopyGlencoeStillImages(Activity):
 
     def store_file(self, path, article_id):
         storage = storage_context(self.settings)
-        request = requests.get(path)
+        user_agent = getattr(self.settings, "user_agent", None)
+        headers = None
+        if user_agent:
+            headers = {"user-agent": user_agent}
+        request = requests.get(path, headers=headers)
         if request.status_code == 200:
             resource = self.s3_resources(path, article_id)
             self.logger.info("S3 resource: " + resource)

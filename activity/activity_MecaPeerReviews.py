@@ -96,6 +96,7 @@ class activity_MecaPeerReviews(MecaBaseActivity):
             % (self.name, version_doi)
         )
         terms_yaml = getattr(self.settings, "assessment_terms_yaml", None)
+        user_agent = getattr(self.settings, "user_agent", None)
 
         # add sub-article XML to the ElementTree
         try:
@@ -105,6 +106,7 @@ class activity_MecaPeerReviews(MecaBaseActivity):
                 terms_yaml,
                 version_doi=version_doi,
                 generate_dois=False,
+                user_agent=user_agent,
             )
         except Exception as exception:
             log_message = (

@@ -55,7 +55,12 @@ class activity_PackageSWH(Activity):
                 version,
             )
             to_file = os.path.join(self.directories.get("INPUT_DIR"), file_name)
-            local_zip_file = download_file(input_file, to_file, self.logger)
+            local_zip_file = download_file(
+                input_file,
+                to_file,
+                self.logger,
+                user_agent=getattr(self.settings, "user_agent", None),
+            )
             self.logger.info("%s downloaded to %s" % (input_file, local_zip_file))
         except Exception:
             self.logger.exception("Exception raised downloading %s" % input_file)
@@ -104,8 +109,11 @@ class activity_PackageSWH(Activity):
         return self.ACTIVITY_SUCCESS
 
 
-def download_file(from_path, to_file, logger):
-    request = requests.get(from_path)
+def download_file(from_path, to_file, logger, user_agent=None):
+    headers = None
+    if user_agent:
+        headers = {"user-agent": user_agent}
+    request = requests.get(from_path, headers=headers)
     if request.status_code == 200:
         with open(to_file, "wb") as open_file:
             open_file.write(request.content)
