@@ -93,8 +93,6 @@ class activity_DepositDOAJ(Activity):
             )
             return self.ACTIVITY_PERMANENT_FAILURE
 
-        user_agent = getattr(self.settings, "user_agent", None)
-
         # post to DOAJ endpoint
         try:
             response = doaj.doaj_post_request(
@@ -102,7 +100,6 @@ class activity_DepositDOAJ(Activity):
                 article_id,
                 doaj_json,
                 self.settings.doaj_api_key,
-                user_agent=user_agent,
             )
             self.statuses["post"] = True
         except Exception as exception:
