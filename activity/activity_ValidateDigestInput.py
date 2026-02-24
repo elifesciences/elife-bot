@@ -77,6 +77,12 @@ class activity_ValidateDigestInput(Activity):
             self.digest
         )
 
+        if error_messages:
+            self.logger.info(
+                "%s for input_file %s validation error messages: %s"
+                % (self.name, str(real_filename), error_messages)
+            )
+
         if not self.statuses.get("build") or not self.statuses.get("valid"):
             # Send error email
             self.statuses["email"] = self.email_error_report(
