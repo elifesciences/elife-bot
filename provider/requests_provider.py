@@ -33,9 +33,9 @@ def post_as_params(url, payload, headers=None):
     return requests.post(url, params=payload, headers=headers)
 
 
-def post_as_data(url, payload, params=None, headers=None):
+def post_as_data(url, payload, params=None, headers=None, auth=None):
     """post the payload as form data"""
-    return requests.post(url, data=payload, params=params, headers=headers)
+    return requests.post(url, data=payload, params=params, headers=headers, auth=auth)
 
 
 def post_as_json(url, payload, headers=None):
@@ -51,13 +51,14 @@ def post_to_endpoint(
     params=None,
     content_type="application/x-www-form-urlencoded",
     user_agent=None,
+    auth=None,
 ):
     """issue the POST"""
     headers = {"Content-Type": content_type}
     if user_agent:
         headers["user-agent"] = user_agent
     try:
-        resp = post_as_data(url, payload, params=params, headers=headers)
+        resp = post_as_data(url, payload, params=params, headers=headers, auth=auth)
     except:
         logger.exception("Exception in post_to_endpoint")
         raise

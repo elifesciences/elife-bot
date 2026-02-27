@@ -180,6 +180,7 @@ def start(settings):
     activity_names.append("InvalidatePreprintCdn")
     activity_names.append("FindFuturePreprints")
     activity_names.append("GeneratePreprintPDF")
+    activity_names.append("StartMecaImport")
 
     for activity_name in activity_names:
         # Import the activity libraries

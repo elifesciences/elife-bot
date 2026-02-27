@@ -294,6 +294,12 @@ reviewed_preprint_api_endpoint = "https://api/path/{article_id}v{version}"
 
 generate_preprint_pdf_api_endpoint = "https://api/generate_preprint_pdf/"
 
+meca_import_endpoint = "https://example.org/import-docmap"
+meca_import_auth_username = "import_user"
+meca_import_auth_password = "import_pass"
+meca_import_temporal_namespace = "namespace"
+meca_import_workflow_id_prefix = "prefix"
+
 
 @mock_aws
 def aws_conn(service, service_creation_kwargs):
