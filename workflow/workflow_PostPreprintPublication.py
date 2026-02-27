@@ -60,6 +60,7 @@ class workflow_PostPreprintPublication(Workflow):
                 define_workflow_step("ArchivePreprint", data),
                 define_workflow_step("PreprintRepository", data),
                 define_workflow_step("DepositPreprintAssets", data),
+                define_workflow_step("StartMecaImport", data),
             ],
             "finish": {"requirements": None},
         }

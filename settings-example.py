@@ -397,6 +397,12 @@ class exp:
 
     reviewed_preprint_api_endpoint = "https://api/path/{article_id}v{version}"
 
+    meca_import_endpoint = ""
+    meca_import_auth_username = ""
+    meca_import_auth_password = ""
+    meca_import_temporal_namespace = ""
+    meca_import_workflow_id_prefix = ""
+
 
 class dev:
     # AWS settings
@@ -778,6 +784,12 @@ class dev:
     meca_sts_role_session_name = "bot"
 
     reviewed_preprint_api_endpoint = "https://api/path/{article_id}v{version}"
+
+    meca_import_endpoint = ""
+    meca_import_auth_username = ""
+    meca_import_auth_password = ""
+    meca_import_temporal_namespace = ""
+    meca_import_workflow_id_prefix = ""
 
 
 class live:
@@ -1165,6 +1177,12 @@ class live:
     meca_sts_role_session_name = "bot"
 
     reviewed_preprint_api_endpoint = "https://api/path/{article_id}v{version}"
+
+    meca_import_endpoint = "https://example.org/import-docmap"
+    meca_import_auth_username = "import_user"
+    meca_import_auth_password = "import_pass"
+    meca_import_temporal_namespace = "namespace"
+    meca_import_workflow_id_prefix = "prefix"
 
 
 def get_settings(ENV="dev"):
