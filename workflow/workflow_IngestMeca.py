@@ -54,7 +54,14 @@ class workflow_IngestMeca(Workflow):
                 define_workflow_step("MecaXslt", data),
                 define_workflow_step("ValidateJatsDtd", data),
                 define_workflow_step("ValidatePreprintSchematron", data),
-                define_workflow_step("GeneratePreprintPDF", data),
+                define_workflow_step(
+                    "GeneratePreprintPDF",
+                    data,
+                    heartbeat_timeout=60 * 10,
+                    schedule_to_close_timeout=60 * 10,
+                    schedule_to_start_timeout=30,
+                    start_to_close_timeout=60 * 10,
+                ),
                 define_workflow_step("ReplacePreprintPDF", data),
                 define_workflow_step(
                     "OutputMeca",
