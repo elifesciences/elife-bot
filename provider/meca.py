@@ -5,6 +5,7 @@ import requests
 from provider import cleaner
 
 REQUESTS_TIMEOUT = (10, 60)
+PDF_REQUESTS_TIMEOUT = (10, 180)
 
 # MECA file name configuration
 MECA_FILE_NAME_PATTERN = "{article_id}-v{version}-meca.zip"
@@ -153,7 +154,7 @@ def post_file_data_to_endpoint(
     with open(file_path, "rb") as open_file:
         response = requests.post(
             endpoint_url,
-            timeout=REQUESTS_TIMEOUT,
+            timeout=PDF_REQUESTS_TIMEOUT,
             headers=headers,
             data=open_file.read(),
         )
