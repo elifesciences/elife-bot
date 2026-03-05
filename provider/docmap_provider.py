@@ -12,7 +12,7 @@ LOG_FORMAT_STRING = (
     "%(asctime)s %(levelname)s %(name)s:%(module)s:%(funcName)s: %(message)s"
 )
 
-REQUESTS_TIMEOUT = (10, 60)
+REQUESTS_TIMEOUT = (10, 240)
 
 # number of hours for published date comparisons
 PUBLISHED_DATE_HOURS_DELTA = 0
