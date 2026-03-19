@@ -231,10 +231,11 @@ class activity_AcceptedSubmissionPeerReviewOcr(AcceptedBaseActivity):
     ):
         "replace inline-graphic tags with mathml"
         # OCR inline graphics to maths formulae from the external service
-        inline_graphic_file_to_data_map = ocr_files(
+        inline_graphic_file_to_data_map = ocr.ocr_files(
             inline_graphic_file_to_path_map,
             "math",
             self.settings,
+            self.name,
             self.logger,
             input_filename,
         )
@@ -316,10 +317,11 @@ class activity_AcceptedSubmissionPeerReviewOcr(AcceptedBaseActivity):
     ):
         "convert table-wrap graphic tags to table XML"
         # OCR inline graphics to table data from the external service
-        graphic_file_to_data_map = ocr_files(
+        graphic_file_to_data_map = ocr.ocr_files(
             graphic_file_to_path_map,
             "table",
             self.settings,
+            self.name,
             self.logger,
             input_filename,
         )
@@ -368,66 +370,6 @@ class activity_AcceptedSubmissionPeerReviewOcr(AcceptedBaseActivity):
         return file_to_approved_math_data_map
 
 
-def ocr_files(file_to_path_map, options_type, settings, logger, identifier):
-    "post request to an endpoint for each file and return data"
-    file_to_data_map = {}
-    user_agent = getattr(settings, "user_agent", None)
-    for file_name, file_path in file_to_path_map.items():
-        logger.info(
-            "OCR file from %s: file_name %s, file_path %s"
-            % (identifier, file_name, file_path)
-        )
-        try:
-            if options_type == "table":
-                response = ocr.mathpix_table_post_request(
-                    url=settings.mathpix_endpoint,
-                    app_id=settings.mathpix_app_id,
-                    app_key=settings.mathpix_app_key,
-                    file_path=file_path,
-                    user_agent=user_agent,
-                )
-            else:
-                response = ocr.mathpix_post_request(
-                    url=settings.mathpix_endpoint,
-                    app_id=settings.mathpix_app_id,
-                    app_key=settings.mathpix_app_key,
-                    file_path=file_path,
-                    user_agent=user_agent,
-                )
-
-        except Exception as exception:
-            logger.exception(
-                "Exception posting to Mathpix API endpoint, file_name %s: %s"
-                % (file_name, str(exception)),
-            )
-            continue
-
-        # get the response.json and use that
-        response_json = response.json()
-
-        logger.info(
-            "JSON response from Mathpix for %s, file_name %s, file_path %s: '%s'"
-            % (identifier, file_name, file_path, json.dumps(response_json, indent=4))
-        )
-
-        # format response data
-        file_to_data_map[file_name] = response_json
-    return file_to_data_map
-
-
-def math_data_parts(math_data):
-    "from a list math_data find the different types of data"
-    mathml_data = None
-    latex_data = None
-    for math_data_row in math_data:
-        if math_data_row.get("type") == "mathml":
-            mathml_data = math_data_row
-            continue
-        if math_data_row.get("type") == "latex":
-            latex_data = math_data_row
-    return mathml_data, latex_data
-
-
 def transform_inline_graphic_tags(xml_root, file_to_math_data_map, logger, identifier):
     "replace inline-graphic tags with maths formulae"
     # for each inline graphic with a math formula, replace the XML tag
@@ -447,7 +389,7 @@ def transform_inline_graphic_tags(xml_root, file_to_math_data_map, logger, ident
             href = cleaner.tag_xlink_href(inline_graphic_tag)
             if href in file_to_math_data_map.keys():
                 math_data = file_to_math_data_map.get(href).get("data")
-                mathml_data, latex_data = math_data_parts(math_data)
+                mathml_data, latex_data = ocr.math_data_parts(math_data)
 
                 if mathml_data and mathml_data.get("value"):
                     # first parse the mathml

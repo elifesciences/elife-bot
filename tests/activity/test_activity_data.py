@@ -1320,3 +1320,29 @@ cdn_folder_files_article_07398 = [
     "elife-07398-media13.jpg",
     "elife-07398-media14.jpg",
 ]
+
+
+EXAMPLE_OCR_RESPONSE_JSON = {
+    "request_id": "2023_06_20_85e56a13304ac2be4063g",
+    "version": "RSK-M115",
+    "image_width": 171,
+    "image_height": 64,
+    "is_printed": True,
+    "is_handwritten": False,
+    "auto_rotate_confidence": 0,
+    "auto_rotate_degrees": 0,
+    "confidence": 0.8816322172060609,
+    "confidence_rate": 0.8816322172060609,
+    "latex_styled": "\\tau \\frac{d \\boldsymbol{a}}{d t}=\\boldsymbol{C a}+\\boldsymbol{b}",
+    "text": "$\\tau \\frac{d \\boldsymbol{a}}{d t}=\\boldsymbol{C a}+\\boldsymbol{b}$",
+    "data": [
+        {
+            "type": "mathml",
+            "value": '<math xmlns="http://www.w3.org/1998/Math/MathML">\n  <mi>τ</mi>\n  <mfrac>\n    <mrow>\n      <mi>d</mi>\n      <mi mathvariant="bold-italic">a</mi>\n    </mrow>\n    <mrow>\n      <mi>d</mi>\n      <mi>t</mi>\n    </mrow>\n  </mfrac>\n  <mo>=</mo>\n  <mi mathvariant="bold-italic">C</mi>\n  <mi mathvariant="bold-italic">a</mi>\n  <mo>+</mo>\n  <mi mathvariant="bold-italic">b</mi>\n</math>',
+        },
+        {
+            "type": "latex",
+            "value": "\\tau \\frac{d \\boldsymbol{a}}{d t}=\\boldsymbol{C a}+\\boldsymbol{b}",
+        },
+    ],
+}
