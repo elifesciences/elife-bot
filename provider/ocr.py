@@ -93,3 +93,71 @@ def mathpix_post_request(
         )
 
     return response
+
+
+def ocr_files(
+    file_to_path_map, options_type, settings, caller_name, logger, identifier
+):
+    "post request to an endpoint for each file and return data"
+    file_to_data_map = {}
+    user_agent = getattr(settings, "user_agent", None)
+    for file_name, file_path in file_to_path_map.items():
+        logger.info(
+            "%s, OCR file from %s: file_name %s, file_path %s"
+            % (caller_name, identifier, file_name, file_path)
+        )
+        try:
+            if options_type == "table":
+                response = mathpix_table_post_request(
+                    url=settings.mathpix_endpoint,
+                    app_id=settings.mathpix_app_id,
+                    app_key=settings.mathpix_app_key,
+                    file_path=file_path,
+                    user_agent=user_agent,
+                )
+            else:
+                response = mathpix_post_request(
+                    url=settings.mathpix_endpoint,
+                    app_id=settings.mathpix_app_id,
+                    app_key=settings.mathpix_app_key,
+                    file_path=file_path,
+                    user_agent=user_agent,
+                )
+
+        except Exception as exception:
+            logger.exception(
+                "%s, exception posting to Mathpix API endpoint, file_name %s: %s"
+                % (caller_name, file_name, str(exception)),
+            )
+            continue
+
+        # get the response.json and use that
+        response_json = response.json()
+
+        logger.info(
+            "%s, JSON response from Mathpix for %s, file_name %s, file_path %s: '%s'"
+            % (
+                caller_name,
+                identifier,
+                file_name,
+                file_path,
+                json.dumps(response_json, indent=4),
+            )
+        )
+
+        # format response data
+        file_to_data_map[file_name] = response_json
+    return file_to_data_map
+
+
+def math_data_parts(math_data):
+    "from a list math_data find the different types of data"
+    mathml_data = None
+    latex_data = None
+    for math_data_row in math_data:
+        if math_data_row.get("type") == "mathml":
+            mathml_data = math_data_row
+            continue
+        if math_data_row.get("type") == "latex":
+            latex_data = math_data_row
+    return mathml_data, latex_data

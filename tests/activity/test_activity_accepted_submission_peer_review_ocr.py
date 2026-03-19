@@ -32,33 +32,7 @@ def input_data(file_name_to_change=""):
     return activity_data
 
 
-EXAMPLE_RESPONSE_JSON = {
-    "request_id": "2023_06_20_85e56a13304ac2be4063g",
-    "version": "RSK-M115",
-    "image_width": 171,
-    "image_height": 64,
-    "is_printed": True,
-    "is_handwritten": False,
-    "auto_rotate_confidence": 0,
-    "auto_rotate_degrees": 0,
-    "confidence": 0.8816322172060609,
-    "confidence_rate": 0.8816322172060609,
-    "latex_styled": "\\tau \\frac{d \\boldsymbol{a}}{d t}=\\boldsymbol{C a}+\\boldsymbol{b}",
-    "text": "$\\tau \\frac{d \\boldsymbol{a}}{d t}=\\boldsymbol{C a}+\\boldsymbol{b}$",
-    "data": [
-        {
-            "type": "mathml",
-            "value": '<math xmlns="http://www.w3.org/1998/Math/MathML">\n  <mi>τ</mi>\n  <mfrac>\n    <mrow>\n      <mi>d</mi>\n      <mi mathvariant="bold-italic">a</mi>\n    </mrow>\n    <mrow>\n      <mi>d</mi>\n      <mi>t</mi>\n    </mrow>\n  </mfrac>\n  <mo>=</mo>\n  <mi mathvariant="bold-italic">C</mi>\n  <mi mathvariant="bold-italic">a</mi>\n  <mo>+</mo>\n  <mi mathvariant="bold-italic">b</mi>\n</math>',
-        },
-        {
-            "type": "latex",
-            "value": "\\tau \\frac{d \\boldsymbol{a}}{d t}=\\boldsymbol{C a}+\\boldsymbol{b}",
-        },
-    ],
-}
-
-
-EQUATION_DATA = EXAMPLE_RESPONSE_JSON.get("data")
+EQUATION_DATA = test_activity_data.EXAMPLE_OCR_RESPONSE_JSON.get("data")
 
 EXAMPLE_TABLE_RESPONSE_JSON = {
     "data": [
@@ -665,6 +639,18 @@ class TestAcceptedSubmissionPeerReviewOcr(unittest.TestCase):
         ) % (zip_file_base, zip_file)
         self.assertEqual(self.activity.logger.logexception, expected_logexception)
 
+
+class TestMissingSetting(unittest.TestCase):
+    "test do_activity() if required setting not defined"
+
+    def setUp(self):
+        fake_logger = FakeLogger()
+
+        class FakeSettings:
+            pass
+
+        self.activity = activity_object(FakeSettings(), fake_logger, None, None, None)
+
     def test_do_activity_settings_no_endpoint(self):
         self.activity.settings = {}
         # do the activity
@@ -677,6 +663,21 @@ class TestAcceptedSubmissionPeerReviewOcr(unittest.TestCase):
             "No mathpix_endpoint in settings, skipping AcceptedSubmissionPeerReviewOcr.",
         )
 
+
+class TestBlankSetting(unittest.TestCase):
+    "test do_activity() if required setting is empty"
+
+    def setUp(self):
+        fake_logger = FakeLogger()
+        self.activity = activity_object(settings_mock, fake_logger, None, None, None)
+        # change settings value
+        self.mathpix_endpoint = self.activity.settings.mathpix_endpoint
+        self.activity.settings.mathpix_endpoint = ""
+
+    def tearDown(self):
+        # restore settings value
+        self.activity.settings.mathpix_endpoint = self.mathpix_endpoint
+
     def test_do_activity_settings_blank_endpoint(self):
         self.activity.settings.mathpix_endpoint = ""
         # do the activity
@@ -688,107 +689,6 @@ class TestAcceptedSubmissionPeerReviewOcr(unittest.TestCase):
             self.activity.logger.loginfo[-1],
             "mathpix_endpoint in settings is blank, skipping AcceptedSubmissionPeerReviewOcr.",
         )
-
-
-class TestOcrFiles(unittest.TestCase):
-    "test ocr_files()"
-
-    def setUp(self):
-        self.logger = FakeLogger()
-        self.file_name = "sa1-inf1.jpg"
-        self.file_path = "tests/files_source/digests/outbox/99999/digest-99999.jpg"
-        self.file_to_path_map = {self.file_name: self.file_path}
-        self.identifier = "test.zip"
-
-    @patch("provider.ocr.requests.post")
-    def test_ocr_files(self, fake_request):
-        "test a request to the ocr endpoint but mocking the requests.post"
-        options_type = "math"
-        response_json = {}
-        response_status = 200
-        response = FakeResponse(response_status)
-        response.response_json = response_json
-        fake_request.return_value = response
-        expected_result = {self.file_name: response_json}
-        # invoke
-        result = activity_module.ocr_files(
-            self.file_to_path_map,
-            options_type,
-            settings_mock,
-            self.logger,
-            self.identifier,
-        )
-        # assert
-        self.assertDictEqual(result, expected_result)
-
-    @patch("requests.post")
-    def test_table_ocr_files(self, fake_request):
-        "test the options_type table"
-        options_type = "table"
-        response_json = {"data": [{"type": "tsv", "value": ""}]}
-        response_status = 200
-        response = FakeResponse(response_status, response_json)
-        # response.response_json = response_json
-        fake_request.return_value = response
-        expected_result = {self.file_name: response_json}
-        # invoke
-        result = activity_module.ocr_files(
-            self.file_to_path_map,
-            options_type,
-            settings_mock,
-            self.logger,
-            self.identifier,
-        )
-        # assert
-        self.assertDictEqual(result, expected_result)
-
-    @patch("requests.post")
-    def test_failure_status_code(self, fake_request):
-        "test exception catching of a non-success status code response"
-        options_type = "math"
-        response_json = {}
-        response_status = 500
-        response = FakeResponse(response_status)
-        response.response_json = response_json
-        fake_request.return_value = response
-        expected_result = {}
-        excepted_log_message = (
-            "Exception posting to Mathpix API endpoint, file_name %s: "
-            "Error in mathpix_post_request %s to Mathpix API: %s\nNone"
-            % (self.file_name, self.file_path, response_status)
-        )
-        # invoke
-        result = activity_module.ocr_files(
-            self.file_to_path_map,
-            options_type,
-            settings_mock,
-            self.logger,
-            self.identifier,
-        )
-        # assert
-        self.assertDictEqual(result, expected_result)
-        # test for logging
-        self.assertEqual(self.logger.logexception, excepted_log_message)
-
-
-class TestMathDataParts(unittest.TestCase):
-    "test math_data_parts()"
-
-    def test_math_data_parts(self):
-        "test expected input"
-        math_data = EQUATION_DATA
-        mathml_data, latex_data = activity_module.math_data_parts(math_data)
-        self.assertTrue(isinstance(mathml_data, dict))
-        self.assertTrue(isinstance(latex_data, dict))
-        self.assertEqual(list(mathml_data.keys()), ["type", "value"])
-        self.assertEqual(list(latex_data.keys()), ["type", "value"])
-
-    def test_empty_list(self):
-        "test when data is an empty list"
-        math_data = []
-        mathml_data, latex_data = activity_module.math_data_parts(math_data)
-        self.assertEqual(mathml_data, None)
-        self.assertEqual(latex_data, None)
 
 
 class TestTransformInlineGraphicTags(unittest.TestCase):
