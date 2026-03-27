@@ -119,8 +119,8 @@ class TestAcceptedSubmissionHistory(unittest.TestCase):
         self.assertTrue(
             xml_content.count(
                 (
-                    '<date date-type="sent-for-review" iso-8601-date="2022-11-28">'
-                    "<day>28</day><month>11</month><year>2022</year>"
+                    '<date date-type="sent-for-review" iso-8601-date="2022-11-29">'
+                    "<day>29</day><month>11</month><year>2022</year>"
                     "</date>"
                     "</history>"
                 )
@@ -141,6 +141,13 @@ class TestAcceptedSubmissionHistory(unittest.TestCase):
                     "</event>"
                     "<event>"
                     "<event-desc>This manuscript was published as a reviewed preprint.</event-desc>"
+                    '<date date-type="reviewed-preprint" iso-8601-date="2023-01-25">'
+                    "<day>25</day><month>01</month><year>2023</year>"
+                    "</date>"
+                    '<self-uri content-type="reviewed-preprint" xlink:href="https://doi.org/10.7554/eLife.85111.1"/>'
+                    "</event>"
+                    "<event>"
+                    "<event-desc>The reviewed preprint was revised.</event-desc>"
                     '<date date-type="reviewed-preprint" iso-8601-date="2023-05-10">'
                     "<day>10</day><month>05</month><year>2023</year>"
                     "</date>"
