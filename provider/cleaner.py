@@ -600,6 +600,25 @@ def pretty_sub_article_xml(root):
     return sub_article.pretty_sub_article_xml(root)
 
 
+def pretty_formula_xml(root):
+    "add whitespace to formulae to make output more pretty"
+    for formula_tag_name in ["disp-formula", "inline-formula"]:
+        for formula_tag in root.findall(".//%s" % formula_tag_name):
+            sub_article.tag_new_line_wrap(formula_tag)
+            for tag_name in [
+                "alternatives",
+                "{http://www.w3.org/1998/Math/MathML}math",
+            ]:
+                for tag in formula_tag.findall(".//%s" % tag_name):
+                    sub_article.tag_new_line_wrap(tag)
+            for tag_name in [
+                "graphic",
+                "inline-graphic",
+            ]:
+                for tag in formula_tag.findall(".//%s" % tag_name):
+                    sub_article.tag_new_line_wrap_tail(tag)
+
+
 def clean_inline_graphic_tags(root):
     "remove ext-link tags if they wrap an inline-graphic tag"
     for parent_tag in root.findall(".//ext-link/inline-graphic/../.."):
