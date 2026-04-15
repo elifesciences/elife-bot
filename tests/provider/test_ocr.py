@@ -122,6 +122,7 @@ class TestOcrFiles(unittest.TestCase):
     def test_ocr_files(self, fake_request):
         "test a request to the ocr endpoint but mocking the requests.post"
         options_type = "math"
+        app_type = "default"
         response_json = {}
         response_status = 200
         response = FakeResponse(response_status)
@@ -132,6 +133,7 @@ class TestOcrFiles(unittest.TestCase):
         result = ocr.ocr_files(
             self.file_to_path_map,
             options_type,
+            app_type,
             settings_mock,
             self.caller_name,
             self.logger,
@@ -144,6 +146,7 @@ class TestOcrFiles(unittest.TestCase):
     def test_table_ocr_files(self, fake_request):
         "test the options_type table"
         options_type = "table"
+        app_type = "preprint"
         response_json = {"data": [{"type": "tsv", "value": ""}]}
         response_status = 200
         response = FakeResponse(response_status, response_json)
@@ -154,6 +157,7 @@ class TestOcrFiles(unittest.TestCase):
         result = ocr.ocr_files(
             self.file_to_path_map,
             options_type,
+            app_type,
             settings_mock,
             self.caller_name,
             self.logger,
@@ -166,6 +170,7 @@ class TestOcrFiles(unittest.TestCase):
     def test_failure_status_code(self, fake_request):
         "test exception catching of a non-success status code response"
         options_type = "math"
+        app_type = None
         response_json = {}
         response_status = 500
         response = FakeResponse(response_status)
@@ -181,6 +186,7 @@ class TestOcrFiles(unittest.TestCase):
         result = ocr.ocr_files(
             self.file_to_path_map,
             options_type,
+            app_type,
             settings_mock,
             self.caller_name,
             self.logger,

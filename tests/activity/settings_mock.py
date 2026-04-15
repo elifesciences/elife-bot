@@ -267,6 +267,8 @@ assessment_terms_yaml = "tests/assessment_terms.yaml"
 mathpix_endpoint = "https://api.mathpix.com.example.org/v3/text"
 mathpix_app_id = "elife-bot"
 mathpix_app_key = "key"
+mathpix_preprint_app_id = "elife-bot-preprint"
+mathpix_preprint_app_key = "preprint_key"
 
 # EPP settings
 epp_data_bucket = "epp_bucket"

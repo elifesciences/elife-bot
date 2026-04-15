@@ -234,6 +234,7 @@ class activity_AcceptedSubmissionPeerReviewOcr(AcceptedBaseActivity):
         inline_graphic_file_to_data_map = ocr.ocr_files(
             inline_graphic_file_to_path_map,
             "math",
+            "default",
             self.settings,
             self.name,
             self.logger,
@@ -320,6 +321,7 @@ class activity_AcceptedSubmissionPeerReviewOcr(AcceptedBaseActivity):
         graphic_file_to_data_map = ocr.ocr_files(
             graphic_file_to_path_map,
             "table",
+            "default",
             self.settings,
             self.name,
             self.logger,

@@ -998,6 +998,55 @@ class TestDocmapUrl(unittest.TestCase):
         self.assertEqual(result, expected)
 
 
+class TestPrettyFormulaXml(unittest.TestCase):
+    "tests for pretty_formula_xml()"
+
+    def test_pretty_formula_xml(self):
+        "test adding whitespace to XML formula tags"
+        root = ElementTree.fromstring(
+            b'<article xmlns:mml="http://www.w3.org/1998/Math/MathML" '
+            b'xmlns:xlink="http://www.w3.org/1999/xlink" article-type="research-article"'
+            b' dtd-version="1.3" xml:lang="en">'
+            b"<disp-formula>"
+            b"<alternatives>"
+            b"<mml:math>\n</mml:math>"
+            b'<graphic xlink:href="image.gif" />'
+            b"</alternatives>"
+            b"</disp-formula>"
+            b"<inline-formula>"
+            b"<alternatives>"
+            b"<mml:math></mml:math>"
+            b'<inline-graphic xlink:href="image.gif" />'
+            b"</alternatives>"
+            b"</inline-formula>"
+            b"</article>"
+        )
+        expected = (
+            b'<article xmlns:mml="http://www.w3.org/1998/Math/MathML" '
+            b'xmlns:xlink="http://www.w3.org/1999/xlink" article-type="research-article"'
+            b' dtd-version="1.3" xml:lang="en">'
+            b"<disp-formula>\n"
+            b"<alternatives>\n"
+            b"<mml:math>\n"
+            b"</mml:math>\n"
+            b'<graphic xlink:href="image.gif" />\n'
+            b"</alternatives>\n"
+            b"</disp-formula>\n"
+            b"<inline-formula>\n"
+            b"<alternatives>\n"
+            b"<mml:math>\n"
+            b"</mml:math>\n"
+            b'<inline-graphic xlink:href="image.gif" />\n'
+            b"</alternatives>\n"
+            b"</inline-formula>\n"
+            b"</article>"
+        )
+        # invoke
+        cleaner.pretty_formula_xml(root)
+        # assert
+        self.assertEqual(ElementTree.tostring(root), expected)
+
+
 class TestCleanInlineGraphicTags(unittest.TestCase):
     def test_clean_simple(self):
         "simple test example for clean_inline_graphic_tags"
