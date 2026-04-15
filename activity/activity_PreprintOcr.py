@@ -375,7 +375,7 @@ def download_graphics(
                 % (caller_name, file_name, str(exception)),
             )
             continue
-        downloaded_file_name_map[file_name] = file_path
+        downloaded_file_name_map[file_name] = local_file_path
     return downloaded_file_name_map
 
 
