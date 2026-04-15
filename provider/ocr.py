@@ -140,7 +140,7 @@ def ocr_files(
     if app_type == "preprint":
         # default
         app_id = getattr(settings, "mathpix_preprint_app_id")
-        app_key = getattr(settings, "mathpix_preprint_app_id")
+        app_key = getattr(settings, "mathpix_preprint_app_key")
     else:
         # default
         app_id = getattr(settings, "mathpix_app_id")
