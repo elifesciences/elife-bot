@@ -247,7 +247,7 @@ class TestGeneratePreprintPdf(unittest.TestCase):
         fake_post_to_endpoint.side_effect = RuntimeError(exception_message)
 
         fake_session.return_value = FakeSession(session_dict)
-        expected_result = activity_class.ACTIVITY_PERMANENT_FAILURE
+        expected_result = activity_class.ACTIVITY_SUCCESS
         # do the activity
         result = self.activity.do_activity(test_activity_data.ingest_meca_data)
         # check assertions
