@@ -56,10 +56,10 @@ class activity_ReplacePreprintPDF(MecaBaseActivity):
 
         if not pdf_s3_path:
             self.logger.error(
-                "%s, no pdf_s3_path found in the session for %s, failing the workflow"
+                "%s, no pdf_s3_path found in the session for %s, skipping"
                 % (self.name, version_doi)
             )
-            return self.ACTIVITY_PERMANENT_FAILURE
+            return self.ACTIVITY_SUCCESS
 
         self.statuses["pdf_s3_path"] = True
 
