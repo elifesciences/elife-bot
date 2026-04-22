@@ -156,7 +156,7 @@ class activity_GeneratePreprintPDF(Activity):
                     % (self.name, endpoint_url, MAX_ATTEMPTS, xml_file_path)
                 )
                 self.clean_tmp_dir()
-                return self.ACTIVITY_PERMANENT_FAILURE
+                return self.ACTIVITY_SUCCESS
 
         self.logger.info(
             "%s, for article_id %s version %s response_content length %s"
