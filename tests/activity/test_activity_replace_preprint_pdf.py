@@ -438,7 +438,7 @@ class TestReplacePreprintPdf(unittest.TestCase):
         del session_dict["pdf_s3_path"]
         fake_session.return_value = FakeSession(session_dict)
 
-        expected_result = activity_class.ACTIVITY_PERMANENT_FAILURE
+        expected_result = activity_class.ACTIVITY_SUCCESS
         # do the activity
         result = self.activity.do_activity(test_activity_data.ingest_meca_data)
         # check assertions
@@ -448,7 +448,7 @@ class TestReplacePreprintPdf(unittest.TestCase):
             self.activity.logger.logerror,
             (
                 "ReplacePreprintPDF, no pdf_s3_path found in the session for"
-                " 10.7554/eLife.95901.1, failing the workflow"
+                " 10.7554/eLife.95901.1, skipping"
             ),
         )
 
