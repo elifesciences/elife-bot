@@ -23,6 +23,8 @@ BIG_QUERY_PREPRINT_FUNDING_VIEW_NAME = (
     "elife-data-pipeline.prod.mv_rp_submission_funding_information"
 )
 
+BIG_QUERY_PREPRINT_AUTHOR_VIEW_NAME = "elife-data-pipeline.prod.mv_rp_author_details"
+
 
 class Manuscript:
     """manuscript data populated from BigQuery row"""
@@ -347,3 +349,36 @@ def parse_funding_data(funding_data):
         funding_awards.append(funding_award_object)
 
     return funding_awards
+
+
+def get_author_data(client, manuscript_id, version):
+    "get author data from the view for a preprint version"
+
+    # query
+    query = (
+        "SELECT * FROM `{view_name}`"
+        " WHERE `manuscript_id` = @manuscript_id"
+        " AND `manuscript_version_str` = @manuscript_version_str"
+    ).format(view_name=BIG_QUERY_PREPRINT_AUTHOR_VIEW_NAME)
+
+    # parameters
+    job_config = QueryJobConfig(
+        query_parameters=[
+            ScalarQueryParameter("manuscript_id", "STRING", manuscript_id),
+            ScalarQueryParameter("manuscript_version_str", "STRING", version),
+        ]
+    )
+
+    query_job = client.query(query, job_config=job_config)  # API request
+    return query_job.result()  # return rows
+
+
+def parse_author_data(author_data):
+    "collect author_details from BigQuery author detail query result"
+    if not author_data:
+        return None
+    author_details = []
+    for author_data_item in author_data:
+        for author_detail_data in author_data_item.author_details:
+            author_details.append(author_detail_data)
+    return author_details
