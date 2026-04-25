@@ -1,5 +1,6 @@
 import os
 import json
+from xml.etree.ElementTree import Element
 from elifetools import xmlio
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
@@ -236,6 +237,28 @@ class activity_ModifyMecaXml(MecaBaseActivity):
                     % (self.name, article_id, version)
                 )
 
+        # 11. add author ORCID details
+        if session.get_value("run_type") != "silent-correction":
+            author_data = get_author_data(
+                article_id, version, self.settings, self.name, self.logger
+            )
+            if author_data:
+                try:
+                    add_author_orcid(xml_root, author_data, self.name, self.logger)
+                except Exception as exception:
+                    self.logger.exception(
+                        (
+                            "%s, exception raised when adding author ORCID data"
+                            " for article_id %s, version %s: %s"
+                        )
+                        % (self.name, article_id, version, str(exception))
+                    )
+            else:
+                self.logger.info(
+                    "%s, no author data from BigQuery for article_id %s, version %s"
+                    % (self.name, article_id, version)
+                )
+
         # finally, improve whitespace
         cleaner.format_article_meta_xml(xml_root)
 
@@ -378,3 +401,165 @@ def add_funding(xml_root, funding_data):
         funding_awards = bigquery.parse_funding_data(funding_data)
     if funding_awards:
         cleaner.set_funding_award_data(xml_root, funding_awards)
+
+
+def get_author_data(article_id, version, settings, caller_name, logger):
+    "from BigQuery get the author data"
+    bigquery_client = bigquery.get_client(settings, logger)
+    try:
+        return bigquery.get_author_data(bigquery_client, article_id, version)
+    except Exception as exception:
+        logger.exception(
+            (
+                "%s, exception getting author data from"
+                " BigQuery for article_id %s, version %s: %s"
+            )
+            % (caller_name, article_id, version, str(exception))
+        )
+    return None
+
+
+def tag_text(parent, tag_name, selector=None):
+    "from the parent tag get the text of tag_name if present"
+    if selector:
+        tag = parent.find(".//%s%s" % (tag_name, selector))
+    else:
+        tag = parent.find(".//%s" % tag_name)
+    if tag is not None:
+        return tag.text
+    return None
+
+
+def author_detail_list_from_xml(xml_root):
+    "from XML get a list of author contrib data for collating ORCID values"
+    xml_author_list = []
+    author_contrib_tags = xml_root.findall(
+        './/article-meta//contrib[@contrib-type="author"]'
+    )
+    for contrib_tag in author_contrib_tags:
+        xml_author = {}
+        xml_author["last_name"] = tag_text(contrib_tag, "surname")
+        xml_author["first_name"] = tag_text(contrib_tag, "given-names")
+        xml_author["ORCID"] = tag_text(
+            contrib_tag, "contrib-id", '[@contrib-id-type="orcid"]'
+        )
+        xml_author_list.append(xml_author)
+    return xml_author_list
+
+
+def author_token_value(last_name, first_name):
+    "from author values compile a single token used for matching"
+    if not first_name:
+        return str(last_name)
+    return "%s, %s" % (last_name, first_name[0])
+
+
+def get_xml_author_transformations(xml_author_list, author_details):
+    "compare author data and collect a list of XML modifications to make"
+    # map XML author name token to non-empty ORCID values
+    author_details_map = {}
+    for author_detail in author_details:
+        if not author_detail.get("ORCID"):
+            continue
+        author_token = author_token_value(
+            author_detail.get("last_name"), author_detail.get("first_name")
+        )
+        author_details_map[author_token] = author_detail.get("ORCID")
+
+    # collect a list of XML modifications
+    xml_author_transformations = []
+    for xml_author in xml_author_list:
+        author_token = author_token_value(
+            xml_author.get("last_name"), xml_author.get("first_name")
+        )
+        if author_token not in author_details_map.keys():
+            continue
+        # compare ORCID value
+        if author_details_map.get(author_token):
+            # check if ORCID value exists in XML
+            if not xml_author.get("ORCID"):
+                # add ORCID tag
+                xml_author_transformations.append(
+                    {
+                        "action": "add",
+                        "author_token": author_token,
+                        "ORCID": author_details_map.get(author_token),
+                    }
+                )
+            elif not xml_author.get("ORCID").endswith(
+                author_details_map.get(author_token)
+            ):
+                # add additional ORCID tag
+                xml_author_transformations.append(
+                    {
+                        "action": "add",
+                        "author_token": author_token,
+                        "ORCID": author_details_map.get(author_token),
+                    }
+                )
+            else:
+                # set authenticated attribute
+                xml_author_transformations.append(
+                    {
+                        "action": "modify",
+                        "author_token": author_token,
+                        "ORCID": author_details_map.get(author_token),
+                    }
+                )
+    return xml_author_transformations
+
+
+def modify_author_xml(xml_root, author_transformations):
+    "modify XML author contributor ORCID tags"
+    author_transformations_map = {
+        transformation.get("author_token"): transformation
+        for transformation in author_transformations
+    }
+
+    for contrib_tag in xml_root.findall(".//contrib"):
+        author_token = author_token_value(
+            tag_text(contrib_tag, "surname"), tag_text(contrib_tag, "given-names")
+        )
+        if author_token not in author_transformations_map.keys():
+            continue
+        transformation = author_transformations_map.get(author_token)
+        if transformation.get("action") == "add":
+            # add ORCID tag
+            orcid_tag = Element("contrib-id")
+            orcid_tag.set("contrib-id-type", "orcid")
+            orcid_tag.set("authenticated", "true")
+            orcid_tag.text = "https://orcid.org/%s" % transformation.get("ORCID")
+            orcid_tag.tail = "\n"
+            contrib_tag.insert(0, orcid_tag)
+        elif transformation.get("action") == "modify":
+            # set authenticated attribute to existing ORCID tag
+            orcid_tag = contrib_tag.find(".//contrib-id")
+            orcid_tag.set("authenticated", "true")
+
+
+def add_author_orcid(xml_root, author_data, caller_name, logger):
+    "add author ORCID data to the XML"
+    # parse author data from BigQuery
+    author_details = None
+    if author_data:
+        author_details = bigquery.parse_author_data(author_data)
+    if not author_details:
+        logger.info("%s, parsed no author_details from author_data" % caller_name)
+        return
+
+    # parse author details from the XML
+    xml_author_list = author_detail_list_from_xml(xml_root)
+    logger.info("%s, found %s authors in the XML" % (caller_name, len(xml_author_list)))
+
+    # match XML authors to author_details data to determine XML transformations
+    xml_author_transformations = get_xml_author_transformations(
+        xml_author_list, author_details
+    )
+    logger.info(
+        "%s, collected xml_author_transformations: %s"
+        % (caller_name, xml_author_transformations)
+    )
+
+    # modify the XML
+    modify_author_xml(xml_root, xml_author_transformations)
+    logger.info("%s, modified author XML" % (caller_name))
