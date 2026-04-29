@@ -131,29 +131,54 @@ class TestAcceptedSubmissionHistory(unittest.TestCase):
         self.assertTrue(
             xml_content.count(
                 (
-                    "<pub-history>"
-                    "<event>"
-                    "<event-desc>This manuscript was published as a preprint.</event-desc>"
-                    '<date date-type="preprint" iso-8601-date="2022-11-22">'
-                    "<day>22</day><month>11</month><year>2022</year>"
-                    "</date>"
-                    '<self-uri content-type="preprint" xlink:href="https://doi.org/10.1101/2022.11.08.515698"/>'
-                    "</event>"
-                    "<event>"
-                    "<event-desc>This manuscript was published as a reviewed preprint.</event-desc>"
-                    '<date date-type="reviewed-preprint" iso-8601-date="2023-01-25">'
-                    "<day>25</day><month>01</month><year>2023</year>"
-                    "</date>"
-                    '<self-uri content-type="reviewed-preprint" xlink:href="https://doi.org/10.7554/eLife.85111.1"/>'
-                    "</event>"
-                    "<event>"
-                    "<event-desc>The reviewed preprint was revised.</event-desc>"
-                    '<date date-type="reviewed-preprint" iso-8601-date="2023-05-10">'
-                    "<day>10</day><month>05</month><year>2023</year>"
-                    "</date>"
-                    '<self-uri content-type="reviewed-preprint" xlink:href="https://doi.org/10.7554/eLife.85111.2"/>'
-                    "</event>"
-                    "</pub-history>"
+                    "<pub-history>\n"
+                    "<event>\n"
+                    "<event-desc>Preprint posted</event-desc>\n"
+                    '<date date-type="preprint" iso-8601-date="2022-11-22">\n'
+                    "<day>22</day>\n"
+                    "<month>11</month>\n"
+                    "<year>2022</year>\n"
+                    "</date>\n"
+                    '<self-uri content-type="preprint"'
+                    ' xlink:href="https://doi.org/10.1101/2022.11.08.515698"/>\n'
+                    "</event>\n"
+                    "<event>\n"
+                    "<event-desc>Reviewed preprint v1</event-desc>\n"
+                    '<date date-type="reviewed-preprint" iso-8601-date="2023-01-25">\n'
+                    "<day>25</day>\n"
+                    "<month>01</month>\n"
+                    "<year>2023</year>\n"
+                    "</date>\n"
+                    '<self-uri content-type="reviewed-preprint"'
+                    ' xlink:href="https://doi.org/10.7554/eLife.85111.1"/>\n'
+                    '<self-uri content-type="editor-report"'
+                    ' xlink:href="https://doi.org/10.7554/eLife.85111.1.sa3">Title</self-uri>\n'
+                    '<self-uri content-type="referee-report"'
+                    ' xlink:href="https://doi.org/10.7554/eLife.85111.1.sa1">Title</self-uri>\n'
+                    '<self-uri content-type="referee-report"'
+                    ' xlink:href="https://doi.org/10.7554/eLife.85111.1.sa2">Title</self-uri>\n'
+                    '<self-uri content-type="author-comment"'
+                    ' xlink:href="https://doi.org/10.7554/eLife.85111.1.sa0">Title</self-uri>\n'
+                    "</event>\n"
+                    "<event>\n"
+                    "<event-desc>Reviewed preprint v2</event-desc>\n"
+                    '<date date-type="reviewed-preprint" iso-8601-date="2023-05-10">\n'
+                    "<day>10</day>\n"
+                    "<month>05</month>\n"
+                    "<year>2023</year>\n"
+                    "</date>\n"
+                    '<self-uri content-type="reviewed-preprint"'
+                    ' xlink:href="https://doi.org/10.7554/eLife.85111.2"/>\n'
+                    '<self-uri content-type="editor-report"'
+                    ' xlink:href="https://doi.org/10.7554/eLife.85111.2.sa2">Title</self-uri>\n'
+                    '<self-uri content-type="referee-report"'
+                    ' xlink:href="https://doi.org/10.7554/eLife.85111.2.sa0">Title</self-uri>\n'
+                    '<self-uri content-type="referee-report"'
+                    ' xlink:href="https://doi.org/10.7554/eLife.85111.2.sa1">Title</self-uri>\n'
+                    '<self-uri content-type="author-comment"'
+                    ' xlink:href="https://doi.org/10.7554/eLife.85111.2.sa3">Title</self-uri>\n'
+                    "</event>\n"
+                    "</pub-history>\n"
                 )
             )
             == 1

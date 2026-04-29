@@ -619,6 +619,26 @@ def pretty_formula_xml(root):
                     sub_article.tag_new_line_wrap_tail(tag)
 
 
+def pretty_pub_history_xml(root):
+    "add whitespace to pub-history tags to make output more pretty"
+    for pub_history_tag in root.findall(".//pub-history"):
+        sub_article.tag_new_line_wrap(pub_history_tag)
+        for tag_name in [
+            "event",
+            "event-desc",
+            "date",
+            "day",
+            "month",
+            "year",
+        ]:
+            for tag in pub_history_tag.findall(".//%s" % tag_name):
+                sub_article.tag_new_line_wrap(tag)
+        # wrap tail only for the following tags
+        for tag_name in ["self-uri"]:
+            for tag in pub_history_tag.findall(".//%s" % tag_name):
+                sub_article.tag_new_line_wrap_tail(tag)
+
+
 def clean_inline_graphic_tags(root):
     "remove ext-link tags if they wrap an inline-graphic tag"
     for parent_tag in root.findall(".//ext-link/inline-graphic/../.."):
