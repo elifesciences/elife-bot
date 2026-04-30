@@ -11,6 +11,7 @@ from provider import (
     email_provider,
     lax_provider,
     outbox_provider,
+    preprint,
     utils,
 )
 
@@ -97,6 +98,11 @@ class activity_DepositCrossrefPostedContent(Activity):
         # build Crossref deposit objects
         crossref_object_map = OrderedDict()
         for xml_file, article in list(article_object_map.items()):
+        
+            # set the article_type based on preprint status
+            if preprint.is_article_preprint(article):
+                article.article_type = "preprint"
+
             # set a posted_date if it is not set
             crossref.set_preprint_posted_date(article, self.name, self.logger)
 
