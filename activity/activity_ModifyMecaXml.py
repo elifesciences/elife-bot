@@ -173,6 +173,7 @@ class activity_ModifyMecaXml(MecaBaseActivity):
                     history_data,
                     docmap_string=docmap_string,
                     identifier=version_doi,
+                    user_agent=getattr(self.settings, "user_agent", None),
                 )
             except Exception as exception:
                 self.logger.exception(

@@ -780,15 +780,35 @@ def prune_history_data(history_data, doi, version):
     return pub_history.prune_history_data(history_data, doi, version)
 
 
-def add_pub_history(root, history_data, docmap_string=None, identifier=None):
+def add_pub_history(
+    root,
+    history_data,
+    docmap_string=None,
+    identifier=None,
+    user_agent=None,
+):
     return pub_history.add_pub_history(
-        root, history_data, docmap_string=docmap_string, identifier=identifier
+        root,
+        history_data,
+        docmap_string=docmap_string,
+        identifier=identifier,
+        user_agent=user_agent,
     )
 
 
-def add_pub_history_meca(root, history_data, docmap_string=None, identifier=None):
+def add_pub_history_meca(
+    root,
+    history_data,
+    docmap_string=None,
+    identifier=None,
+    user_agent=None,
+):
     return pub_history.add_pub_history_meca(
-        root, history_data, docmap_string=docmap_string, identifier=identifier
+        root,
+        history_data,
+        docmap_string=docmap_string,
+        identifier=identifier,
+        user_agent=user_agent,
     )
 
 
