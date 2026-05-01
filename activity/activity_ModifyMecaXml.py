@@ -167,12 +167,25 @@ class activity_ModifyMecaXml(MecaBaseActivity):
             if session.get_value("run_type") == "silent-correction":
                 clear_pub_history(xml_root)
 
-            xml_root = cleaner.add_pub_history_meca(
-                xml_root,
-                history_data,
-                docmap_string=docmap_string,
-                identifier=version_doi,
-            )
+            try:
+                xml_root = cleaner.add_pub_history_meca(
+                    xml_root,
+                    history_data,
+                    docmap_string=docmap_string,
+                    identifier=version_doi,
+                )
+            except Exception as exception:
+                self.logger.exception(
+                    (
+                        "%s, exception raised when adding pub-history"
+                        " for article_id %s, version %s: %s"
+                    )
+                    % (self.name, article_id, version, str(exception))
+                )
+                self.end_cleaner_log(session)
+                # Clean up disk
+                self.clean_tmp_dir()
+                return self.ACTIVITY_PERMANENT_FAILURE
 
         # 7. replace <permissions>, includes copyright statement, copyright holder, license type
         license_data_dict = cleaner.get_license_data(docmap_string, version_doi)
