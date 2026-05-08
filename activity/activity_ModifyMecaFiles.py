@@ -86,7 +86,6 @@ class activity_ModifyMecaFiles(MecaBaseActivity):
         ) = self.download_manifest(storage, resource_prefix)
 
         # rename MECA files if not a silent-correction and subfolder name can be changed
-        change_subfolder_name = False
         if run_type != "silent-correction":
             # find subfolder name based on the location of the article XML file
             content_subfolder = meca.meca_content_folder(article_xml_path)
@@ -94,35 +93,58 @@ class activity_ModifyMecaFiles(MecaBaseActivity):
                 "%s, content_subfolder name found for %s: %s"
                 % (self.name, version_doi, content_subfolder)
             )
-            if content_subfolder != MECA_SUB_FOLDER_NAME:
-                change_subfolder_name = True
+            change_subfolder_name = bool(content_subfolder != MECA_SUB_FOLDER_NAME)
 
-        if change_subfolder_name:
-            file_paths = content_folder_paths(
-                storage, resource_prefix, expanded_folder, content_subfolder
-            )
-            self.logger.info("%s, file_paths to move: %s" % (self.name, file_paths))
+            file_paths = []
+            if change_subfolder_name:
+                file_paths = content_folder_paths(
+                    storage, resource_prefix, expanded_folder, content_subfolder
+                )
+                self.logger.info("%s, file_paths to move: %s" % (self.name, file_paths))
             # generate new XML file name
             new_xml_file_name = preprint.PREPRINT_XML_FILE_NAME_PATTERN.format(
                 article_id=utils.pad_msid(article_id), version=version
             )
-            new_xml_file_path = "%s/%s" % (
-                MECA_SUB_FOLDER_NAME,
-                new_xml_file_name,
+            change_article_xml_file_name = bool(
+                article_xml_path.rsplit("/", 1)[-1] != new_xml_file_name
             )
-            self.logger.info(
-                "%s, will use a new article XML file path: %s"
-                % (self.name, new_xml_file_path)
-            )
-            file_transfer_map = content_folder_file_transfer_map(
-                file_paths,
-                content_subfolder,
-                article_xml_path,
-                new_xml_file_path,
-            )
+
+            # create a new article XML file path depending on the content folder name
+            if change_subfolder_name:
+                # new content subfolder name
+                new_xml_file_path = "%s/%s" % (
+                    MECA_SUB_FOLDER_NAME,
+                    new_xml_file_name,
+                )
+            else:
+                # use existing content subfolder name
+                new_xml_file_path = "%s/%s" % (
+                    content_subfolder,
+                    new_xml_file_name,
+                )
+
+            file_transfer_map = {}
+            if change_article_xml_file_name:
+                self.logger.info(
+                    "%s, will use a new article XML file path: %s"
+                    % (self.name, new_xml_file_path)
+                )
+
+            if change_subfolder_name:
+                file_transfer_map = content_folder_file_transfer_map(
+                    file_paths,
+                    content_subfolder,
+                    article_xml_path,
+                    new_xml_file_path,
+                )
+            elif change_article_xml_file_name:
+                # only change the XML file name if not changing the subfolder name
+                file_transfer_map = {article_xml_path: new_xml_file_path}
+
             self.logger.info(
                 "%s, file_transfer_map: %s" % (self.name, file_transfer_map)
             )
+
             self.logger.info(
                 "%s, moving files in the expanded folder to the new content folder for %s"
                 % (self.name, version_doi)
