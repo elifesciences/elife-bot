@@ -221,7 +221,12 @@ class FakeStorageContext:
         bucket_name, s3_key = self.s3_storage_objects(resource)
         file_name = self.dir + "/" + s3_key
         if os.path.exists(file_name):
-            os.remove(file_name)
+            try:
+                os.remove(file_name)
+            except OSError:
+                # assume it is a directory, and remove it if empty
+                if len(os.listdir(file_name)) <= 0:
+                    os.rmdir(file_name)
 
 
 def fake_get_tmp_dir(path=None):
