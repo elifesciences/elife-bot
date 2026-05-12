@@ -403,6 +403,8 @@ class exp:
     meca_import_temporal_namespace = ""
     meca_import_workflow_id_prefix = ""
 
+    meca_enrich_refs_endpoint = "https://example.org/enrich"
+
 
 class dev:
     # AWS settings
@@ -790,6 +792,8 @@ class dev:
     meca_import_auth_password = ""
     meca_import_temporal_namespace = ""
     meca_import_workflow_id_prefix = ""
+
+    meca_enrich_refs_endpoint = "https://example.org/enrich"
 
 
 class live:
@@ -1183,6 +1187,8 @@ class live:
     meca_import_auth_password = "import_pass"
     meca_import_temporal_namespace = "namespace"
     meca_import_workflow_id_prefix = "prefix"
+
+    meca_enrich_refs_endpoint = "https://example.org/enrich"
 
 
 def get_settings(ENV="dev"):
