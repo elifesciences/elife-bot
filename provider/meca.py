@@ -5,6 +5,7 @@ import requests
 from provider import cleaner
 
 REQUESTS_TIMEOUT = (10, 60)
+LONG_REQUESTS_TIMEOUT = (10, 180)
 PDF_REQUESTS_TIMEOUT = (10, 180)
 
 # MECA file name configuration
@@ -82,7 +83,9 @@ def get_meca_article_pdf_path(folder_name, version_doi, caller_name, logger):
     return article_pdf_path
 
 
-def post_xml_file(file_path, endpoint_url, user_agent, caller_name, logger):
+def post_xml_file(
+    file_path, endpoint_url, user_agent, caller_name, logger, timeout=REQUESTS_TIMEOUT
+):
     "POST the file_path to the XSLT endpoint"
     headers = None
     if user_agent:
@@ -97,7 +100,7 @@ def post_xml_file(file_path, endpoint_url, user_agent, caller_name, logger):
     with open(file_path, "rb") as open_file:
         files.append(("file", (file_name, open_file, "text/xml")))
         response = requests.post(
-            endpoint_url, timeout=REQUESTS_TIMEOUT, headers=headers, files=files
+            endpoint_url, timeout=timeout, headers=headers, files=files
         )
     if response and response.status_code not in [200]:
         raise Exception(
@@ -115,7 +118,14 @@ def post_xml_file(file_path, endpoint_url, user_agent, caller_name, logger):
     return None
 
 
-def post_to_endpoint(xml_file_path, endpoint_url, user_agent, caller_name, logger):
+def post_to_endpoint(
+    xml_file_path,
+    endpoint_url,
+    user_agent,
+    caller_name,
+    logger,
+    timeout=REQUESTS_TIMEOUT,
+):
     "post XML file to endpoint, catch exceptions, return response content"
     try:
         response_content = post_xml_file(
@@ -124,6 +134,7 @@ def post_to_endpoint(xml_file_path, endpoint_url, user_agent, caller_name, logge
             user_agent,
             caller_name,
             logger,
+            timeout=timeout,
         )
     except Exception as exception:
         logger.exception(
@@ -137,6 +148,20 @@ def post_to_endpoint(xml_file_path, endpoint_url, user_agent, caller_name, logge
         )
         response_content = None
     return response_content
+
+
+def post_to_endpoint_long_timeout(
+    xml_file_path, endpoint_url, user_agent, caller_name, logger
+):
+    "post XML file to endpoint using a long timeout, catch exceptions, return response content"
+    return post_to_endpoint(
+        xml_file_path,
+        endpoint_url,
+        user_agent,
+        caller_name,
+        logger,
+        timeout=LONG_REQUESTS_TIMEOUT,
+    )
 
 
 def post_file_data_to_endpoint(

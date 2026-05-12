@@ -182,6 +182,7 @@ def start(settings):
     activity_names.append("GeneratePreprintPDF")
     activity_names.append("StartMecaImport")
     activity_names.append("PreprintOcr")
+    activity_names.append("MecaEnrichRefs")
 
     for activity_name in activity_names:
         # Import the activity libraries
