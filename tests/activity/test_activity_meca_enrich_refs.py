@@ -33,12 +33,12 @@ class TestMecaEnrichRefs(unittest.TestCase):
         self.activity.clean_tmp_dir()
 
     @patch.object(activity_module, "get_session")
-    @patch.object(meca, "post_xml_file")
+    @patch.object(meca, "post_to_enrich_endpoint")
     @patch.object(activity_module, "storage_context")
     def test_do_activity(
         self,
         fake_storage_context,
-        fake_post_xml_file,
+        fake_post,
         fake_session,
     ):
         directory = TempDirectory()
@@ -60,7 +60,7 @@ class TestMecaEnrichRefs(unittest.TestCase):
             dest_folder=directory.path,
             resources=[SESSION_DICT.get("article_xml_path")],
         )
-        fake_post_xml_file.return_value = transformed_xml
+        fake_post.return_value = transformed_xml
         expected_result = activity_class.ACTIVITY_SUCCESS
         # do the activity
         result = self.activity.do_activity(test_activity_data.ingest_meca_data)
@@ -70,12 +70,12 @@ class TestMecaEnrichRefs(unittest.TestCase):
             self.assertEqual(open_file.read(), transformed_xml)
 
     @patch.object(activity_module, "get_session")
-    @patch.object(meca, "post_xml_file")
+    @patch.object(meca, "post_to_enrich_endpoint")
     @patch.object(activity_module, "storage_context")
     def test_post_content_empty(
         self,
         fake_storage_context,
-        fake_post_xml_file,
+        fake_post,
         fake_session,
     ):
         "test if POST response content returned is empty"
@@ -97,7 +97,7 @@ class TestMecaEnrichRefs(unittest.TestCase):
             dest_folder=directory.path,
             resources=[SESSION_DICT.get("article_xml_path")],
         )
-        fake_post_xml_file.return_value = None
+        fake_post.return_value = None
         expected_result = activity_class.ACTIVITY_TEMPORARY_FAILURE
         # do the activity
         result = self.activity.do_activity(test_activity_data.ingest_meca_data)
@@ -105,12 +105,12 @@ class TestMecaEnrichRefs(unittest.TestCase):
         self.assertEqual(result, expected_result)
 
     @patch.object(activity_module, "get_session")
-    @patch.object(meca, "post_xml_file")
+    @patch.object(meca, "post_to_enrich_endpoint")
     @patch.object(activity_module, "storage_context")
-    def test_post_to_xsl_exception(
+    def test_post_exception(
         self,
         fake_storage_context,
-        fake_post_xml_file,
+        fake_post,
         fake_session,
     ):
         "test if POST raises an exception"
@@ -132,7 +132,7 @@ class TestMecaEnrichRefs(unittest.TestCase):
             dest_folder=directory.path,
             resources=[SESSION_DICT.get("article_xml_path")],
         )
-        fake_post_xml_file.side_effect = Exception("An exception")
+        fake_post.side_effect = Exception("An exception")
         expected_result = activity_class.ACTIVITY_TEMPORARY_FAILURE
         # do the activity
         result = self.activity.do_activity(test_activity_data.ingest_meca_data)
@@ -140,12 +140,12 @@ class TestMecaEnrichRefs(unittest.TestCase):
         self.assertEqual(result, expected_result)
 
     @patch.object(activity_module, "get_session")
-    @patch.object(meca, "post_xml_file")
+    @patch.object(meca, "post_to_enrich_endpoint")
     @patch.object(activity_module, "storage_context")
     def test_post_exception_max_attempts(
         self,
         fake_storage_context,
-        fake_post_xml_file,
+        fake_post,
         fake_session,
     ):
         "test if POST raises an exception and is the final attempt"
@@ -169,7 +169,7 @@ class TestMecaEnrichRefs(unittest.TestCase):
             dest_folder=directory.path,
             resources=[SESSION_DICT.get("article_xml_path")],
         )
-        fake_post_xml_file.side_effect = Exception("An exception")
+        fake_post.side_effect = Exception("An exception")
         expected_result = activity_class.ACTIVITY_SUCCESS
         # do the activity
         result = self.activity.do_activity(test_activity_data.ingest_meca_data)

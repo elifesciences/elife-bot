@@ -165,7 +165,12 @@ def post_to_endpoint_long_timeout(
 
 
 def post_file_data_to_endpoint(
-    file_path, endpoint_url, user_agent, caller_name, logger
+    file_path,
+    endpoint_url,
+    user_agent,
+    caller_name,
+    logger,
+    timeout=PDF_REQUESTS_TIMEOUT,
 ):
     "POST data from the file_path to an endpoint and return the response content"
     headers = {"Content-Type": "application/xml"}
@@ -179,7 +184,7 @@ def post_file_data_to_endpoint(
     with open(file_path, "rb") as open_file:
         response = requests.post(
             endpoint_url,
-            timeout=PDF_REQUESTS_TIMEOUT,
+            timeout=timeout,
             headers=headers,
             data=open_file.read(),
         )
@@ -210,10 +215,38 @@ def post_to_preprint_pdf_endpoint(
             user_agent,
             caller_name,
             logger,
+            timeout=PDF_REQUESTS_TIMEOUT,
         )
     except Exception as exception:
         logger.exception(
             "%s, posting %s to preprint PDF endpoint %s: %s"
+            % (
+                caller_name,
+                xml_file_path,
+                endpoint_url,
+                str(exception),
+            )
+        )
+        response_content = None
+    return response_content
+
+
+def post_to_enrich_endpoint(
+    xml_file_path, endpoint_url, user_agent, caller_name, logger
+):
+    "post XML file to enrich refs endpoint, catch exceptions, return response content"
+    try:
+        response_content = post_file_data_to_endpoint(
+            xml_file_path,
+            endpoint_url,
+            user_agent,
+            caller_name,
+            logger,
+            timeout=LONG_REQUESTS_TIMEOUT,
+        )
+    except Exception as exception:
+        logger.exception(
+            "%s, posting %s to enrich endpoint %s: %s"
             % (
                 caller_name,
                 xml_file_path,
