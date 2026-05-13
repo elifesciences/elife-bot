@@ -170,7 +170,7 @@ class TestMecaEnrichRefs(unittest.TestCase):
             resources=[SESSION_DICT.get("article_xml_path")],
         )
         fake_post_xml_file.side_effect = Exception("An exception")
-        expected_result = activity_class.ACTIVITY_PERMANENT_FAILURE
+        expected_result = activity_class.ACTIVITY_SUCCESS
         # do the activity
         result = self.activity.do_activity(test_activity_data.ingest_meca_data)
         # check assertions

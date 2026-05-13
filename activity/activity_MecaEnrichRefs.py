@@ -156,7 +156,7 @@ class activity_MecaEnrichRefs(Activity):
                     % (self.name, endpoint_url, MAX_ATTEMPTS, xml_file_path)
                 )
                 self.clean_tmp_dir()
-                return self.ACTIVITY_PERMANENT_FAILURE
+                return self.ACTIVITY_SUCCESS
 
         # save the response content to S3
         s3_resource = orig_resource + "/" + article_xml_path
