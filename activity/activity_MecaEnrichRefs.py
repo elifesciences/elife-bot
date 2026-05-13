@@ -108,13 +108,20 @@ class activity_MecaEnrichRefs(Activity):
         self.logger.info(
             "%s, posting %s to endpoint %s" % (self.name, xml_file_path, endpoint_url)
         )
-        response_content = meca.post_to_endpoint_long_timeout(
-            xml_file_path,
-            endpoint_url,
-            getattr(self.settings, "user_agent", None),
-            self.name,
-            self.logger,
-        )
+        try:
+            response_content = meca.post_to_enrich_endpoint(
+                xml_file_path,
+                endpoint_url,
+                getattr(self.settings, "user_agent", None),
+                self.name,
+                self.logger,
+            )
+        except Exception as exception:
+            self.logger.exception(
+                "%s, exception raised posting to endpoint %s: %s"
+                % (self.name, endpoint_url, str(exception))
+            )
+            response_content = None
 
         if response_content:
             self.statuses["post"] = True
