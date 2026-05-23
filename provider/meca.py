@@ -200,7 +200,7 @@ def post_file_data_to_endpoint(
             )
         )
     if response and response.status_code == 200:
-        return response.content
+        return response
     return None
 
 
@@ -209,7 +209,7 @@ def post_to_preprint_pdf_endpoint(
 ):
     "post XML file to PDF generation endpoint, catch exceptions, return response content"
     try:
-        response_content = post_file_data_to_endpoint(
+        response = post_file_data_to_endpoint(
             xml_file_path,
             endpoint_url,
             user_agent,
@@ -227,8 +227,8 @@ def post_to_preprint_pdf_endpoint(
                 str(exception),
             )
         )
-        response_content = None
-    return response_content
+        response = None
+    return response
 
 
 def post_to_enrich_endpoint(
@@ -236,7 +236,7 @@ def post_to_enrich_endpoint(
 ):
     "post XML file to enrich refs endpoint, catch exceptions, return response content"
     try:
-        response_content = post_file_data_to_endpoint(
+        response = post_file_data_to_endpoint(
             xml_file_path,
             endpoint_url,
             user_agent,
@@ -244,6 +244,7 @@ def post_to_enrich_endpoint(
             logger,
             timeout=LONG_REQUESTS_TIMEOUT,
         )
+        response_content = response.content
     except Exception as exception:
         logger.exception(
             "%s, posting %s to enrich endpoint %s: %s"
