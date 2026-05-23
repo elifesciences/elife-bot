@@ -103,20 +103,29 @@ class activity_GeneratePreprintPDF(Activity):
         # post to endpoint the XML data
         endpoint_url = self.settings.generate_preprint_pdf_api_endpoint
         self.logger.info("%s, endpoint url %s" % (self.name, endpoint_url))
+        response = None
         try:
-            response_content = meca.post_to_preprint_pdf_endpoint(
+            response = meca.post_to_preprint_pdf_endpoint(
                 xml_file_path,
                 endpoint_url,
                 user_agent=getattr(self.settings, "user_agent", None),
                 caller_name=self.name,
                 logger=self.logger,
             )
+            response_content = response.content
         except Exception as exception:
             self.logger.exception(
                 "%s, exception raised posting to endpoint %s: %s"
                 % (self.name, endpoint_url, str(exception))
             )
             response_content = None
+
+        if response:
+            # log the response headers
+            self.logger.info(
+                "%s, for article_id %s version %s got response headers: %s"
+                % (self.name, article_id, version, response.headers)
+            )
 
         if not response_content:
             self.logger.info(
