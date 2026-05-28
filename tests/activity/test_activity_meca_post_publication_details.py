@@ -44,7 +44,8 @@ class TestMecaPostPublicationDetails(unittest.TestCase):
             "s3://prod-elife-epp-meca/reviewed-preprints/95901-v1-meca.zip"
         )
         expected_session_dict = test_activity_data.meca_details_session_example(
-            computer_file_url=computer_file_url
+            computer_file_url=computer_file_url,
+            meca_details_module="MecaPostPublicationDetails",
         )
         # do the activity
         result = self.activity.do_activity(test_activity_data.ingest_meca_data)

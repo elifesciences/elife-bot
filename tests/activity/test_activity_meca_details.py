@@ -42,7 +42,9 @@ class TestMecaDetails(unittest.TestCase):
         mock_session = FakeSession({})
         fake_session.return_value = mock_session
         expected_result = self.activity.ACTIVITY_SUCCESS
-        expected_session_dict = test_activity_data.meca_details_session_example()
+        expected_session_dict = test_activity_data.meca_details_session_example(
+            meca_details_module="MecaDetails",
+        )
         # do the activity
         result = self.activity.do_activity(test_activity_data.ingest_meca_data)
         # assertions
@@ -77,7 +79,9 @@ class TestMecaDetails(unittest.TestCase):
         fake_session.return_value = mock_session
         expected_result = self.activity.ACTIVITY_SUCCESS
         expected_session_dict = test_activity_data.meca_details_session_example(
-            run_type="silent-correction", computer_file_url=computer_file_url
+            run_type="silent-correction",
+            computer_file_url=computer_file_url,
+            meca_details_module="MecaDetails",
         )
         # silent-correction run_type
         input_data = copy.copy(test_data.silent_ingest_meca_data)

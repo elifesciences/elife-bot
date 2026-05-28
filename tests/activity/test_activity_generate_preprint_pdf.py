@@ -2,16 +2,18 @@
 
 import os
 import copy
+import json
 import unittest
 from mock import patch
 from testfixtures import TempDirectory
-from provider import meca
+from provider import github_provider, meca
 import activity.activity_GeneratePreprintPDF as activity_module
 from activity.activity_GeneratePreprintPDF import (
     activity_GeneratePreprintPDF as activity_class,
 )
 from tests.activity import helpers, settings_mock, test_activity_data
 from tests.activity.classes_mock import (
+    FakeGithubIssue,
     FakeLogger,
     FakeResponse,
     FakeSession,
@@ -35,6 +37,7 @@ class TestGeneratePreprintPdf(unittest.TestCase):
         # clean the temporary directory
         self.activity.clean_tmp_dir()
 
+    @patch.object(github_provider, "find_github_issues")
     @patch("provider.outbox_provider.storage_context")
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
@@ -45,14 +48,29 @@ class TestGeneratePreprintPdf(unittest.TestCase):
         fake_session,
         fake_storage_context,
         fake_outbox_storage_context,
+        fake_find_github_issues,
     ):
         "test do_activity() returning a successful result"
         directory = TempDirectory()
+
+        github_issue = FakeGithubIssue()
+        fake_find_github_issues.return_value = [github_issue]
+
+        expected_pdf_file_name = "elife-preprint-95901-v1.pdf"
+        expected_pdf_s3_folder = (
+            "expanded_meca/95901-v1/1ee54f9a-cb28-4c8e-8232-4b317cf4beda/pdf/"
+        )
+        expected_pdf_s3_path = "%s%s" % (
+            expected_pdf_s3_folder,
+            expected_pdf_file_name,
+        )
 
         # save pdf_s3_path value for assertion later then remove it from session
         session_dict = copy.copy(SESSION_DICT)
         pdf_s3_path = session_dict["pdf_s3_path"]
         del session_dict["pdf_s3_path"]
+        # add meca details module name to the session
+        session_dict["meca_details_module"] = "MecaDetails"
 
         # create folders if they do not exist
         meca_file_path = "tests/files_source/95901-v1-meca.zip"
@@ -83,12 +101,27 @@ class TestGeneratePreprintPdf(unittest.TestCase):
         session_object = FakeSession(session_dict)
         fake_session.return_value = session_object
 
-        fake_post.return_value = FakeResponse(
+        response = FakeResponse(
             200,
             content=b"pdf",
         )
 
+        headers_kept = {
+            "X-Info": "Some info",
+            "X-Warnings": "Some warnings",
+        }
+        headers_all = copy.copy(headers_kept)
+        headers_all["Content-Disposition"] = "attachment; filename=document.pdf"
+        response.headers = headers_all
+        fake_post.return_value = response
+
         expected_result = activity_class.ACTIVITY_SUCCESS
+
+        expected_comment_body = (
+            "elife-bot workflow message:\n\nGeneratePreprintPDF, response headers when generated"
+            " %s: %s"
+        ) % (expected_pdf_s3_path, json.dumps(headers_kept))
+
         # do the activity
         result = self.activity.do_activity(test_activity_data.ingest_meca_data)
         # check assertions
@@ -110,31 +143,30 @@ class TestGeneratePreprintPdf(unittest.TestCase):
         self.assertTrue(
             (
                 "GeneratePreprintPDF, for article_id 95901 version 1 pdf_file_name:"
-                " elife-preprint-95901-v1.pdf"
+                " %s" % expected_pdf_file_name
             )
             in self.activity.logger.loginfo,
         )
         self.assertTrue(
             (
                 "GeneratePreprintPDF, for article_id 95901 version 1 writing response content"
-                " to %s/elife-preprint-95901-v1.pdf"
+                " to %s/%s"
             )
-            % self.activity.directories.get("TEMP_DIR")
+            % (self.activity.directories.get("TEMP_DIR"), expected_pdf_file_name)
             in self.activity.logger.loginfo,
         )
         self.assertTrue(
             (
                 "GeneratePreprintPDF, for article_id 95901 version 1"
-                " uploading to pdf_expanded_folder:"
-                " expanded_meca/95901-v1/1ee54f9a-cb28-4c8e-8232-4b317cf4beda/pdf/"
+                " uploading to pdf_expanded_folder: %s"
             )
+            % expected_pdf_s3_folder
             in self.activity.logger.loginfo,
         )
         self.assertTrue(
             (
-                "GeneratePreprintPDF, for article_id 95901 version 1 session pdf_s3_path:"
-                " expanded_meca/95901-v1/1ee54f9a-cb28-4c8e-8232-4b317cf4beda/"
-                "pdf/elife-preprint-95901-v1.pdf"
+                "GeneratePreprintPDF, for article_id 95901 version 1 session pdf_s3_path: %s"
+                % expected_pdf_s3_path
             )
             in self.activity.logger.loginfo,
         )
@@ -145,8 +177,84 @@ class TestGeneratePreprintPdf(unittest.TestCase):
         # test pdf file in S3 folder
         pdf_path = os.path.join(directory.path, pdf_s3_path)
         self.assertEqual(
-            os.listdir(os.path.dirname(pdf_path)), ["elife-preprint-95901-v1.pdf"]
+            os.listdir(os.path.dirname(pdf_path)), [expected_pdf_file_name]
         )
+
+        self.assertEqual(github_issue.comment.body, expected_comment_body)
+
+    @patch.object(github_provider, "find_github_issues")
+    @patch("provider.outbox_provider.storage_context")
+    @patch.object(activity_module, "storage_context")
+    @patch.object(activity_module, "get_session")
+    @patch("requests.post")
+    def test_do_activity_post_publication(
+        self,
+        fake_post,
+        fake_session,
+        fake_storage_context,
+        fake_outbox_storage_context,
+        fake_find_github_issues,
+    ):
+        "test do_activity() successful result as a post-publication workflow"
+        directory = TempDirectory()
+
+        github_issue = FakeGithubIssue()
+        fake_find_github_issues.return_value = [github_issue]
+
+        session_dict = copy.copy(SESSION_DICT)
+        # add meca details module name to the session
+        session_dict["meca_details_module"] = "MecaPostPublicationDetails"
+
+        # create folders if they do not exist
+        meca_file_path = "tests/files_source/95901-v1-meca.zip"
+        resource_folder = os.path.join(
+            directory.path,
+            session_dict.get("expanded_folder"),
+        )
+        # create folders if they do not exist
+        os.makedirs(resource_folder, exist_ok=True)
+        # unzip the test fixture files
+        zip_file_paths = helpers.unzip_fixture(meca_file_path, resource_folder)
+        resources = [
+            os.path.join(
+                test_activity_data.ingest_meca_session_example().get("expanded_folder"),
+                file_path,
+            )
+            for file_path in zip_file_paths
+        ]
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources, dest_folder=directory.path
+        )
+
+        # mock outbox_provider storage
+        fake_outbox_storage_context.return_value = FakeStorageContext(
+            directory.path, dest_folder=directory.path
+        )
+
+        session_object = FakeSession(session_dict)
+        fake_session.return_value = session_object
+
+        response = FakeResponse(
+            200,
+            content=b"pdf",
+        )
+        # test X-Info only in the headers
+        headers_kept = {
+            "X-Info": "Some info",
+        }
+        headers_all = copy.copy(headers_kept)
+        headers_all["Content-Disposition"] = "attachment; filename=document.pdf"
+        response.headers = headers_all
+        fake_post.return_value = response
+
+        expected_result = activity_class.ACTIVITY_SUCCESS
+        # do the activity
+        result = self.activity.do_activity(test_activity_data.ingest_meca_data)
+        # check assertions
+        self.assertEqual(result, expected_result)
+
+        # assert no Github issue comment was added
+        self.assertEqual(github_issue.comment, None)
 
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
@@ -205,6 +313,7 @@ class TestGeneratePreprintPdf(unittest.TestCase):
             % exception_message,
         )
 
+    @patch.object(github_provider, "find_github_issues")
     @patch.object(activity_module, "storage_context")
     @patch.object(activity_module, "get_session")
     @patch.object(meca, "post_to_preprint_pdf_endpoint")
@@ -213,10 +322,13 @@ class TestGeneratePreprintPdf(unittest.TestCase):
         fake_post_to_endpoint,
         fake_session,
         fake_storage_context,
+        fake_find_github_issues,
     ):
         "test if POST raises an exception and is the final attempt"
         directory = TempDirectory()
 
+        github_issue = FakeGithubIssue()
+        fake_find_github_issues.return_value = [github_issue]
         # remove pdf_s3_path from session
         session_dict = copy.copy(SESSION_DICT)
         # set the session counter value
@@ -248,6 +360,15 @@ class TestGeneratePreprintPdf(unittest.TestCase):
 
         fake_session.return_value = FakeSession(session_dict)
         expected_result = activity_class.ACTIVITY_SUCCESS
+        expected_comment_body = (
+            "elife-bot workflow message:\n\nGeneratePreprintPDF, POST to endpoint_url"
+            " %s attempts reached MAX_ATTEMPTS of %s for file %s/content/24301711.xml"
+        ) % (
+            settings_mock.generate_preprint_pdf_api_endpoint,
+            activity_module.MAX_ATTEMPTS,
+            self.activity.directories.get("INPUT_DIR"),
+        )
+
         # do the activity
         result = self.activity.do_activity(test_activity_data.ingest_meca_data)
         # check assertions
@@ -257,11 +378,17 @@ class TestGeneratePreprintPdf(unittest.TestCase):
         self.assertEqual(
             self.activity.logger.logexception,
             (
-                "GeneratePreprintPDF, POST to endpoint_url https://api/generate_preprint_pdf/"
-                " attempts reached MAX_ATTEMPTS of 4 for file %s/content/24301711.xml"
-                % self.activity.directories.get("INPUT_DIR")
+                "GeneratePreprintPDF, POST to endpoint_url"
+                " %s attempts reached MAX_ATTEMPTS of %s for file %s/content/24301711.xml"
+                % (
+                    settings_mock.generate_preprint_pdf_api_endpoint,
+                    activity_module.MAX_ATTEMPTS,
+                    self.activity.directories.get("INPUT_DIR"),
+                )
             ),
         )
+
+        self.assertEqual(github_issue.comment.body, expected_comment_body)
 
     @patch("provider.preprint.generate_new_pdf_href")
     @patch.object(activity_module, "storage_context")
@@ -450,4 +577,48 @@ class TestSettings(unittest.TestCase):
                 "GeneratePreprintPDF, generate_preprint_pdf_api_endpoint"
                 " in settings is blank, skipping"
             ),
+        )
+
+
+class TestGetWorkflowType(unittest.TestCase):
+    "tests for get_workflow_type()"
+
+    def test_pre_publication(self):
+        # invoke
+        result = activity_module.get_workflow_type("MecaDetails")
+        # assert
+        self.assertEqual(result, "pre-publication")
+
+    def test_post_publication(self):
+        # invoke
+        result = activity_module.get_workflow_type("MecaPostPublicationDetails")
+        # assert
+        self.assertEqual(result, "post-publication")
+
+    def test_no_match(self):
+        # invoke
+        result = activity_module.get_workflow_type(None)
+        # assert
+        self.assertEqual(result, None)
+
+
+class TestFilterResponseHeaders(unittest.TestCase):
+    "tests for filter_response_headers()"
+
+    def test_filter_response_headers(self):
+        "test filtering response header values"
+        headers = {
+            "Content-Disposition": "attachment; filename=document.pdf",
+            "X-Info": "Some info",
+            "X-Warnings": "Some warnings",
+        }
+        # invoke
+        result = activity_module.filter_response_headers(headers)
+        # assert
+        self.assertDictEqual(
+            result,
+            {
+                "X-Info": "Some info",
+                "X-Warnings": "Some warnings",
+            },
         )
