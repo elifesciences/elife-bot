@@ -2,7 +2,7 @@ import os
 import glob
 import json
 import time
-from provider import outbox_provider, preprint, meca
+from provider import github_provider, outbox_provider, preprint, meca
 from provider.execution_context import get_session
 from provider.storage_provider import storage_context
 from activity.objects import Activity
@@ -68,6 +68,7 @@ class activity_GeneratePreprintPDF(Activity):
         # load session data
         article_id = session.get_value("article_id")
         version = session.get_value("version")
+        version_doi = session.get_value("version_doi")
         article_xml_path = session.get_value("article_xml_path")
         expanded_folder = session.get_value("expanded_folder")
 
@@ -160,9 +161,15 @@ class activity_GeneratePreprintPDF(Activity):
                 return self.ACTIVITY_TEMPORARY_FAILURE
             if int(session.get_value(SESSION_ATTEMPT_COUNTER_NAME)) >= MAX_ATTEMPTS:
                 # maximum number of attempts are completed
-                self.logger.exception(
+                log_message = (
                     "%s, POST to endpoint_url %s attempts reached MAX_ATTEMPTS of %s for file %s"
                     % (self.name, endpoint_url, MAX_ATTEMPTS, xml_file_path)
+                )
+                self.logger.exception(log_message)
+                # add as a Github issue comment
+                issue_comment = "elife-bot workflow message:\n\n%s" % log_message
+                github_provider.add_github_issue_comment(
+                    self.settings, self.logger, self.name, version_doi, issue_comment
                 )
                 self.clean_tmp_dir()
                 return self.ACTIVITY_SUCCESS
@@ -234,7 +241,49 @@ class activity_GeneratePreprintPDF(Activity):
         )
         session.store_value("pdf_s3_path", pdf_s3_path)
 
+        # add Github issue comment if applicable
+        workflow_type = get_workflow_type(session.get_value("meca_details_module"))
+        if workflow_type and response:
+            self.logger.info(
+                "%s, workflow_type %s for %s" % (self.name, workflow_type, pdf_s3_path)
+            )
+            response_headers = filter_response_headers(response.headers)
+            # add comment if any X-Warnings, or in pre-publication if there are only X-Info
+            if response_headers and (
+                "X-Warnings" in response_headers or (workflow_type == "pre-publication")
+            ):
+                log_message = "%s, response headers when generated %s: %s" % (
+                    self.name,
+                    pdf_s3_path,
+                    json.dumps(response_headers),
+                )
+
+                self.logger.info(log_message)
+                # add as a Github issue comment
+                issue_comment = "elife-bot workflow message:\n\n%s" % log_message
+                github_provider.add_github_issue_comment(
+                    self.settings, self.logger, self.name, version_doi, issue_comment
+                )
+
         # Clean up disk
         self.clean_tmp_dir()
 
         return self.ACTIVITY_SUCCESS
+
+
+def get_workflow_type(meca_details_module):
+    "from the meca details module name is this pre- or post-publication"
+    if meca_details_module == "MecaDetails":
+        return "pre-publication"
+    if meca_details_module == "MecaPostPublicationDetails":
+        return "post-publication"
+    return None
+
+
+def filter_response_headers(headers):
+    "keep response headers produced by the PDF generation process"
+    return {
+        header_name: header_value
+        for header_name, header_value in headers.items()
+        if header_name in ["X-Info", "X-Warnings"]
+    }

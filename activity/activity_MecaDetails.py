@@ -13,6 +13,9 @@ from activity.objects import Activity
 # DOI prefix for generating DOI value
 DOI_PREFIX = "10.7554/eLife."
 
+# session property to store the module name
+SESSION_MODULE_NAME_PROPERTY = "meca_details_module"
+
 
 class activity_MecaDetails(Activity):
     def __init__(self, settings, logger, client=None, token=None, activity_task=None):
@@ -154,6 +157,8 @@ class activity_MecaDetails(Activity):
 
         session.store_value("computer_file_url", computer_file_url)
 
+        self.store_activity_name(session)
+
         self.clean_tmp_dir()
 
         self.logger.info(
@@ -168,6 +173,10 @@ class activity_MecaDetails(Activity):
         return docmap_provider.input_computer_file_url_from_steps(
             steps, version_doi, self.name, self.logger
         )
+
+    def store_activity_name(self, session):
+        "store the name of this module in the session to mark pre- or post-publication workflow"
+        session.store_value(SESSION_MODULE_NAME_PROPERTY, self.name)
 
 
 def meca_file_parts(file_name):
