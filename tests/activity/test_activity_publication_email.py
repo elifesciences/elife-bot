@@ -5,6 +5,7 @@ import unittest
 import shutil
 import smtplib
 from collections import OrderedDict
+from functools import lru_cache
 from testfixtures import TempDirectory
 from mock import patch
 from ddt import ddt, data, unpack
@@ -62,6 +63,7 @@ DO_ACTIVITY_PASSES.append(
 )
 
 
+@lru_cache
 def fake_authors(activity_object, article_id=3):
     # parse author csv file or create test fixture data
     column_headings, authors = ejp.author_detail_list(
@@ -70,6 +72,7 @@ def fake_authors(activity_object, article_id=3):
     return activity_object.get_author_list(column_headings, authors, article_id)
 
 
+@lru_cache
 def fake_preprint_authors(activity_object, article_id=3):
     # parse preprint author csv file or create test fixture data
     column_headings, authors = ejp.author_detail_list(
@@ -135,6 +138,23 @@ EJP_ARTICLE_91826_AUTHORS = (
 )
 
 
+@lru_cache
+def parse_article_file(xml_file_path):
+    "parse an article XML file using the article provider library"
+    article_object = articlelib.article()
+    article_object.parse_article_file(xml_file_path)
+    return article_object
+
+
+@lru_cache
+def load_config(settings, config_type):
+    "load rules from YAML"
+    return yaml_provider.load_config(
+        settings,
+        config_type,
+    )
+
+
 class TestPublicationEmail(unittest.TestCase):
     def setUp(self):
         fake_logger = FakeLogger()
@@ -194,18 +214,28 @@ class TestPublicationEmail(unittest.TestCase):
                 for xml_file in prepared_article_xml_filenames
             ]
         )
-        approved = self.activity.parse_article_xml(
-            [
-                os.path.join(storage_path, xml_file)
-                for xml_file in approved_article_xml_filenames
-            ]
-        )[0]
-        not_published_articles = self.activity.parse_article_xml(
-            [
-                os.path.join(storage_path, xml_file)
-                for xml_file in not_published_article_xml_filenames
-            ]
-        )[0]
+        # map the file name to prepared object list index to reuse parsed article objects
+        file_name_to_prepared_index_map = {}
+        for index, article in enumerate(prepared):
+            if article.doi:
+                file_path = xml_file_to_doi_map.get(article.doi)
+                if file_path:
+                    file_name = file_path.rsplit(os.sep, 1)[-1]
+                    file_name_to_prepared_index_map[file_name] = index
+
+        # populate the approved article list
+        approved = []
+        for xml_file in approved_article_xml_filenames:
+            index = file_name_to_prepared_index_map.get(xml_file)
+            if index is not None:
+                approved.append(prepared[index])
+
+        # populate the not published article list
+        not_published_articles = []
+        for xml_file in not_published_article_xml_filenames:
+            index = file_name_to_prepared_index_map.get(xml_file)
+            if index is not None:
+                not_published_articles.append(prepared[index])
 
         fake_process_articles.return_value = (
             approved,
@@ -342,9 +372,7 @@ class TestSendAndClean(unittest.TestCase):
         self.activity = activity_PublicationEmail(
             settings_mock, self.logger, None, None, None
         )
-        self.rules = yaml_provider.load_config(
-            settings_mock, config_type="publication_email"
-        )
+        self.rules = load_config(settings_mock, config_type="publication_email")
 
     def tearDown(self):
         TempDirectory.cleanup_all()
@@ -473,9 +501,7 @@ class TestSendEmailsForArticles(unittest.TestCase):
         )
         self.articles = articles
 
-        self.rules = yaml_provider.load_config(
-            settings_mock, config_type="publication_email"
-        )
+        self.rules = load_config(settings_mock, config_type="publication_email")
 
     def tearDown(self):
         self.activity.clean_tmp_dir()
@@ -572,9 +598,7 @@ class TestProcessArticles(unittest.TestCase):
         self.activity = activity_PublicationEmail(
             settings_mock, fake_logger, None, None, None
         )
-        self.rules = yaml_provider.load_config(
-            settings_mock, config_type="publication_email"
-        )
+        self.rules = load_config(settings_mock, config_type="publication_email")
 
     def tearDown(self):
         self.activity.clean_tmp_dir()
@@ -734,8 +758,7 @@ class TestProcessArticles(unittest.TestCase):
         fake_download_xml.return_value = False
 
         if test_case_data.get("related_article"):
-            related_article = articlelib.article()
-            related_article.parse_article_file(test_case_data.get("related_article"))
+            related_article = parse_article_file(test_case_data.get("related_article"))
             fake_get_related_article.return_value = related_article
         else:
             fake_get_related_article.return_value = None
@@ -797,9 +820,7 @@ class TestPrepareArticles(unittest.TestCase):
         article.doi = "10.7554/eLife.84364"
         article.article_type = "research-article"
         self.articles = [article]
-        self.rules = yaml_provider.load_config(
-            settings_mock, config_type="publication_email"
-        )
+        self.rules = load_config(settings_mock, config_type="publication_email")
 
     def tearDown(self):
         self.activity.clean_tmp_dir()
@@ -889,9 +910,7 @@ class TestChooseEmailType(unittest.TestCase):
         },
     )
     def test_choose_email_type(self, test_case_data):
-        rules = yaml_provider.load_config(
-            settings_mock, config_type="publication_email"
-        )
+        rules = load_config(settings_mock, config_type="publication_email")
 
         email_type = activity_module.choose_email_type(
             test_case_data.get("article_type"),
@@ -974,16 +993,13 @@ class TestGetEmailHeaders(unittest.TestCase):
     def test_template_get_email_headers_00013(self):
         self.activity.download_templates()
 
-        rules = yaml_provider.load_config(
-            settings_mock, config_type="publication_email"
-        )
+        rules = load_config(settings_mock, config_type="publication_email")
 
         email_type = "author_publication_email_VOR_no_POA"
 
         authors = fake_authors(self.activity, 13)
 
-        article_object = articlelib.article()
-        article_object.parse_article_file("tests/test_data/elife00013.xml")
+        article_object = parse_article_file("tests/test_data/elife00013.xml")
         article_type = article_object.article_type
         feature_article = False
         related_insight_article = None
@@ -1022,13 +1038,10 @@ class TestGetEmailHeaders(unittest.TestCase):
         article_id = 91826
         email_type = "author_publication_email_RP_revised_version"
 
-        rules = yaml_provider.load_config(
-            settings_mock, config_type="publication_email"
-        )
+        rules = load_config(settings_mock, config_type="publication_email")
 
         authors = fake_preprint_authors(self.activity, article_id)
-        article_object = articlelib.article()
-        article_object.parse_article_file(
+        article_object = parse_article_file(
             "tests/files_source/publication_email/outbox/elife-preprint-91826-v2.xml"
         )
         article_type = article_object.article_type
@@ -1084,14 +1097,11 @@ class TestGetEmailBody(unittest.TestCase):
 
         email_type = "author_publication_email_Feature"
 
-        rules = yaml_provider.load_config(
-            settings_mock, config_type="publication_email"
-        )
+        rules = load_config(settings_mock, config_type="publication_email")
 
         authors = fake_authors(self.activity)
 
-        article_object = articlelib.article()
-        article_object.parse_article_file("tests/test_data/elife-00353-v1.xml")
+        article_object = parse_article_file("tests/test_data/elife-00353-v1.xml")
         article_object.pdf_cover_link = (
             "https://localhost.org/download-your-cover/00353"
         )
@@ -1135,8 +1145,7 @@ class TestGetEmailBody(unittest.TestCase):
 
 class TestGetPdfCoverPage(unittest.TestCase):
     def test_get_pdf_cover_page(self):
-        article_object = articlelib.article()
-        article_object.parse_article_file("tests/test_data/elife-00353-v1.xml")
+        article_object = parse_article_file("tests/test_data/elife-00353-v1.xml")
         article_object.pdf_cover_link = pdf_cover_page.get_pdf_cover_page(
             article_object.doi_id, settings_mock, FakeLogger()
         )
@@ -1256,9 +1265,7 @@ class TestApproveArticles(unittest.TestCase):
         self.activity = activity_PublicationEmail(
             settings_mock, fake_logger, None, None, None
         )
-        self.rules = yaml_provider.load_config(
-            settings_mock, config_type="publication_email"
-        )
+        self.rules = load_config(settings_mock, config_type="publication_email")
 
     def tearDown(self):
         self.activity.clean_tmp_dir()
@@ -1548,9 +1555,7 @@ class TestChooseRecipientAuthors(unittest.TestCase):
         expected_recipient_count,
     ):
         authors = fake_authors(self.activity)
-        rules = yaml_provider.load_config(
-            settings_mock, config_type="publication_email"
-        )
+        rules = load_config(settings_mock, config_type="publication_email")
         recipient_authors = activity_module.choose_recipient_authors(
             authors,
             article_type,
@@ -1694,8 +1699,7 @@ class TestGetRelatedArticle(unittest.TestCase):
         "get related article from existing list of related articles"
         doi = "10.7554/eLife.15747"
         expected_doi = doi
-        related_article = articlelib.article()
-        related_article.parse_article_file("tests/test_data/elife-15747-v2.xml")
+        related_article = parse_article_file("tests/test_data/elife-15747-v2.xml")
         return_value = activity_module.get_related_article(
             settings_mock, TempDirectory(), doi, [related_article], FakeLogger(), ""
         )
@@ -1706,8 +1710,7 @@ class TestGetRelatedArticle(unittest.TestCase):
         "get related article from creating a new article for the doi"
         doi = "10.7554/eLife.15747"
         expected_doi = doi
-        article_object = articlelib.article()
-        article_object.parse_article_file("tests/test_data/elife-15747-v2.xml")
+        article_object = parse_article_file("tests/test_data/elife-15747-v2.xml")
         fake_create_article.return_value = article_object
         related_articles = []
         return_value = activity_module.get_related_article(
@@ -1836,7 +1839,6 @@ class TestAuthorsFromXML(unittest.TestCase):
         },
     )
     def test_authors_from_xml(self, test_case_data):
-        article_object = articlelib.article()
         full_filename = os.path.join(
             "tests",
             "files_source",
@@ -1844,7 +1846,7 @@ class TestAuthorsFromXML(unittest.TestCase):
             "outbox",
             test_case_data.get("filename"),
         )
-        article_object.parse_article_file(full_filename)
+        article_object = parse_article_file(full_filename)
         authors = activity_module.authors_from_xml(article_object)
         self.assertEqual(authors, test_case_data.get("expected"))
 
@@ -1854,9 +1856,7 @@ class TestEmailTypeFromRules(unittest.TestCase):
 
     def test_article_type(self):
         "test by article_type only"
-        rules = yaml_provider.load_config(
-            settings_mock, config_type="publication_email"
-        )
+        rules = load_config(settings_mock, config_type="publication_email")
         article_type = "discussion"
         expected = "author_publication_email_Feature"
         result = activity_module.email_type_from_rules(rules, article_type)
@@ -1864,9 +1864,7 @@ class TestEmailTypeFromRules(unittest.TestCase):
 
     def test_article_type_preprint_version_1(self):
         "test preprint article_type arguments for a version 1"
-        rules = yaml_provider.load_config(
-            settings_mock, config_type="publication_email"
-        )
+        rules = load_config(settings_mock, config_type="publication_email")
         article_type = "preprint"
         # currently the parser considers the XML to be POA status
         is_poa = True
@@ -1879,9 +1877,7 @@ class TestEmailTypeFromRules(unittest.TestCase):
 
     def test_article_type_preprint_version_2(self):
         "test preprint article_type arguments for a version 2"
-        rules = yaml_provider.load_config(
-            settings_mock, config_type="publication_email"
-        )
+        rules = load_config(settings_mock, config_type="publication_email")
         article_type = "preprint"
         # currently the parser considers the XML to be POA status
         is_poa = True
@@ -1894,9 +1890,7 @@ class TestEmailTypeFromRules(unittest.TestCase):
 
     def test_article_type_preprint_version_1_poa_false(self):
         "test preprint article_type arguments for a version 1 and is_poa is False"
-        rules = yaml_provider.load_config(
-            settings_mock, config_type="publication_email"
-        )
+        rules = load_config(settings_mock, config_type="publication_email")
         article_type = "preprint"
         # currently the parser considers the XML to be POA status
         is_poa = False
@@ -1909,9 +1903,7 @@ class TestEmailTypeFromRules(unittest.TestCase):
 
     def test_article_type_preprint_version_2_poa_false(self):
         "test preprint article_type arguments for a version 2 and is_poa is False"
-        rules = yaml_provider.load_config(
-            settings_mock, config_type="publication_email"
-        )
+        rules = load_config(settings_mock, config_type="publication_email")
         article_type = "preprint"
         # currently the parser considers the XML to be POA status
         is_poa = False
@@ -1940,9 +1932,7 @@ class TestEmailTypeFromRules(unittest.TestCase):
 
     def test_edge_case(self):
         "edge case where is_poa and was_ever_poa are False instead of None"
-        rules = yaml_provider.load_config(
-            settings_mock, config_type="publication_email"
-        )
+        rules = load_config(settings_mock, config_type="publication_email")
         article_type = "article-commentary"
         is_poa = False
         was_ever_poa = False
@@ -1957,9 +1947,7 @@ class TestRecipientsFromRules(unittest.TestCase):
     "tests for recipients_from_rules()"
 
     def test_recipients_from_rules(self):
-        rules = yaml_provider.load_config(
-            settings_mock, config_type="publication_email"
-        )
+        rules = load_config(settings_mock, config_type="publication_email")
         article_type = "article-commentary"
         expected = ["authors", "features_publication_recipient_email"]
         self.assertEqual(
@@ -1971,9 +1959,7 @@ class TestFeaturesRecipientNameFromRules(unittest.TestCase):
     "tests for features_recipient_name_from_rules()"
 
     def test_features_recipient_name_from_rules(self):
-        rules = yaml_provider.load_config(
-            settings_mock, config_type="publication_email"
-        )
+        rules = load_config(settings_mock, config_type="publication_email")
         article_type = "article-commentary"
         expected = "Features"
         self.assertEqual(
@@ -1987,9 +1973,7 @@ class TestDoNotSendArticleTypesFromRules(unittest.TestCase):
 
     def test_do_not_send_article_types(self):
         "test using rules from the YAML file"
-        rules = yaml_provider.load_config(
-            settings_mock, config_type="publication_email"
-        )
+        rules = load_config(settings_mock, config_type="publication_email")
         expected = ["correction", "editorial", "retraction"]
         article_types = activity_module.do_not_send_article_types_from_rules(rules)
         self.assertEqual(article_types, expected)
