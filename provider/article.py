@@ -41,6 +41,30 @@ def create_article(settings, tmp_dir, doi_id=None):
     return article_object
 
 
+def create_preprint_article(settings, tmp_dir, doi_id):
+    """
+    Instantiate an article object and populate it with
+    data with preprint data for a the doi_id (int) supplied
+    """
+
+    # Instantiate a new article object
+    article_object = article(settings)
+
+    # Get and parse the preprint article XML for data
+    # Convert the doi_id to 5 digit string in case it was an integer
+    doi_id = pad_msid(doi_id)
+    article_xml_filename = article_object.download_preprint_article_xml_from_s3(
+        tmp_dir, doi_id
+    )
+    try:
+        article_object.parse_article_file(os.path.join(tmp_dir, article_xml_filename))
+    except:
+        # Article XML for this DOI was not parsed so return None
+        return None
+
+    return article_object
+
+
 class article:
     def __init__(self, settings=None):
         self.settings = settings
@@ -154,6 +178,58 @@ class article:
             with open(filename_plus_path, "wb") as open_file:
                 open_file.write(response.content)
             return xml_filename
+
+        return False
+
+    def download_preprint_article_xml_from_s3(self, to_dir, doi_id):
+        "download latest preprint XML"
+        if not doi_id:
+            return None
+
+        xml_filename = None
+
+        # Convert the value just in case
+        doi_id = pad_msid(doi_id)
+
+        # list XML files in the CDN bucket folder
+        storage = storage_context(self.settings)
+        bucket_name = (
+            self.settings.publishing_buckets_prefix + self.settings.preprint_cdn_bucket
+        )
+        bucket_folder_resource = (
+            self.settings.storage_provider + "://" + bucket_name + "/" + doi_id + "/"
+        )
+        s3_key_names = storage.list_resources(bucket_folder_resource)
+        # remove the expanded_folder from the s3_key_names
+        xml_s3_key_names = [
+            key_name.rsplit("/", 1)[-1]
+            for key_name in s3_key_names
+            if key_name.endswith(".xml")
+        ]
+        version_match_pattern = re.compile(r".*?-v(\d+)\.xml$")
+        highest_version = None
+        highest_version_s3_key_name = None
+        for key_name in xml_s3_key_names:
+            matches = version_match_pattern.match(key_name)
+            if matches:
+                if not highest_version:
+                    highest_version = int(matches[1])
+                    highest_version_s3_key_name = key_name
+                elif int(matches[1]) > highest_version:
+                    highest_version = int(matches[1])
+                    highest_version_s3_key_name = key_name
+
+        # download the XML file
+        if highest_version_s3_key_name:
+            filename_plus_path = to_dir + os.sep + highest_version_s3_key_name
+
+            with open(filename_plus_path, "wb") as open_file:
+                storage_resource_origin = (
+                    bucket_folder_resource + highest_version_s3_key_name
+                )
+                storage.get_resource_to_file(storage_resource_origin, open_file)
+
+            return highest_version_s3_key_name
 
         return False
 

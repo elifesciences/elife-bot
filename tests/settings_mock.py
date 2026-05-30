@@ -29,6 +29,7 @@ redis_expire_key = 86400  # seconds
 
 ejp_bucket = "ejp_bucket"
 ppp_cdn_bucket = "ppd_cdn_bucket"
+preprint_cdn_bucket = "ppd_cdn_bucket/preprints"
 archive_bucket = "archive_bucket"
 bot_bucket = "bot_bucket"
 lens_bucket = "dest_bucket"
