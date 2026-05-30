@@ -1719,11 +1719,15 @@ class TestGetRelatedArticle(unittest.TestCase):
         self.assertEqual(return_value.doi, expected_doi)
         self.assertEqual(len(related_articles), 1)
 
+    @patch("provider.article.create_preprint_article")
     @patch("provider.article.create_article")
-    def test_get_related_article_create_article_blank(self, fake_create_article):
+    def test_get_related_article_create_article_blank(
+        self, fake_create_article, fake_create_preprint_article
+    ):
         "test when creating a related article returns None"
         doi = "10.7554/eLife.15747"
         fake_create_article.return_value = None
+        fake_create_preprint_article.return_value = None
         related_articles = []
         return_value = activity_module.get_related_article(
             settings_mock, TempDirectory(), doi, related_articles, FakeLogger(), ""

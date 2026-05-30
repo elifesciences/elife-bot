@@ -889,7 +889,12 @@ def get_related_article(
     article = articlelib.create_article(settings, tmp_dir, doi_id)
 
     if not article:
-        log_info = "Could not build the related article " + doi
+        log_info = "Could not build the related article from a VOR" + doi
+        # try to populate it from a preprint XML
+        article = articlelib.create_preprint_article(settings, tmp_dir, doi_id)
+
+    if not article:
+        log_info = "Could not build the related article from a VOR or preprint " + doi
         admin_email_content += "\n" + log_info
         logger.info(log_info)
         return article
