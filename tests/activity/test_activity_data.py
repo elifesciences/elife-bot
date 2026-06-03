@@ -59,9 +59,11 @@ ingest_meca_data = {
 
 
 def meca_details_session_example(
-    run_type=None, computer_file_url="s3://prod-elife-epp-meca/95901-v1-meca.zip"
+    run_type=None,
+    computer_file_url="s3://prod-elife-epp-meca/95901-v1-meca.zip",
+    meca_details_module=None,
 ):
-    return {
+    session_dict = {
         "run": "1ee54f9a-cb28-4c8e-8232-4b317cf4beda",
         "run_type": run_type,
         "article_id": 95901,
@@ -71,6 +73,9 @@ def meca_details_session_example(
         "docmap_string": read_fixture("sample_docmap_for_95901.json").decode("utf-8"),
         "computer_file_url": computer_file_url,
     }
+    if meca_details_module:
+        session_dict["meca_details_module"] = meca_details_module
+    return session_dict
 
 
 def ingest_meca_session_example(

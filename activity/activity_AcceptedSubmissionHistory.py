@@ -108,6 +108,7 @@ class activity_AcceptedSubmissionHistory(AcceptedBaseActivity):
                 history_data,
                 docmap_string=docmap_string,
                 identifier=input_filename,
+                user_agent=getattr(self.settings, "user_agent", None),
             )
             self.statuses["xml_root"] = True
 

@@ -1,3 +1,4 @@
+import os
 import unittest
 from mock import patch
 from ddt import ddt, data, unpack
@@ -251,6 +252,68 @@ class TestGetLensUrl(unittest.TestCase):
     def test_get_lens_url(self):
         lens_url = provider_module.get_lens_url("10.7554/eLife.08411")
         self.assertEqual(lens_url, "https://lens.elifesciences.org/08411")
+
+
+class TestDownloadPreprintArticleXmlFromS3(unittest.TestCase):
+    "tests for download_preprint_article_xml_from_s3()"
+
+    def setUp(self):
+        self.articleprovider = article(settings_mock)
+
+    def tearDown(self):
+        TempDirectory.cleanup_all()
+
+    @patch("provider.article.storage_context")
+    def test_download(self, fake_storage_context):
+        directory = TempDirectory()
+        doi_id = "95901"
+        resources = [
+            "preprints/95901/elife-preprint-95901-v1.pdf",
+            "preprints/95901/elife-preprint-95901-v1.xml",
+            "preprints/95901/elife-preprint-95901-v2.pdf",
+            "preprints/95901/elife-preprint-95901-v2.xml",
+        ]
+        # create file fixtures on disk
+        for resource in resources:
+            file_path = os.path.join(directory.path, resource)
+            os.makedirs(os.path.dirname(file_path), exist_ok=True)
+            with open(file_path, "wb") as open_file:
+                open_file.write(b"")
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources
+        )
+        # invoke
+        result = self.articleprovider.download_preprint_article_xml_from_s3(
+            directory.path, doi_id
+        )
+        # assert
+        self.assertEqual(result, "elife-preprint-95901-v2.xml")
+
+    @patch("provider.article.storage_context")
+    def test_not_found(self, fake_storage_context):
+        "test if no preprint XML file is found"
+        directory = TempDirectory()
+        doi_id = "95901"
+        resources = []
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, resources
+        )
+        # invoke
+        result = self.articleprovider.download_preprint_article_xml_from_s3(
+            directory.path, doi_id
+        )
+        # assert
+        self.assertEqual(result, False)
+
+    def test_no_doi_id(self):
+        "test if doi_id argument is None"
+        directory = TempDirectory()
+        self.assertEqual(
+            self.articleprovider.download_preprint_article_xml_from_s3(
+                directory.path, None
+            ),
+            None,
+        )
 
 
 class TestArticleWasEverPublished(unittest.TestCase):

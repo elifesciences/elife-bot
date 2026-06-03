@@ -5,6 +5,7 @@ import requests
 from provider import cleaner
 
 REQUESTS_TIMEOUT = (10, 60)
+LONG_REQUESTS_TIMEOUT = (10, 180)
 PDF_REQUESTS_TIMEOUT = (10, 180)
 
 # MECA file name configuration
@@ -82,7 +83,9 @@ def get_meca_article_pdf_path(folder_name, version_doi, caller_name, logger):
     return article_pdf_path
 
 
-def post_xml_file(file_path, endpoint_url, user_agent, caller_name, logger):
+def post_xml_file(
+    file_path, endpoint_url, user_agent, caller_name, logger, timeout=REQUESTS_TIMEOUT
+):
     "POST the file_path to the XSLT endpoint"
     headers = None
     if user_agent:
@@ -97,7 +100,7 @@ def post_xml_file(file_path, endpoint_url, user_agent, caller_name, logger):
     with open(file_path, "rb") as open_file:
         files.append(("file", (file_name, open_file, "text/xml")))
         response = requests.post(
-            endpoint_url, timeout=REQUESTS_TIMEOUT, headers=headers, files=files
+            endpoint_url, timeout=timeout, headers=headers, files=files
         )
     if response and response.status_code not in [200]:
         raise Exception(
@@ -115,7 +118,14 @@ def post_xml_file(file_path, endpoint_url, user_agent, caller_name, logger):
     return None
 
 
-def post_to_endpoint(xml_file_path, endpoint_url, user_agent, caller_name, logger):
+def post_to_endpoint(
+    xml_file_path,
+    endpoint_url,
+    user_agent,
+    caller_name,
+    logger,
+    timeout=REQUESTS_TIMEOUT,
+):
     "post XML file to endpoint, catch exceptions, return response content"
     try:
         response_content = post_xml_file(
@@ -124,6 +134,7 @@ def post_to_endpoint(xml_file_path, endpoint_url, user_agent, caller_name, logge
             user_agent,
             caller_name,
             logger,
+            timeout=timeout,
         )
     except Exception as exception:
         logger.exception(
@@ -139,8 +150,27 @@ def post_to_endpoint(xml_file_path, endpoint_url, user_agent, caller_name, logge
     return response_content
 
 
+def post_to_endpoint_long_timeout(
+    xml_file_path, endpoint_url, user_agent, caller_name, logger
+):
+    "post XML file to endpoint using a long timeout, catch exceptions, return response content"
+    return post_to_endpoint(
+        xml_file_path,
+        endpoint_url,
+        user_agent,
+        caller_name,
+        logger,
+        timeout=LONG_REQUESTS_TIMEOUT,
+    )
+
+
 def post_file_data_to_endpoint(
-    file_path, endpoint_url, user_agent, caller_name, logger
+    file_path,
+    endpoint_url,
+    user_agent,
+    caller_name,
+    logger,
+    timeout=PDF_REQUESTS_TIMEOUT,
 ):
     "POST data from the file_path to an endpoint and return the response content"
     headers = {"Content-Type": "application/xml"}
@@ -154,7 +184,7 @@ def post_file_data_to_endpoint(
     with open(file_path, "rb") as open_file:
         response = requests.post(
             endpoint_url,
-            timeout=PDF_REQUESTS_TIMEOUT,
+            timeout=timeout,
             headers=headers,
             data=open_file.read(),
         )
@@ -170,7 +200,7 @@ def post_file_data_to_endpoint(
             )
         )
     if response and response.status_code == 200:
-        return response.content
+        return response
     return None
 
 
@@ -179,16 +209,45 @@ def post_to_preprint_pdf_endpoint(
 ):
     "post XML file to PDF generation endpoint, catch exceptions, return response content"
     try:
-        response_content = post_file_data_to_endpoint(
+        response = post_file_data_to_endpoint(
             xml_file_path,
             endpoint_url,
             user_agent,
             caller_name,
             logger,
+            timeout=PDF_REQUESTS_TIMEOUT,
         )
     except Exception as exception:
         logger.exception(
             "%s, posting %s to preprint PDF endpoint %s: %s"
+            % (
+                caller_name,
+                xml_file_path,
+                endpoint_url,
+                str(exception),
+            )
+        )
+        response = None
+    return response
+
+
+def post_to_enrich_endpoint(
+    xml_file_path, endpoint_url, user_agent, caller_name, logger
+):
+    "post XML file to enrich refs endpoint, catch exceptions, return response content"
+    try:
+        response = post_file_data_to_endpoint(
+            xml_file_path,
+            endpoint_url,
+            user_agent,
+            caller_name,
+            logger,
+            timeout=LONG_REQUESTS_TIMEOUT,
+        )
+        response_content = response.content
+    except Exception as exception:
+        logger.exception(
+            "%s, posting %s to enrich endpoint %s: %s"
             % (
                 caller_name,
                 xml_file_path,

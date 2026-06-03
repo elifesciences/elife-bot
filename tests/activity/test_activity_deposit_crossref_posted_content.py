@@ -399,6 +399,13 @@ class TestDepositCrossrefPostedContent(unittest.TestCase):
                     "10.7554/eLife.103870.1"
                     "</rel:intra_work_relation>"
                 ),
+                (
+                    '<collection property="crawler-based">\n'
+                    '<item crawler="iParadigms">\n'
+                    "<resource>https://elifesciences.org/reviewed-preprints/103870v2/pdf</resource>\n"
+                    "</item>\n"
+                    "</collection>\n"
+                ),
             ],
         }
         directory = TempDirectory()

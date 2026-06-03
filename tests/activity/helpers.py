@@ -193,6 +193,15 @@ def add_files_to_meca_zip(zip_file_path, output_dir, file_details):
     with zipfile.ZipFile(new_zip_file_path, "w") as open_zip:
         for file_path in list_files(os.path.join(zip_temp_dir)):
             open_zip.write(os.path.join(zip_temp_dir, file_path), file_path)
+            # also add subfolder files
+            if os.path.isdir(os.path.join(zip_temp_dir, file_path)):
+                for sub_folder_path in list_files(
+                    os.path.join(zip_temp_dir, file_path)
+                ):
+                    open_zip.write(
+                        os.path.join(zip_temp_dir, file_path, sub_folder_path),
+                        "%s/%s" % (file_path, sub_folder_path),
+                    )
 
     # clean up the temporary directory
     shutil.rmtree(zip_temp_dir)

@@ -302,6 +302,7 @@ meca_import_auth_password = "import_pass"
 meca_import_temporal_namespace = "namespace"
 meca_import_workflow_id_prefix = "prefix"
 
+meca_enrich_refs_endpoint = "https://example.org/enrich"
 
 @mock_aws
 def aws_conn(service, service_creation_kwargs):

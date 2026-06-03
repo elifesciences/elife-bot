@@ -53,6 +53,7 @@ class workflow_IngestMeca(Workflow):
                 define_workflow_step("MecaPeerReviewEquations", data),
                 define_workflow_step("PreprintOcr", data),
                 define_workflow_step("MecaXslt", data),
+                define_workflow_step("MecaEnrichRefs", data),
                 define_workflow_step("ValidateJatsDtd", data),
                 define_workflow_step("ValidatePreprintSchematron", data),
                 define_workflow_step(

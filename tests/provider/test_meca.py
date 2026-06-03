@@ -265,7 +265,7 @@ class TestPostFileDataToEndpoint(unittest.TestCase):
             "test",
             logger,
         )
-        self.assertEqual(result, self.transformed_xml)
+        self.assertEqual(result.content, self.transformed_xml)
 
     @patch("requests.post")
     def test_status_code_400(self, fake_post):
@@ -310,13 +310,16 @@ class TesetPostToPreprintPdfEndpoint(unittest.TestCase):
         "test normal response content returned"
         logger = FakeLogger()
         response_content = b""
-        fake_post_file_data.return_value = response_content
+        status_code = 200
+        fake_post_file_data.return_value = FakeResponse(
+            status_code, content=response_content
+        )
         # invoke
         result = meca.post_to_preprint_pdf_endpoint(
             self.xml_file_path, self.endpoint_url, None, self.caller_name, logger
         )
         # assert
-        self.assertEqual(result, response_content)
+        self.assertEqual(result.content, response_content)
 
     @patch.object(meca, "post_file_data_to_endpoint")
     def test_exception(self, fake_post_file_data):
