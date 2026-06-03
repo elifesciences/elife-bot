@@ -1047,6 +1047,51 @@ class TestPrettyFormulaXml(unittest.TestCase):
         self.assertEqual(ElementTree.tostring(root), expected)
 
 
+class TestPrettyPubHistoryXml(unittest.TestCase):
+    "tests for pretty_pub_history_xml()"
+
+    def test_pretty_pub_history_xml(self):
+        "test adding whitespace to XML pub-history tags"
+        root = ElementTree.fromstring(
+            b'<article xmlns:xlink="http://www.w3.org/1999/xlink"'
+            b' article-type="research-article" dtd-version="1.3" xml:lang="en">'
+            b"<pub-history>"
+            b"<event>"
+            b"<event-desc>Preprint posted</event-desc>"
+            b'<date date-type="preprint" iso-8601-date="2022-11-22">'
+            b"<day>22</day>"
+            b"<month>11</month>"
+            b"<year>2022</year>"
+            b"</date>"
+            b'<self-uri content-type="preprint"'
+            b' xlink:href="https://doi.org/10.1101/2022.11.08.515698" />'
+            b"</event>"
+            b"</pub-history>"
+            b"</article>"
+        )
+        expected = (
+            b'<article xmlns:xlink="http://www.w3.org/1999/xlink"'
+            b' article-type="research-article" dtd-version="1.3" xml:lang="en">'
+            b"<pub-history>\n"
+            b"<event>\n"
+            b"<event-desc>Preprint posted</event-desc>\n"
+            b'<date date-type="preprint" iso-8601-date="2022-11-22">\n'
+            b"<day>22</day>\n"
+            b"<month>11</month>\n"
+            b"<year>2022</year>\n"
+            b"</date>\n"
+            b'<self-uri content-type="preprint"'
+            b' xlink:href="https://doi.org/10.1101/2022.11.08.515698" />\n'
+            b"</event>\n"
+            b"</pub-history>\n"
+            b"</article>"
+        )
+        # invoke
+        cleaner.pretty_pub_history_xml(root)
+        # assert
+        self.assertEqual(ElementTree.tostring(root), expected)
+
+
 class TestCleanInlineGraphicTags(unittest.TestCase):
     def test_clean_simple(self):
         "simple test example for clean_inline_graphic_tags"

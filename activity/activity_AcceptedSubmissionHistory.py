@@ -103,15 +103,19 @@ class activity_AcceptedSubmissionHistory(AcceptedBaseActivity):
         if history_data:
             if xml_root is None:
                 xml_root = cleaner.parse_article_xml(xml_file_path)
-            xml_root = cleaner.add_pub_history(
+            xml_root = cleaner.add_pub_history_meca(
                 xml_root,
                 history_data,
+                docmap_string=docmap_string,
                 identifier=input_filename,
                 user_agent=getattr(self.settings, "user_agent", None),
             )
             self.statuses["xml_root"] = True
 
         if self.statuses.get("xml_root"):
+            # make XML pretty
+            cleaner.pretty_pub_history_xml(xml_root)
+
             # write the XML root to disk
             cleaner.write_xml_file(xml_root, xml_file_path, input_filename)
 
