@@ -25,6 +25,14 @@ class TestMatchIssueTitle(unittest.TestCase):
         result = github_provider.match_issue_title(title, msid, version)
         self.assertEqual(result, True)
 
+    def test_match_extra_whitespace(self):
+        "test title matching article_id MSID and version"
+        title = "MSID:   95901   Version:   1   DOI x"
+        msid = 95901
+        version = 1
+        result = github_provider.match_issue_title(title, msid, version)
+        self.assertEqual(result, True)
+
     def test_no_match(self):
         "test if the title does not match"
         title = "MSID: 5 Version: b DOI x"

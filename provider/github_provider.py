@@ -13,7 +13,7 @@ class RetryException(RuntimeError):
 GITHUB_USER = "elifesciences"
 
 ISSUE_TITLE_MATCH_PATTERN = re.compile(
-    r"^MSID: (?P<msid>\d+?) Version: (?P<version>\d+?).*"
+    r"^MSID:\s*(?P<msid>\d+?)\s*Version:\s*(?P<version>\d+?).*"
 )
 
 
