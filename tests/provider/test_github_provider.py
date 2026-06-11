@@ -26,8 +26,16 @@ class TestMatchIssueTitle(unittest.TestCase):
         self.assertEqual(result, True)
 
     def test_match_extra_whitespace(self):
-        "test title matching article_id MSID and version"
+        "test title matching when there is extra whitespace separation"
         title = "MSID:   95901   Version:   1   DOI x"
+        msid = 95901
+        version = 1
+        result = github_provider.match_issue_title(title, msid, version)
+        self.assertEqual(result, True)
+
+    def test_match_with_no_whitespace(self):
+        "test title matching when there is no whitespace"
+        title = "MSID:95901Version:1DOI x"
         msid = 95901
         version = 1
         result = github_provider.match_issue_title(title, msid, version)
