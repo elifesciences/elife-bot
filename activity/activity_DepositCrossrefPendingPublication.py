@@ -97,10 +97,7 @@ class activity_DepositCrossrefPendingPublication(Activity):
 
         # add an accepted date if not set
         for article_object in article_object_map.values():
-            if not article_object.get_date("accepted"):
-                # add an accepted date
-                accepted_date_struct = utils.get_current_datetime().timetuple()
-                article_object.add_date(ArticleDate("accepted", accepted_date_struct))
+            set_accepted_date(article_object)
 
         # duplicate and modify the article for a version DOI deposit
         article_version_object_map = {}
@@ -386,3 +383,19 @@ def check_doi_does_not_exist(article, logger, user_agent=None):
         % article.doi
     )
     return False
+
+
+def set_accepted_date(article):
+    "check for an accepted date, and set one if not found"
+    if not article.get_date("accepted"):
+        # look for a sent-for-review date in publication_history
+        for pub_history_event in getattr(article, "publication_history", []):
+            if (
+                pub_history_event.event_type == "sent-for-review"
+                and pub_history_event.date
+            ):
+                article.add_date(ArticleDate("accepted", pub_history_event.date))
+        if not article.get_date("accepted"):
+            # add an accepted date
+            accepted_date_struct = utils.get_current_datetime().timetuple()
+            article.add_date(ArticleDate("accepted", accepted_date_struct))

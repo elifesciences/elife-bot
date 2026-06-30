@@ -5,7 +5,7 @@ import time
 import unittest
 from mock import patch
 from testfixtures import TempDirectory
-from elifearticle.article import Article
+from elifearticle.article import Article, ArticleDate, Event
 from provider import crossref, utils
 import activity.activity_DepositCrossrefPendingPublication as activity_module
 from activity.activity_DepositCrossrefPendingPublication import (
@@ -420,3 +420,49 @@ class TestArticleTitleRewrite(unittest.TestCase):
             article_object_map.get(filename).title,
             activity_module.PLACEHOLDER_ARTICLE_TITLE,
         )
+
+
+class TestSetAcceptedDate(unittest.TestCase):
+    "tests for set_accepted_date()"
+
+    def setUp(self):
+        self.accepted_date = "2026-02-01T00:00:00Z"
+        self.article = Article()
+
+    def test_accepted_date_exists(self):
+        "test if an accepted date is already present"
+        # instantiate an ArticleDate
+        accepted_date_struct = time.strptime(self.accepted_date, "%Y-%m-%dT%H:%M:%SZ")
+        event_date = ArticleDate("accepted", accepted_date_struct)
+        # add the Event to the article dates
+        self.article.add_date(event_date)
+        # invoke
+        activity_module.set_accepted_date(self.article)
+        # assert
+        self.assertEqual(self.article.get_date("accepted").date, accepted_date_struct)
+
+    def test_pub_history_date(self):
+        "test a sent-for-review date in the publicatoin_history is used"
+        # instantiate an Event
+        accepted_date_struct = time.strptime(self.accepted_date, "%Y-%m-%dT%H:%M:%SZ")
+        pub_history_event = Event()
+        pub_history_event.event_type = "sent-for-review"
+        pub_history_event.date = accepted_date_struct
+        # add the Event to publication_history
+        self.article.publication_history = [pub_history_event]
+        # invoke
+        activity_module.set_accepted_date(self.article)
+        # assert
+        self.assertEqual(self.article.get_date("accepted").date, accepted_date_struct)
+
+    @patch.object(utils, "get_current_datetime")
+    def test_default_date(self, fake_get_current_datetime):
+        "test a default date is set when no other date is found"
+        accepted_date_struct = time.strptime(self.accepted_date, "%Y-%m-%dT%H:%M:%SZ")
+        fake_get_current_datetime.return_value = datetime.datetime.strptime(
+            self.accepted_date, "%Y-%m-%dT%H:%M:%SZ"
+        )
+        # invoke
+        activity_module.set_accepted_date(self.article)
+        # assert
+        self.assertEqual(self.article.get_date("accepted").date, accepted_date_struct)
