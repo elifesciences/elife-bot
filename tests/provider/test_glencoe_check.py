@@ -92,6 +92,12 @@ class TestGlencoeCheck(unittest.TestCase):
                 b' xlink:href="elife-00666-video2.gif"></media>',
                 True,
             ),
+            (
+                b'<media mimetype="video/gif" id="video1"'
+                b' xlink:href="xlink:href="elife-00666-video2.gif">'
+                b"<label>Animation 1.</label></media>",
+                True,
+            ),
         ]
         for xml_str, expected in cases:
             self.assertEqual(glencoe_check.has_videos(xml_str), expected)
