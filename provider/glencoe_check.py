@@ -85,6 +85,8 @@ def jpg_href_values(video_metadata):
 def has_videos(xml_str):
     if re.search(r'<media[^>]*mimetype="video".*?>', unicode_encode(xml_str)):
         return True
+    if re.search(r'<media[^>]*mimetype="video/.*?".*?>', unicode_encode(xml_str)):
+        return True
     return False
 
 
