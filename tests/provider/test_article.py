@@ -326,10 +326,10 @@ class TestArticleWasEverPublished(unittest.TestCase):
     @patch("provider.article.storage_context")
     def test_was_ever_published(self, fake_storage_context):
         directory = TempDirectory()
-        workflow = "HEFCE"
+        workflow = "CLOCKSS"
         resources = [
-            "pub_router/published/20220308/elife_poa_e02444v2.xml",
-            "pub_router/published/20220308/elife02419.xml",
+            "clockss/published/20220308/elife_poa_e02444v2.xml",
+            "clockss/published/20220308/elife02419.xml",
         ]
         fake_storage_context.return_value = FakeStorageContext(
             directory.path, resources

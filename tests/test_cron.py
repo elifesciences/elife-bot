@@ -83,7 +83,7 @@ class TestCron(unittest.TestCase):
         },
         {
             "starter_name": "starter_PubRouterDeposit",
-            "workflow_id": "PubRouterDeposit_HEFCE",
+            "workflow_id": "PubRouterDeposit_CLOCKSS",
         },
         {"starter_name": "starter_PublishPOA", "workflow_id": "PublishPOA"},
     )
@@ -620,7 +620,6 @@ class TestConditionalStarts(unittest.TestCase):
                 "cron_FiveMinute",
                 "starter_DepositCrossref",
                 "starter_FindReingestPreprint",
-                "starter_PubRouterDeposit",
                 "starter_PubmedArticleDeposit",
                 "starter_AdminEmail",
             ],
@@ -628,7 +627,6 @@ class TestConditionalStarts(unittest.TestCase):
                 "cron_FiveMinute",
                 "DepositCrossref",
                 "FindReingestPreprint",
-                "PubRouterDeposit_HEFCE",
                 "PubmedArticleDeposit",
                 "AdminEmail",
             ],

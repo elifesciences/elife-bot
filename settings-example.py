@@ -192,19 +192,6 @@ class exp:
     PMC_FTP_PASSWORD = ""
     PMC_FTP_CWD = ""
 
-    # HEFCE Archive FTP settings
-    HEFCE_FTP_URI = ""
-    HEFCE_FTP_USERNAME = ""
-    HEFCE_FTP_PASSWORD = ""
-    HEFCE_FTP_CWD = ""
-
-    # HEFCE Archive SFTP settings
-    HEFCE_SFTP_URI = ""
-    HEFCE_SFTP_USERNAME = ""
-    HEFCE_SFTP_PASSWORD = ""
-    HEFCE_SFTP_CWD = ""
-    HEFCE_EMAIL = "hefce@example.org"
-
     # Cengage Archive FTP settings
     CENGAGE_FTP_URI = ""
     CENGAGE_FTP_USERNAME = ""
@@ -586,19 +573,6 @@ class dev:
     PMC_FTP_PASSWORD = ""
     PMC_FTP_CWD = ""
 
-    # HEFCE Archive FTP settings
-    HEFCE_FTP_URI = ""
-    HEFCE_FTP_USERNAME = ""
-    HEFCE_FTP_PASSWORD = ""
-    HEFCE_FTP_CWD = ""
-
-    # HEFCE Archive SFTP settings
-    HEFCE_SFTP_URI = ""
-    HEFCE_SFTP_USERNAME = ""
-    HEFCE_SFTP_PASSWORD = ""
-    HEFCE_SFTP_CWD = ""
-    HEFCE_EMAIL = "hefce@example.org"
-
     # Cengage Archive FTP settings
     CENGAGE_FTP_URI = ""
     CENGAGE_FTP_USERNAME = ""
@@ -976,19 +950,6 @@ class live:
     PMC_FTP_USERNAME = ""
     PMC_FTP_PASSWORD = ""
     PMC_FTP_CWD = ""
-
-    # HEFCE Archive FTP settings
-    HEFCE_FTP_URI = ""
-    HEFCE_FTP_USERNAME = ""
-    HEFCE_FTP_PASSWORD = ""
-    HEFCE_FTP_CWD = ""
-
-    # HEFCE Archive SFTP settings
-    HEFCE_SFTP_URI = ""
-    HEFCE_SFTP_USERNAME = ""
-    HEFCE_SFTP_PASSWORD = ""
-    HEFCE_SFTP_CWD = ""
-    HEFCE_EMAIL = "hefce@example.org"
 
     # Cengage Archive FTP settings
     CENGAGE_FTP_URI = ""

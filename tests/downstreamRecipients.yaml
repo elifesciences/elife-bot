@@ -200,30 +200,6 @@ GoOA:
   settings_ftp_password: GOOA_FTP_PASSWORD
   settings_ftp_cwd: GOOA_FTP_CWD
 
-HEFCE:
-  activity_name: FTPArticle
-  s3_bucket_folder: pub_router
-  schedule_downstream: true
-  schedule_silent_correction: true
-  schedule_article_types:
-    - vor
-  do_not_schedule:
-    - retraction_of_preprint
-  send_by_protocol: sftp
-  send_once_only: true
-  send_article_types:
-    - vor
-  remove_version_doi: true
-  settings_friendly_email_recipients: HEFCE_EMAIL
-  settings_ftp_uri: HEFCE_FTP_URI
-  settings_ftp_username: HEFCE_FTP_USERNAME
-  settings_ftp_password: HEFCE_FTP_PASSWORD
-  settings_ftp_cwd: HEFCE_FTP_CWD
-  settings_sftp_uri: HEFCE_SFTP_URI
-  settings_sftp_username: HEFCE_SFTP_USERNAME
-  settings_sftp_password: HEFCE_SFTP_PASSWORD
-  settings_sftp_cwd: HEFCE_SFTP_CWD
-
 OASwitchboard:
   activity_name: FTPArticle
   s3_bucket_folder: oaswitchboard

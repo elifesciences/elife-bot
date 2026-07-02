@@ -64,13 +64,13 @@ class TestPubRouterDeposit(unittest.TestCase):
     ):
         directory = TempDirectory()
         fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
-        activity_data = {"data": {"workflow": "HEFCE"}}
+        activity_data = {"data": {"workflow": "CLOCKSS"}}
         fake_was_ever_published.return_value = None
         resources = helpers.populate_storage(
             from_dir="tests/test_data/",
             to_dir=directory.path,
             filenames=["elife00013.xml", "elife09169.xml"],
-            sub_dir="pub_router/outbox",
+            sub_dir="clockss/outbox",
         )
         fake_outbox_storage_context.return_value = FakeStorageContext(
             directory.path, resources
@@ -111,13 +111,13 @@ class TestPubRouterDeposit(unittest.TestCase):
         directory = TempDirectory()
         tmp_dir = self.pubrouterdeposit.get_tmp_dir()
         fake_email_smtp_connect.return_value = FakeSMTPServer(directory.path)
-        activity_data = {"data": {"workflow": "HEFCE"}}
+        activity_data = {"data": {"workflow": "CLOCKSS"}}
         fake_was_ever_published.return_value = None
         resources = helpers.populate_storage(
             from_dir="tests/test_data/",
             to_dir=directory.path,
             filenames=["elife00013.xml", "elife09169.xml"],
-            sub_dir="pub_router/outbox",
+            sub_dir="clockss/outbox",
         )
         fake_outbox_storage_context.return_value = FakeStorageContext(
             directory.path, resources
@@ -266,7 +266,7 @@ class TestStartFtpArticleWorkflow(unittest.TestCase):
         self.pubrouterdeposit = activity_PubRouterDeposit(
             settings_mock, FakeLogger(), None, None, None
         )
-        self.pubrouterdeposit.workflow = "HEFCE"
+        self.pubrouterdeposit.workflow = "CLOCKSS"
         self.article = article()
         self.article.doi_id = "00666"
 
@@ -392,7 +392,7 @@ class TestApproveArticles(unittest.TestCase):
         "CNKI",
         "CNPIEC",
         "GoOA",
-        "HEFCE",
+        "CLOCKSS",
         "OASwitchboard",
         "OVID",
         "PMC",
@@ -540,7 +540,6 @@ class TestApproveArticles(unittest.TestCase):
         "CNKI",
         "CNPIEC",
         "GoOA",
-        "HEFCE",
         "OASwitchboard",
         "WoS",
     )
@@ -583,7 +582,7 @@ class TestApproveArticles(unittest.TestCase):
         "CNKI",
         "CNPIEC",
         "GoOA",
-        "HEFCE",
+        "CLOCKSS",
         "OASwitchboard",
         "PMC",
         "WoS",
@@ -681,7 +680,7 @@ class TestApproveArticles(unittest.TestCase):
 class TestGetFriendlyEmailRecipients(unittest.TestCase):
     @unpack
     @data(
-        {"workflow": "HEFCE", "settings_name": "HEFCE_EMAIL"},
+        {"workflow": "CLOCKSS", "settings_name": "CLOCKSS_EMAIL"},
         {"workflow": "Cengage", "settings_name": "CENGAGE_EMAIL"},
         {"workflow": "GoOA", "settings_name": "GOOA_EMAIL"},
         {"workflow": "CNPIEC", "settings_name": "CNPIEC_EMAIL"},
@@ -720,11 +719,11 @@ class TestGetFriendlyEmailRecipients(unittest.TestCase):
 
         class TestSettings:
             downstream_recipients_yaml = "tests/downstreamRecipients.yaml"
-            HEFCE_EMAIL = "email@example.org"
+            CLOCKSS_EMAIL = "email@example.org"
 
         test_settings = TestSettings()
         self.assertIsNotNone(
-            activity_module.get_friendly_email_recipients(test_settings, "HEFCE")
+            activity_module.get_friendly_email_recipients(test_settings, "CLOCKSS")
         )
 
 
