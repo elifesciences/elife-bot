@@ -18,7 +18,7 @@ class TestStarterFTPArticle(unittest.TestCase):
             [
                 ("domain", "test_domain"),
                 ("task_list", "test_task_list"),
-                ("workflow_id", "FTPArticle_HEFCE_666"),
+                ("workflow_id", "FTPArticle_CLOCKSS_666"),
                 ("workflow_name", "FTPArticle"),
                 ("workflow_version", "1"),
                 ("child_policy", None),
@@ -26,13 +26,13 @@ class TestStarterFTPArticle(unittest.TestCase):
                 (
                     "input",
                     (
-                        '{"data": {"workflow": "HEFCE", "elife_id": "666",'
+                        '{"data": {"workflow": "CLOCKSS", "elife_id": "666",'
                         ' "version": null, "publication_state": null}}'
                     ),
                 ),
             ]
         )
-        params = self.starter.get_workflow_params(workflow="HEFCE", doi_id="666")
+        params = self.starter.get_workflow_params(workflow="CLOCKSS", doi_id="666")
         self.assertEqual(params, expected)
 
     def test_get_workflow_params_no_workflow(self):
@@ -56,14 +56,14 @@ class TestStarterFTPArticle(unittest.TestCase):
 
     def test_get_workflow_params_no_doi_id(self):
         with self.assertRaises(NullRequiredDataException) as test_exception:
-            self.starter.get_workflow_params(workflow="HEFCE")
+            self.starter.get_workflow_params(workflow="CLOCKSS")
         self.assertEqual(
             str(test_exception.exception), "Did not get a doi_id argument. Required."
         )
 
     @patch("boto3.client")
     def test_start(self, fake_client):
-        workflow = "HEFCE"
+        workflow = "CLOCKSS"
         doi_id = 3
         fake_client.return_value = FakeSWFClient()
         self.assertIsNone(self.starter.start(settings_mock, workflow, doi_id))

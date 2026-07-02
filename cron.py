@@ -325,18 +325,6 @@ def conditional_starts(current_datetime):
     elif current_time.tm_min >= 45 and current_time.tm_min <= 59:
         # Bottom quarter of the hour
 
-        # Pub router deposits once per day 23:45 UTC
-        if current_time.tm_hour == 23:
-            conditional_start_list.append(
-                OrderedDict(
-                    [
-                        ("starter_name", "starter_PubRouterDeposit"),
-                        ("workflow_id", "PubRouterDeposit_HEFCE"),
-                        ("start_seconds", 60 * 31),
-                    ]
-                )
-            )
-
         # Cengage deposits once per day 22:45 UTC
         if current_time.tm_hour == 22:
             conditional_start_list.append(

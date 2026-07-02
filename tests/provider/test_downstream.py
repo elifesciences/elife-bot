@@ -21,7 +21,7 @@ class TestChooseOutboxes(unittest.TestCase):
         self.assertEqual(outbox_list, [])
 
     def test_empty_workflow_rules(self):
-        rules = {"HEFCE": {}}
+        rules = {"CLOCKSS": {}}
         outbox_list = downstream.choose_outboxes("vor", True, rules)
         self.assertEqual(outbox_list, [])
 
@@ -50,7 +50,6 @@ class TestChooseOutboxes(unittest.TestCase):
             "gooa",
             "oaswitchboard",
             "pmc",
-            "pub_router",
             "wos",
         ]:
             self.assertFalse(
@@ -81,7 +80,6 @@ class TestChooseOutboxes(unittest.TestCase):
             "gooa",
             "oaswitchboard",
             "pmc",
-            "pub_router",
             "publication_email",
             "wos",
         ]:
@@ -103,7 +101,6 @@ class TestChooseOutboxes(unittest.TestCase):
             "oaswitchboard",
             "ovid",
             "pmc",
-            "pub_router",
             "publication_email",
             "pubmed",
             "wos",
@@ -126,7 +123,6 @@ class TestChooseOutboxes(unittest.TestCase):
             "gooa",
             "ovid",
             "pmc",
-            "pub_router",
             "pubmed",
             "wos",
             "zendy",
@@ -159,7 +155,6 @@ class TestChooseOutboxes(unittest.TestCase):
             "gooa",
             "ovid",
             "pmc",
-            "pub_router",
             "wos",
             "zendy",
         ]:
@@ -192,7 +187,6 @@ class TestChooseOutboxes(unittest.TestCase):
             "gooa",
             "ovid",
             "pmc",
-            "pub_router",
             "wos",
             "zendy",
         ]:
@@ -236,7 +230,6 @@ class TestChooseOutboxes(unittest.TestCase):
             "pubmed",
             "pmc",
             "ovid",
-            "pub_router",
             "wos",
             "zendy",
         ]:
@@ -263,7 +256,6 @@ class TestChooseOutboxes(unittest.TestCase):
             "pubmed",
             "pmc",
             "ovid",
-            "pub_router",
             "zendy",
         ]:
             self.assertTrue(

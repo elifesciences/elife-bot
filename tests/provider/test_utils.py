@@ -333,7 +333,7 @@ class TestConsoleStartEnvDocument(unittest.TestCase):
 class TestConsoleStartEnvWorkflow(unittest.TestCase):
     def test_console_start_env_workflow(self):
         env = "foo"
-        workflow = "HEFCE"
+        workflow = "CLOCKSS"
         expected = env, workflow
         testargs = ["cron.py", "-e", env, "-w", workflow]
         with patch.object(sys, "argv", testargs):
@@ -357,7 +357,7 @@ class TestConsoleStartEnvWorkflowDoiId(unittest.TestCase):
     def test_console_start_env_workflow_doi_id(self):
         env = "foo"
         doi_id = "7"
-        workflow = "HEFCE"
+        workflow = "CLOCKSS"
         expected = env, doi_id, workflow
         testargs = ["cron.py", "-e", env, "-d", doi_id, "-w", workflow]
         with patch.object(sys, "argv", testargs):

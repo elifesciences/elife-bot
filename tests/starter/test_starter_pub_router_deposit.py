@@ -18,15 +18,15 @@ class TestStarterPubRouterDeposit(unittest.TestCase):
             [
                 ("domain", "test_domain"),
                 ("task_list", "test_task_list"),
-                ("workflow_id", "PubRouterDeposit_HEFCE"),
+                ("workflow_id", "PubRouterDeposit_CLOCKSS"),
                 ("workflow_name", "PubRouterDeposit"),
                 ("workflow_version", "1"),
                 ("child_policy", None),
                 ("execution_start_to_close_timeout", None),
-                ("input", '{"data": {"workflow": "HEFCE"}}'),
+                ("input", '{"data": {"workflow": "CLOCKSS"}}'),
             ]
         )
-        params = self.starter.get_workflow_params(workflow="HEFCE")
+        params = self.starter.get_workflow_params(workflow="CLOCKSS")
         self.assertEqual(params, expected)
 
     def test_get_workflow_params_no_workflow(self):
@@ -38,6 +38,6 @@ class TestStarterPubRouterDeposit(unittest.TestCase):
 
     @patch("boto3.client")
     def test_start(self, fake_client):
-        workflow = "HEFCE"
+        workflow = "CLOCKSS"
         fake_client.return_value = FakeSWFClient()
         self.assertIsNone(self.starter.start(settings_mock, workflow))

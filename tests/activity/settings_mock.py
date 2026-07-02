@@ -106,17 +106,6 @@ jatsgenerator_config_section = "elife"
 packagepoa_config_file = "tests/activity/packagepoa.cfg"
 packagepoa_config_section = "elife"
 
-HEFCE_FTP_URI = "hefce_ftp.localhost"
-HEFCE_FTP_USERNAME = ""
-HEFCE_FTP_PASSWORD = ""
-HEFCE_FTP_CWD = ""
-HEFCE_EMAIL = ["", ""]
-
-HEFCE_SFTP_URI = "hefce_sftp.localhost:22"
-HEFCE_SFTP_USERNAME = ""
-HEFCE_SFTP_PASSWORD = ""
-HEFCE_SFTP_CWD = ""
-
 CENGAGE_FTP_URI = "cengage.localhost"
 CENGAGE_FTP_USERNAME = ""
 CENGAGE_FTP_PASSWORD = ""

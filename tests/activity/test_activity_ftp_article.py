@@ -40,16 +40,6 @@ class TestFTPArticle(unittest.TestCase):
     @patch("activity.activity_FTPArticle.FTP")
     @patch("activity.activity_FTPArticle.SFTP")
     @data(
-        (
-            "HEFCE",
-            None,
-            None,
-            True,
-            "hefce_ftp.localhost",
-            "hefce_sftp.localhost:22",
-            1,
-            True,
-        ),
         ("Cengage", None, None, True, "cengage.localhost", None, 1, True),
         ("GoOA", None, None, True, "gooa.localhost", None, 1, True),
         ("WoS", None, None, True, "wos.localhost", None, 1, True),
@@ -168,28 +158,27 @@ class TestFTPArticle(unittest.TestCase):
         self,
     ):
         "test for when the SFTP_URI is blank"
-        self.activity.settings.HEFCE_SFTP_URI = ""
-        workflow = "HEFCE"
+        self.activity.settings.ZENDY_SFTP_URI = ""
+        workflow = "Zendy"
         elife_id = "19405"
         expected_result = self.activity.ACTIVITY_PERMANENT_FAILURE
         activity_data = {"data": {"elife_id": elife_id, "workflow": workflow}}
         self.assertEqual(self.activity.do_activity(activity_data), expected_result)
 
-    @patch.object(activity_FTPArticle, "download_files_from_s3")
-    @patch.object(activity_FTPArticle, "sftp_to_endpoint")
+
+    @patch.object(activity_module, "collect_credentials")
     def test_do_activity_failure(
         self,
-        fake_sftp_to_endpoint,
-        fake_download_files_from_s3,
+        fake_collect_credentials,
     ):
-        fake_sftp_to_endpoint.return_value = True
-        fake_download_files_from_s3.return_value = True
-        workflow = "HEFCE"
+        fake_collect_credentials.side_effect = Exception("An exception")
+        workflow = "CLOCKSS"
         elife_id = "non_numeric_raises_exception"
         expected_result = False
         # Cause an exception by setting elife_id as non numeric for now
         activity_data = {"data": {"elife_id": elife_id, "workflow": workflow}}
         self.assertEqual(self.activity.do_activity(activity_data), expected_result)
+
 
     @patch.object(activity_FTPArticle, "download_files_from_s3")
     @patch.object(activity_FTPArticle, "sftp_to_endpoint")
@@ -200,7 +189,7 @@ class TestFTPArticle(unittest.TestCase):
     ):
         fake_sftp_to_endpoint.side_effect = Exception("An exception")
         fake_download_files_from_s3.return_value = True
-        workflow = "HEFCE"
+        workflow = "CLOCKSS"
         elife_id = "19405"
         expected_result = self.activity.ACTIVITY_PERMANENT_FAILURE
         # Cause an exception by setting elife_id as non numeric for now
@@ -249,7 +238,7 @@ class TestDownloadFilesFromS3(unittest.TestCase):
         fake_download_archive_zip.return_value = True
         fake_repackage_archive_zip.return_value = False
         doi_id = "353"
-        workflow = "HEFCE"
+        workflow = "CLOCKSS"
         version = None
         publication_state = None
         # invoke the method being tested
@@ -391,7 +380,7 @@ class TestMoveOrRepackagePmcZip(unittest.TestCase):
         (
             "tests/test_data/pmc/elife-05-19405.zip",
             19405,
-            "HEFCE",
+            "CLOCKSS",
             "elife-05-19405.zip",
             [
                 "elife-19405.pdf",
