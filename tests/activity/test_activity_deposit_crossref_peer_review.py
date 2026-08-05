@@ -68,7 +68,8 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
                 "<month>05</month>",
                 "<month>06</month>",
                 "<ai:license_ref>http://creativecommons.org/licenses/by/4.0/</ai:license_ref>",
-                '<person_name contributor_role="editor" sequence="first">',
+                '<person_name sequence="first">',
+                '<role type="editor" vocab="crossref"/>',
                 "<surname>Bergstrom</surname>",
                 (
                     '<rel:inter_work_relation identifier-type="doi" relationship-type="isReviewOf">'
@@ -110,7 +111,9 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
                     '<rel:inter_work_relation identifier-type="doi" relationship-type="isReviewOf">'
                     + "10.7554/eLife.1234567890.4</rel:inter_work_relation>"
                 ),
-                '<anonymous contributor_role="author" sequence="first"/>',
+                (
+                    '<anonymous sequence="first">\n                    <role type="author" vocab="crossref"/>\n                </anonymous>'
+                ),
                 '<peer_review stage="pre-publication" type="editor-report">',
                 '<peer_review stage="pre-publication" type="referee-report">',
                 '<peer_review stage="pre-publication" type="author-comment">',
@@ -144,7 +147,9 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
                     '<rel:inter_work_relation identifier-type="doi" relationship-type="isReviewOf">'
                     + "10.7554/eLife.84364.2</rel:inter_work_relation>"
                 ),
-                '<anonymous contributor_role="author" sequence="first"/>',
+                (
+                    '<anonymous sequence="first">\n                    <role type="author" vocab="crossref"/>\n                </anonymous>'
+                ),
                 '<peer_review stage="pre-publication" type="editor-report">',
                 "<ORCID>https://orcid.org/test-orcid</ORCID>",
                 '<peer_review stage="pre-publication" type="referee-report">',
@@ -227,7 +232,9 @@ class TestDepositCrossrefPeerReview(unittest.TestCase):
                     + "10.7554/eLife.103870.2</rel:inter_work_relation>"
                 ),
                 "<ORCID>http://orcid.org/0000-0002-2050-0745</ORCID>",
-                '<anonymous contributor_role="author" sequence="first"/>',
+                (
+                    '<anonymous sequence="first">\n                    <role type="author" vocab="crossref"/>\n                </anonymous>'
+                ),
                 '<peer_review stage="pre-publication" type="editor-report">',
                 '<peer_review stage="pre-publication" type="referee-report">',
                 '<peer_review stage="pre-publication" type="author-comment">',
