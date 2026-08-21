@@ -115,23 +115,20 @@ class TestAcceptedSubmissionHistory(unittest.TestCase):
 
         with open(xml_file_path, "r", encoding="utf-8") as open_file:
             xml_content = open_file.read()
-        # assert found number of sub-article tags in the XML
-        self.assertTrue(
-            xml_content.count(
-                (
-                    '<date date-type="sent-for-review" iso-8601-date="2022-11-29">'
-                    "<day>29</day><month>11</month><year>2022</year>"
-                    "</date>"
-                    "</history>"
-                )
-            )
-            == 1
-        )
+
         # assert pub-history is present in the XML
         self.assertTrue(
             xml_content.count(
                 (
                     "<pub-history>\n"
+                    "<event>\n"
+                    "<event-desc>Sent for review</event-desc>\n"
+                    '<date date-type="sent-for-review" iso-8601-date="2022-11-29">\n'
+                    "<day>29</day>\n"
+                    "<month>11</month>\n"
+                    "<year>2022</year>\n"
+                    "</date>\n"
+                    "</event>\n"
                     "<event>\n"
                     "<event-desc>Preprint posted</event-desc>\n"
                     '<date date-type="preprint" iso-8601-date="2022-11-22">\n'

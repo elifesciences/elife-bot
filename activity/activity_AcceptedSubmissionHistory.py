@@ -81,25 +81,24 @@ class activity_AcceptedSubmissionHistory(AcceptedBaseActivity):
 
         # add log messages if an external href is not approved to download
         xml_root = None
+
+        review_date_data = None
         if not review_date_string:
             cleaner.LOGGER.warning(
                 "%s A sent-for-review date was not added to the XML", input_filename
             )
         else:
-            # convert the review-date to a time_struct object
-            date_struct = cleaner.date_struct_from_string(review_date_string)
-
-            # add the sent-for-review date to a history tag in the XML file
-            if date_struct:
-                xml_root = cleaner.parse_article_xml(xml_file_path)
-                cleaner.add_history_date(
-                    xml_root, "sent-for-review", date_struct, input_filename
-                )
-
-                self.statuses["xml_root"] = True
+            review_date_data = {"type": "sent-for-review", "date": review_date_string}
 
         # add pub-history tag
         history_data = cleaner.docmap_preprint_history_from_docmap(docmap_string)
+
+        # add sent-for-review date to the history_data
+        if history_data and review_date_data:
+            history_data.insert(0, review_date_data)
+        elif review_date_string:
+            history_data = [review_date_data]
+
         if history_data:
             if xml_root is None:
                 xml_root = cleaner.parse_article_xml(xml_file_path)
