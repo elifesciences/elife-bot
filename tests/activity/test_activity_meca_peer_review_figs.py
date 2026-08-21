@@ -140,7 +140,7 @@ class TestMecaPeerReviewFigs(unittest.TestCase):
                     "<title>Caption title.</title>\n"
                     "<p>Caption paragraph.</p>\n"
                     "</caption>\n"
-                    '<graphic mimetype="image" mime-subtype="jpg"'
+                    '<graphic mimetype="image/jpg"'
                     ' xlink:href="elife-95901-sa1-fig1.jpg"/>\n'
                     "</fig>\n"
                     "</body>\n"
@@ -154,7 +154,7 @@ class TestMecaPeerReviewFigs(unittest.TestCase):
                     "<title>Caption title.</title>\n"
                     "<p>Caption paragraph.</p>\n"
                     "</caption>\n"
-                    '<graphic mimetype="image" mime-subtype="jpg" xlink:href="sa2-fig1.jpg"/>\n'
+                    '<graphic mimetype="image/jpg" xlink:href="sa2-fig1.jpg"/>\n'
                     "</fig>\n"
                     "<p>Paragraph.</p>\n"
                     '<p><inline-graphic xlink:href="local3.jpg"/></p>\n'
@@ -164,7 +164,7 @@ class TestMecaPeerReviewFigs(unittest.TestCase):
                     "<title>Caption title.</title>\n"
                     "<p>Caption paragraph.</p>\n"
                     "</caption>\n"
-                    '<graphic mimetype="image" mime-subtype="jpg" xlink:href="sa2-fig2.jpg"/>\n'
+                    '<graphic mimetype="image/jpg" xlink:href="sa2-fig2.jpg"/>\n'
                     "</fig>\n"
                     "</body>\n"
                     "</sub-article>"
@@ -460,7 +460,7 @@ class TestCollectFigFileDetails(unittest.TestCase):
             "<title>Caption title.</title>\n"
             "<p>Caption paragraph.</p>\n"
             "</caption>\n"
-            '<graphic mimetype="image" mime-subtype="jpg"'
+            '<graphic mimetype="image/jpg"'
             ' xlink:href="elife-95901-sa1-fig1.jpg"/>\n'
             "</fig>\n"
             "</body>\n"
