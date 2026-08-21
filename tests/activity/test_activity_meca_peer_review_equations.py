@@ -95,7 +95,7 @@ class TestMecaPeerReviewEquations(unittest.TestCase):
                     '<inline-graphic xlink:href="elife-sa1-equ1.jpg"/></inline-formula>.</p>\n'
                     "<p>Following is a display formula:</p>\n"
                     '<disp-formula id="sa1equ2">\n'
-                    '<graphic mimetype="image" mime-subtype="jpg"'
+                    '<graphic mimetype="image/jpg"'
                     ' xlink:href="elife-sa1-equ2.jpg"/>\n'
                     "</disp-formula>\n"
                     "</body>\n"
@@ -486,7 +486,7 @@ DISPLAY_FORMULA_XML = (
     "<p>Following is a display formula:</p>\n"
     '<disp-formula id="sa1equ2">\n'
     "<label>(1)</label>\n"
-    '<graphic mimetype="image" mime-subtype="jpg" xlink:href="elife-sa1-equ2.jpg"/>\n'
+    '<graphic mimetype="image/jpg" xlink:href="elife-sa1-equ2.jpg"/>\n'
     "</disp-formula>\n"
 )
 

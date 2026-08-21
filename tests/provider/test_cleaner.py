@@ -580,7 +580,7 @@ class TestTransformEquations(unittest.TestCase):
             ' <inline-graphic xlink:href="elife-inf1.jpg" />.</p>'
             "<p>Following is a display formula:</p>"
             '<disp-formula id="sa1equ2">'
-            '<graphic mimetype="image" mime-subtype="jpg" xlink:href="elife-sa1-equ2.jpg" />'
+            '<graphic mimetype="image/jpg" xlink:href="elife-sa1-equ2.jpg" />'
             "</disp-formula>"
             "</body>"
             "</sub-article>"

@@ -129,7 +129,7 @@ class TestMecaPeerReviewTables(unittest.TestCase):
                     "<title>Caption title.</title>\n"
                     "<p>Caption paragraph.</p>\n"
                     "</caption>\n"
-                    '<graphic mimetype="image" mime-subtype="jpg"'
+                    '<graphic mimetype="image/jpg"'
                     ' xlink:href="elife-95901-sa1-table1.jpg"/>\n'
                     "</table-wrap>\n"
                     "</body>\n"
@@ -143,7 +143,7 @@ class TestMecaPeerReviewTables(unittest.TestCase):
                     "<title>Caption title.</title>\n"
                     "<p>Caption paragraph.</p>\n"
                     "</caption>\n"
-                    '<graphic mimetype="image" mime-subtype="jpg" xlink:href="sa2-table1.jpg"/>\n'
+                    '<graphic mimetype="image/jpg" xlink:href="sa2-table1.jpg"/>\n'
                     "</table-wrap>\n"
                     "</body>\n"
                     "</sub-article>\n"
@@ -438,7 +438,7 @@ class TestCollectTableFileDetails(unittest.TestCase):
             "<title>Caption title.</title>\n"
             "<p>Caption paragraph.</p>\n"
             "</caption>\n"
-            '<graphic mimetype="image" mime-subtype="jpg"'
+            '<graphic mimetype="image/jpg"'
             ' xlink:href="elife-95901-sa1-table1.jpg"/>\n'
             "</table-wrap>\n"
             "</body>\n"

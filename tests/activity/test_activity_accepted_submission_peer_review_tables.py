@@ -141,7 +141,7 @@ class TestAcceptedSubmissionPeerReviewTables(unittest.TestCase):
                     "<title>Caption title.</title>"
                     "<p>Caption paragraph.</p>"
                     "</caption>"
-                    '<graphic mimetype="image" mime-subtype="jpg"'
+                    '<graphic mimetype="image/jpg"'
                     ' xlink:href="elife-45644-sa1-table1.jpg"/>'
                     "</table-wrap>"
                     "</body>"
@@ -155,7 +155,7 @@ class TestAcceptedSubmissionPeerReviewTables(unittest.TestCase):
                     "<title>Caption title.</title>"
                     "<p>Caption paragraph.</p>"
                     "</caption>"
-                    '<graphic mimetype="image" mime-subtype="jpg" xlink:href="sa2-table1.jpg"/>'
+                    '<graphic mimetype="image/jpg" xlink:href="sa2-table1.jpg"/>'
                     "</table-wrap>"
                     "</body>"
                     "</sub-article>"

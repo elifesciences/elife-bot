@@ -152,7 +152,7 @@ class TestAcceptedSubmissionPeerReviewFigs(unittest.TestCase):
                     "<title>Caption title.</title>"
                     "<p>Caption paragraph.</p>"
                     "</caption>"
-                    '<graphic mimetype="image" mime-subtype="jpg" xlink:href="sa1-fig1.jpg"/>'
+                    '<graphic mimetype="image/jpg" xlink:href="sa1-fig1.jpg"/>'
                     "</fig>"
                     "</body>"
                     "</sub-article>"
@@ -165,7 +165,7 @@ class TestAcceptedSubmissionPeerReviewFigs(unittest.TestCase):
                     "<title>Caption title.</title>"
                     "<p>Caption paragraph.</p>"
                     "</caption>"
-                    '<graphic mimetype="image" mime-subtype="jpg" xlink:href="sa2-fig1.jpg"/>'
+                    '<graphic mimetype="image/jpg" xlink:href="sa2-fig1.jpg"/>'
                     "</fig>"
                     '<p>Paragraph.</p><p><inline-graphic xlink:href="local3.jpg"/></p>'
                     '<fig id="sa2fig2">'
@@ -174,7 +174,7 @@ class TestAcceptedSubmissionPeerReviewFigs(unittest.TestCase):
                     "<title>Caption title.</title>"
                     "<p>Caption paragraph.</p>"
                     "</caption>"
-                    '<graphic mimetype="image" mime-subtype="jpg" xlink:href="sa2-fig2.jpg"/>'
+                    '<graphic mimetype="image/jpg" xlink:href="sa2-fig2.jpg"/>'
                     "</fig>"
                     "</body>"
                     "</sub-article>"
