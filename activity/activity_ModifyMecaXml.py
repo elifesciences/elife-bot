@@ -155,14 +155,28 @@ class activity_ModifyMecaXml(MecaBaseActivity):
             elocation_id = "RP%s" % utils.msid_from_doi(doi)
         modify_elocation_id(xml_root, elocation_id)
 
-        # 5. remove <history> (if present), create <history> with a sent-for-review date
-        modify_history(xml_root, review_date_struct, identifier=version_doi)
+        # 5. remove <history> (if present)
+        modify_history(xml_root, None, identifier=version_doi)
 
         # 6. add <pub-history>, with events and dates, including self-uri tags
         if history_data:
             # remove current version_doi data from history data
             history_data = cleaner.prune_history_data(history_data, doi, version)
 
+        # add sent-for-review date to the history_data
+        review_date_data = None
+        if not review_date_string:
+            cleaner.LOGGER.warning(
+                "%s A sent-for-review date was not added to the XML", version_doi
+            )
+        else:
+            review_date_data = {"type": "sent-for-review", "date": review_date_string}
+
+        if history_data and review_date_data:
+            history_data.insert(0, review_date_data)
+
+        # continue modifying pub-history
+        if history_data:
             # if silent correction, remove pub-history if present
             if session.get_value("run_type") == "silent-correction":
                 clear_pub_history(xml_root)
@@ -327,17 +341,12 @@ def modify_elocation_id(xml_root, elocation_id):
 
 
 def modify_history(xml_root, review_date_struct, identifier):
-    "modify history tag and add history dates"
+    "modify history tag"
     # remove history tags
-    history_tag = xml_root.find(".//front/article-meta/history")
-    if history_tag:
-        for tag in history_tag.findall("*"):
-            history_tag.remove(tag)
-    # add the sent-for-review date to a history tag in the XML file
-    if review_date_struct:
-        cleaner.add_history_date(
-            xml_root, "sent-for-review", review_date_struct, identifier
-        )
+    article_meta_tag = xml_root.find(".//front/article-meta")
+    if article_meta_tag:
+        for history_tag in article_meta_tag.findall("history"):
+            article_meta_tag.remove(history_tag)
 
 
 def clear_pub_history(xml_root):
