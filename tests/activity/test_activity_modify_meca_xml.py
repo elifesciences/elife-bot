@@ -197,14 +197,19 @@ class TestModifyMecaXml(unittest.TestCase):
         # assert elocation-id tag
         self.assertTrue("</volume>\n<elocation-id>RP95901</elocation-id>" in xml_string)
         # assert history tag
-        self.assertTrue('<history>\n<date date-type="received">' not in xml_string)
-        self.assertTrue(
-            '<history>\n<date date-type="sent-for-review" iso-8601-date=' in xml_string
-        )
+        self.assertTrue("<history>" not in xml_string)
         # assert pub-history
         self.assertTrue(
             (
                 "<pub-history>\n"
+                "<event>\n"
+                "<event-desc>Sent for review</event-desc>\n"
+                '<date date-type="sent-for-review" iso-8601-date="2024-01-19">\n'
+                "<day>19</day>\n"
+                "<month>01</month>\n"
+                "<year>2024</year>\n"
+                "</date>\n"
+                "</event>\n"
                 "<event>\n"
                 "<event-desc>Preprint posted</event-desc>\n"
                 '<date date-type="preprint" iso-8601-date="2024-01-24">\n'
@@ -614,6 +619,14 @@ class TestModifyMecaXml(unittest.TestCase):
         self.assertTrue(
             (
                 "<pub-history>\n"
+                "<event>\n"
+                "<event-desc>Sent for review</event-desc>\n"
+                '<date date-type="sent-for-review" iso-8601-date="2024-01-19">\n'
+                "<day>19</day>\n"
+                "<month>01</month>\n"
+                "<year>2024</year>\n"
+                "</date>\n"
+                "</event>\n"
                 "<event>\n"
                 "<event-desc>Preprint posted</event-desc>\n"
                 '<date date-type="preprint" iso-8601-date="2024-01-24">\n'
@@ -1288,16 +1301,10 @@ class TestModifyHistory(unittest.TestCase):
             "<article-meta>"
             "<volume>13</volume>"
             "<elocation-id>RP95901</elocation-id>"
-            "<history>"
-            '<date date-type="sent-for-review" iso-8601-date="2024-01-24">'
-            "<day>24</day>"
-            "<month>01</month>"
-            "<year>2024</year>"
-            "</date>"
-            "</history>"
             "<permissions />"
             "</article-meta>"
-            "</front></article>"
+            "</front>"
+            "</article>"
         )
         # invoke
         activity_module.modify_history(xml_root, review_date_struct, identifier)
