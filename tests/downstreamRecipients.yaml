@@ -222,6 +222,25 @@ OASwitchboard:
   settings_sftp_password: OASWITCHBOARD_SFTP_PASSWORD
   settings_sftp_cwd: OASWITCHBOARD_SFTP_CWD
 
+OASwitchboard_Preprint:
+  activity_name: FTPArticle
+  s3_bucket_folder: oaswitchboard_preprint
+  schedule_downstream: true
+  schedule_silent_correction: true
+  schedule_article_types:
+    - preprint
+  send_by_protocol: sftp
+  send_once_only: true
+  send_article_types:
+    - preprint
+  send_file_types:
+    - xml
+  settings_friendly_email_recipients: OASWITCHBOARD_PREPRINT_EMAIL
+  settings_sftp_uri: OASWITCHBOARD_PREPRINT_SFTP_URI
+  settings_sftp_username: OASWITCHBOARD_PREPRINT_SFTP_USERNAME
+  settings_sftp_password: OASWITCHBOARD_PREPRINT_SFTP_PASSWORD
+  settings_sftp_cwd: OASWITCHBOARD_PREPRINT_SFTP_CWD
+
 OVID:
   activity_name: FTPArticle
   s3_bucket_folder: ovid

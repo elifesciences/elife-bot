@@ -360,6 +360,249 @@ class TestDownloadArchiveZip(unittest.TestCase):
 
 
 @ddt
+class TestMoveOrRepackageRpZip(unittest.TestCase):
+    def setUp(self):
+        self.activity = activity_FTPArticle(
+            settings_mock, FakeLogger(), None, None, None
+        )
+
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
+
+    @data(
+        (
+            "tests/files_source/95901-v1-meca.zip",
+            19405,
+            2,
+            "CLOCKSS_Preprint",
+            "elife-19405-rp-v2.zip",
+            [
+                "content/",
+                "content/24301711.pdf",
+                "content/24301711.xml",
+                "content/24301711v1_fig1.tif",
+                "content/24301711v1_tbl1.tif",
+                "content/24301711v1_tbl1a.tif",
+                "content/24301711v1_tbl2.tif",
+                "content/24301711v1_tbl3.tif",
+                "content/24301711v1_tbl4.tif",
+                "directives.xml",
+                "manifest.xml",
+                "mimetype",
+                "transfer.xml",
+            ],
+        ),
+        (
+            "tests/files_source/95901-v1-meca.zip",
+            19405,
+            2,
+            "OASwitchboard_Preprint",
+            "elife-preprint-19405-xml.zip",
+            [
+                "elife-preprint-19405-v2.xml",
+            ],
+        ),
+    )
+    @unpack
+    def test_move_or_repackage_rp_zip(
+        self,
+        input_zip_file_path,
+        doi_id,
+        version,
+        workflow,
+        expected_zip_file,
+        expected_zip_file_contents,
+    ):
+        # create activity directories
+        self.activity.make_activity_directories()
+        # copy in some sample data
+        dest_input_zip_file_path = os.path.join(
+            self.activity.directories.get("TMP_DIR"),
+            input_zip_file_path.rsplit("/", 1)[-1],
+        )
+        shutil.copy(input_zip_file_path, dest_input_zip_file_path)
+        # call the activity function
+        self.activity.move_or_repackage_rp_zip(workflow, doi_id, version)
+        # confirm the output
+        ftp_outbox_dir = self.activity.directories.get("FTP_TO_SOMEWHERE_DIR")
+        self.assertTrue(expected_zip_file in os.listdir(ftp_outbox_dir))
+        with zipfile.ZipFile(
+            os.path.join(ftp_outbox_dir, expected_zip_file)
+        ) as zip_file:
+            self.assertEqual(
+                sorted(zip_file.namelist()), sorted(expected_zip_file_contents)
+            )
+
+    def test_exception_for_no_zip(self):
+        "test exception handled if no zip file found"
+        # create activity directories
+        self.activity.make_activity_directories()
+        doi_id = 19405
+        version = 2
+        workflow = "OASwitchboard_Preprint"
+        # call the activity function
+        self.activity.move_or_repackage_rp_zip(workflow, doi_id, version)
+        # assert
+        self.assertTrue(
+            "FTPArticle, no preprint zip file found in TMP_DIR for doi_id %s, version %s"
+            % (doi_id, version)
+            in self.activity.logger.loginfo
+        )
+
+
+class TestRepackageRpZip(unittest.TestCase):
+    def setUp(self):
+        self.activity = activity_FTPArticle(
+            settings_mock, FakeLogger(), None, None, None
+        )
+
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
+
+    def test_repackage_rp_zip(
+        self,
+    ):
+        "test finding, renaming the XML and PDF and zipping them only"
+        doi_id = 95901
+        version = 2
+        keep_file_types = ["pdf", "xml"]
+        expected_zip_file = "elife-preprint-95901-pdf-xml.zip"
+        expected_zip_file_contents = [
+            "elife-preprint-95901-v2.pdf",
+            "elife-preprint-95901-v2.xml",
+        ]
+        # create activity directories
+        self.activity.make_activity_directories()
+
+        # use RP MECA file for testing preprint zip logic
+        meca_file_path = "tests/files_source/95901-v1-meca.zip"
+        meca_file_name = meca_file_path.rsplit("/", 1)[-1]
+        zip_file_path = os.path.join(
+            self.activity.directories.get("INPUT_DIR"), meca_file_name
+        )
+        shutil.copy(meca_file_path, zip_file_path)
+        # call the activity function
+        self.activity.repackage_rp_zip(doi_id, version, keep_file_types)
+        # assert
+        with zipfile.ZipFile(
+            os.path.join(
+                self.activity.directories.get("FTP_TO_SOMEWHERE_DIR"), expected_zip_file
+            )
+        ) as zip_file:
+            self.assertEqual(
+                sorted(zip_file.namelist()),
+                sorted(expected_zip_file_contents),
+                sorted(zip_file.namelist()),
+            )
+
+    def test_repackage_rp_zip_xml(
+        self,
+    ):
+        "test finding, renaming, and zipping only the XML file"
+        doi_id = 95901
+        version = 2
+        keep_file_types = ["xml"]
+        expected_zip_file = "elife-preprint-95901-xml.zip"
+        expected_zip_file_contents = ["elife-preprint-95901-v2.xml"]
+        # create activity directories
+        self.activity.make_activity_directories()
+
+        # use RP MECA file for testing preprint zip logic
+        meca_file_path = "tests/files_source/95901-v1-meca.zip"
+        meca_file_name = meca_file_path.rsplit("/", 1)[-1]
+        zip_file_path = os.path.join(
+            self.activity.directories.get("INPUT_DIR"), meca_file_name
+        )
+        shutil.copy(meca_file_path, zip_file_path)
+        # call the activity function
+        self.activity.repackage_rp_zip(doi_id, version, keep_file_types)
+        # assert
+        with zipfile.ZipFile(
+            os.path.join(
+                self.activity.directories.get("FTP_TO_SOMEWHERE_DIR"), expected_zip_file
+            )
+        ) as zip_file:
+            self.assertEqual(
+                sorted(zip_file.namelist()),
+                sorted(expected_zip_file_contents),
+                sorted(zip_file.namelist()),
+            )
+
+
+class TestMoveRpZip(unittest.TestCase):
+    def setUp(self):
+        self.activity = activity_FTPArticle(
+            settings_mock, FakeLogger(), None, None, None
+        )
+
+    def tearDown(self):
+        self.activity.clean_tmp_dir()
+
+    def test_move_rp_zip(
+        self,
+    ):
+        "test moving RP zip file"
+        doi_id = 95901
+        version = 2
+        expected_zip_file = "elife-95901-rp-v2.zip"
+        expected_zip_file_contents = [
+            "content/",
+            "content/24301711.pdf",
+            "content/24301711.xml",
+            "content/24301711v1_fig1.tif",
+            "content/24301711v1_tbl1.tif",
+            "content/24301711v1_tbl1a.tif",
+            "content/24301711v1_tbl2.tif",
+            "content/24301711v1_tbl3.tif",
+            "content/24301711v1_tbl4.tif",
+            "directives.xml",
+            "manifest.xml",
+            "mimetype",
+            "transfer.xml",
+        ]
+        # create activity directories
+        self.activity.make_activity_directories()
+
+        # use RP MECA file for testing preprint zip logic
+        meca_file_path = "tests/files_source/95901-v1-meca.zip"
+        meca_file_name = meca_file_path.rsplit("/", 1)[-1]
+        zip_file_path = os.path.join(
+            self.activity.directories.get("INPUT_DIR"), meca_file_name
+        )
+        shutil.copy(meca_file_path, zip_file_path)
+        # call the activity function
+        self.activity.move_rp_zip(doi_id, version)
+        # assert
+        ftp_outbox_dir = self.activity.directories.get("FTP_TO_SOMEWHERE_DIR")
+        self.assertTrue(expected_zip_file in os.listdir(ftp_outbox_dir))
+        with zipfile.ZipFile(
+            os.path.join(
+                self.activity.directories.get("FTP_TO_SOMEWHERE_DIR"), expected_zip_file
+            )
+        ) as zip_file:
+            self.assertEqual(
+                sorted(zip_file.namelist()),
+                sorted(expected_zip_file_contents),
+                sorted(zip_file.namelist()),
+            )
+
+    def test_exception_no_zip(self):
+        "test exception handled if no zip file"
+        doi_id = 95901
+        version = 2
+        # create activity directories
+        self.activity.make_activity_directories()
+        # call the activity function
+        self.activity.move_rp_zip(doi_id, version)
+        # assert
+        self.assertTrue(
+            "FTPArticle, no preprint zip file found in TMP_DIR for doi_id %s, version %s"
+            % (doi_id, version)
+            in self.activity.logger.loginfo
+        )
+
+
+@ddt
 class TestMoveOrRepackagePmcZip(unittest.TestCase):
     def setUp(self):
         self.activity = activity_FTPArticle(
