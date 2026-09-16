@@ -5,15 +5,17 @@ import glob
 import shutil
 import re
 from elifetools import parseJATS as parser
-from provider import article_processing, utils, yaml_provider
+from provider import article_processing, meca, preprint, utils, yaml_provider
 from provider.storage_provider import storage_context
 from provider.sftp import SFTP
 from provider.ftp import FTP
 from activity.objects import Activity
+from activity.activity_MecaDetails import generate_version_doi
 
 
 JOURNAL = "elife"
 ZIP_FILE_PREFIX = "%s-" % JOURNAL
+PREPRINT_ZIP_FILE_PREFIX = "%s-preprint-" % JOURNAL
 
 
 class activity_FTPArticle(Activity):
@@ -209,28 +211,7 @@ class activity_FTPArticle(Activity):
         # switch logic depending on publication_state value
         if publication_state and "preprint" in publication_state:
             self.download_archive_zip_from_s3(doi_id, version, status="rp")
-            try:
-                archive_zip_name = glob.glob(
-                    self.directories.get("TMP_DIR") + "/*.zip"
-                )[0]
-            except IndexError:
-                self.logger.info(
-                    "%s, no preprint zip file found in TMP_DIR for doi_id %s, version %s"
-                    % (self.name, doi_id, version)
-                )
-                archive_zip_name = None
-            if archive_zip_name:
-                new_archive_zip_name = article_processing.new_rp_zip_filename(
-                    self.journal, doi_id, version
-                )
-                from_path = archive_zip_name
-                to_path = os.path.join(
-                    self.directories.get("FTP_TO_SOMEWHERE_DIR"), new_archive_zip_name
-                )
-                self.logger.info(
-                    "%s, moving %s to %s" % (self.name, from_path, to_path)
-                )
-                shutil.move(from_path, to_path)
+            self.move_or_repackage_rp_zip(workflow, doi_id, version)
             return
 
         # continue for non-preprint zip file
@@ -350,6 +331,146 @@ class activity_FTPArticle(Activity):
             retain_version_number=retain_version_number,
         )
 
+    def zip_selected_files(self, from_dir, zip_file_path, keep_file_types):
+        "zip included and excluded files for sending VOR or RP article content"
+        ignore_name_fragments = ["-supp", "-data", "-code"]
+
+        with zipfile.ZipFile(
+            zip_file_path, "w", zipfile.ZIP_DEFLATED, allowZip64=True
+        ) as new_zipfile:
+            # Add files
+            for file_type in file_type_matches(keep_file_types):
+                files = glob.glob(from_dir + file_type)
+                for to_dir_file in files:
+                    add_file = True
+                    # Ignore some files that are PDF we do not want to include
+                    for ignore in ignore_name_fragments:
+                        if ignore in to_dir_file:
+                            add_file = False
+                            break
+                    if add_file:
+                        filename = to_dir_file.split(os.sep)[-1]
+                        new_zipfile.write(to_dir_file, filename)
+
+        # Move the zip
+        shutil.move(
+            zip_file_path, self.directories.get("FTP_TO_SOMEWHERE_DIR") + os.sep
+        )
+
+    def move_or_repackage_rp_zip(self, workflow, doi_id, version):
+        "extract files to send from RP MECA zip or send the entire zip file"
+        # additional sending details
+        details = sending_details(self.settings, workflow)
+
+        # test a zip file exists in TMP_DIR
+        try:
+            archive_zip_name = glob.glob(self.directories.get("TMP_DIR") + "/*.zip")[
+                0
+            ]
+        except IndexError:
+            self.logger.info(
+                "%s, no preprint zip file found in TMP_DIR for doi_id %s, version %s"
+                % (self.name, doi_id, version)
+            )
+            return
+
+        # move the downloaded zip file to the INPUT_DIR as is done with VOR processing
+        zipfiles = glob.glob(self.directories.get("TMP_DIR") + "/*.zip")
+        for zipfile_path in zipfiles:
+            zipfile_name = zipfile_path.rsplit(os.sep, 1)[-1]
+            shutil.move(
+                zipfile_path,
+                os.path.join(self.directories.get("INPUT_DIR"), zipfile_name),
+            )
+
+        # Repackage or move the zip depending on the workflow type
+        if details.get("send_file_types"):
+            # only send the particular file types
+            self.repackage_rp_zip(doi_id, version, details.get("send_file_types"))
+        else:
+            # by default send all files
+            self.move_rp_zip(doi_id, version)
+
+    def repackage_rp_zip(self, doi_id, version, keep_file_types):
+        "repackage RP MECA zip file to include only certain content file types"
+
+        # Extract the zip and build a new zip
+        zipfiles = glob.glob(self.directories.get("INPUT_DIR") + "/*.zip")
+        to_dir = self.directories.get("TMP_DIR")
+        for filename in zipfiles:
+            with zipfile.ZipFile(filename, "r") as open_zip_file:
+                open_zip_file.extractall(to_dir)
+
+        version_doi = generate_version_doi(doi_id, version)
+
+        # locate the MECA content folder
+        original_article_xml_path = meca.get_meca_article_xml_path(
+            self.directories.get("TMP_DIR"), version_doi, self.name, self.logger
+        )
+        content_subfolder = meca.meca_content_folder(original_article_xml_path)
+        content_subfolder_path = os.path.join(
+            self.directories.get("TMP_DIR"), content_subfolder
+        )
+
+        # note: renaming of files below will no longer match file name found in the manifest.xml
+        # rename the XML file to default naming convention
+        new_xml_file_name = preprint.PREPRINT_XML_FILE_NAME_PATTERN.format(
+            article_id=utils.pad_msid(doi_id), version=version
+        )
+        new_article_xml_path = os.path.join(content_subfolder_path, new_xml_file_name)
+        shutil.move(
+            os.path.join(self.directories.get("TMP_DIR"), original_article_xml_path),
+            new_article_xml_path,
+        )
+
+        # rename the PDF file to default naming convention
+        orginal_article_pdf_path = meca.get_meca_article_pdf_path(
+            self.directories.get("TMP_DIR"), version_doi, self.name, self.logger
+        )
+        new_pdf_file_name = preprint.PREPRINT_PDF_FILE_NAME_PATTERN.format(
+            article_id=utils.pad_msid(doi_id), version=version
+        )
+        new_article_pdf_path = os.path.join(content_subfolder_path, new_pdf_file_name)
+        shutil.move(
+            os.path.join(self.directories.get("TMP_DIR"), orginal_article_pdf_path),
+            new_article_pdf_path,
+        )
+
+        # Create the new zip
+        zip_file_path = os.path.join(
+            self.directories.get("ZIP_DIR"),
+            # set preprint zip file name here
+            new_zip_file_name(
+                doi_id, PREPRINT_ZIP_FILE_PREFIX, zip_file_suffix(keep_file_types)
+            ),
+        )
+
+        # add selected files to the zip
+        self.zip_selected_files(content_subfolder_path, zip_file_path, keep_file_types)
+
+    def move_rp_zip(self, doi_id, version):
+        "rename the RP MECA zip file and move to the sending folder"
+        try:
+            archive_zip_name = glob.glob(self.directories.get("INPUT_DIR") + "/*.zip")[
+                0
+            ]
+        except IndexError:
+            self.logger.info(
+                "%s, no preprint zip file found in TMP_DIR for doi_id %s, version %s"
+                % (self.name, doi_id, version)
+            )
+            archive_zip_name = None
+        if archive_zip_name:
+            new_archive_zip_name = article_processing.new_rp_zip_filename(
+                self.journal, doi_id, version
+            )
+            from_path = archive_zip_name
+            to_path = os.path.join(
+                self.directories.get("FTP_TO_SOMEWHERE_DIR"), new_archive_zip_name
+            )
+            self.logger.info("%s, moving %s to %s" % (self.name, from_path, to_path))
+            shutil.move(from_path, to_path)
+
     def move_or_repackage_pmc_zip(self, doi_id, workflow):
         """
         Run if we downloaded a PMC zip file, either
@@ -371,8 +492,6 @@ class activity_FTPArticle(Activity):
     def repackage_pmc_zip(self, doi_id, keep_file_types):
         """repackage the zip file to include only certain file types then move it to folder"""
 
-        ignore_name_fragments = ["-supp", "-data", "-code"]
-
         # Extract the zip and build a new zip
         zipfiles = glob.glob(self.directories.get("INPUT_DIR") + "/*.zip")
         to_dir = self.directories.get("TMP_DIR")
@@ -387,27 +506,9 @@ class activity_FTPArticle(Activity):
                 doi_id, ZIP_FILE_PREFIX, zip_file_suffix(keep_file_types)
             ),
         )
-        with zipfile.ZipFile(
-            zip_file_path, "w", zipfile.ZIP_DEFLATED, allowZip64=True
-        ) as new_zipfile:
-            # Add files
-            for file_type in file_type_matches(keep_file_types):
-                files = glob.glob(to_dir + file_type)
-                for to_dir_file in files:
-                    add_file = True
-                    # Ignore some files that are PDF we do not want to include
-                    for ignore in ignore_name_fragments:
-                        if ignore in to_dir_file:
-                            add_file = False
-                            break
-                    if add_file:
-                        filename = to_dir_file.split(os.sep)[-1]
-                        new_zipfile.write(to_dir_file, filename)
 
-        # Move the zip
-        shutil.move(
-            zip_file_path, self.directories.get("FTP_TO_SOMEWHERE_DIR") + os.sep
-        )
+        # add selected files to the zip
+        self.zip_selected_files(to_dir, zip_file_path, keep_file_types)
 
     def move_pmc_zip(self):
         """Default, move all the zip files from TMP_DIR to FTP_OUTBOX"""

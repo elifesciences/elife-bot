@@ -57,7 +57,11 @@ class TestSchedulePreprintDownstream(unittest.TestCase):
             "comment": "published preprint article example",
             "article_id": "84364",
             "version": 2,
-            "expected_outbox_folders": ["clockss_preprint", "publication_email"],
+            "expected_outbox_folders": [
+                "clockss_preprint",
+                "oaswitchboard_preprint",
+                "publication_email",
+            ],
             "expected_result": activity_object.ACTIVITY_SUCCESS,
         },
     )

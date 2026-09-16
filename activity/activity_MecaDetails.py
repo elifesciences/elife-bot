@@ -68,7 +68,9 @@ class activity_MecaDetails(Activity):
             )
             filename_last_element = data.get("file_name").rsplit("/", 1)[-1]
             article_id, version = meca_file_parts(filename_last_element)
-            version_doi = "%s%s.%s" % (DOI_PREFIX, utils.pad_msid(article_id), version)
+            version_doi = generate_version_doi(
+                article_id, version, doi_prefix=DOI_PREFIX
+            )
         else:
             # store details in session
             article_id = data.get("article_id")
@@ -202,3 +204,8 @@ def steps_by_version_doi(docmap_json, version_doi, caller_name, logger):
         raise
 
     return step_map.get(version_doi)
+
+
+def generate_version_doi(article_id, version, doi_prefix=DOI_PREFIX):
+    "generate a version DOI for an article version"
+    return "%s%s.%s" % (doi_prefix, utils.pad_msid(article_id), version)
