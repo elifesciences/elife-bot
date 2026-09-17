@@ -19,6 +19,7 @@ WORKFLOW_NAMES = [
     "OVID",
     "Zendy",
     "OASwitchboard",
+    "OASwitchboard_Preprint",
     "Scilit",
 ]
 
