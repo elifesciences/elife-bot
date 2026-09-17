@@ -230,11 +230,12 @@ OASwitchboard_Preprint:
   schedule_article_types:
     - preprint
   send_by_protocol: sftp
-  send_once_only: true
+  send_once_only: false
   send_article_types:
     - preprint
   send_file_types:
     - xml
+  send_unzipped_files: true
   settings_friendly_email_recipients: OASWITCHBOARD_PREPRINT_EMAIL
   settings_sftp_uri: OASWITCHBOARD_PREPRINT_SFTP_URI
   settings_sftp_username: OASWITCHBOARD_PREPRINT_SFTP_USERNAME
