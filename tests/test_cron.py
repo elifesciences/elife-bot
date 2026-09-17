@@ -24,6 +24,7 @@ class TestCron(unittest.TestCase):
         "1970-01-01 17:45:00",
         "1970-01-01 12:30:00",
         "1970-01-01 20:30:00",
+        "1970-01-01 20:45:00",
         "1970-01-01 21:30:00",
         "1970-01-01 21:45:00",
         "1970-01-01 22:30:00",
@@ -361,6 +362,31 @@ class TestConditionalStarts(unittest.TestCase):
         },
     )
     def test_conditional_starts_20_30_utc(self, test_data):
+        self.conditional_start_test_run(test_data)
+
+    @data(
+        {
+            "comment": "20:45 UTC",
+            "date_time": "1970-01-01 20:45:00 UTC",
+            "expected_starter_names": [
+                "cron_FiveMinute",
+                "starter_DepositCrossref",
+                "starter_FindReingestPreprint",
+                "starter_PubRouterDeposit",
+                "starter_PubmedArticleDeposit",
+                "starter_AdminEmail",
+            ],
+            "expected_workflow_ids": [
+                "cron_FiveMinute",
+                "DepositCrossref",
+                "FindReingestPreprint",
+                "PubRouterDeposit_OASwitchboard_Preprint",
+                "PubmedArticleDeposit",
+                "AdminEmail",
+            ],
+        },
+    )
+    def test_conditional_starts_20_45_utc(self, test_data):
         self.conditional_start_test_run(test_data)
 
     @data(
