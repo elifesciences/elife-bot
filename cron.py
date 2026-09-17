@@ -361,6 +361,18 @@ def conditional_starts(current_datetime):
                 )
             )
 
+        # OASwitchboard_Preprint deposits once per day 20:45 UTC
+        if current_time.tm_hour == 20:
+            conditional_start_list.append(
+                OrderedDict(
+                    [
+                        ("starter_name", "starter_PubRouterDeposit"),
+                        ("workflow_id", "PubRouterDeposit_OASwitchboard_Preprint"),
+                        ("start_seconds", 60 * 31),
+                    ]
+                )
+            )
+
         conditional_start_list.append(
             OrderedDict(
                 [
