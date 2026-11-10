@@ -121,10 +121,18 @@ class TestGetArticleProfileType(unittest.TestCase):
     "tests for get_article_profile_type()"
 
     def setUp(self):
-        self.xml_string = (
+        self.retraction_xml_string = (
             '<article xmlns:xlink="http://www.w3.org/1999/xlink" article-type="retraction">'
             "<article-meta>"
             '<related-article related-article-type="retracted-article" ext-link-type="doi" '
+            'xlink:href="10.7554/eLife.00666" id="ra1"/>'
+            "</article-meta>"
+            "</article>"
+        )
+        self.expression_of_concern_xml_string = (
+            '<article xmlns:xlink="http://www.w3.org/1999/xlink" article-type="expression-of-concern">'
+            "<article-meta>"
+            '<related-article related-article-type="object-of-concern" ext-link-type="doi" '
             'xlink:href="10.7554/eLife.00666" id="ra1"/>'
             "</article-meta>"
             "</article>"
@@ -150,7 +158,7 @@ class TestGetArticleProfileType(unittest.TestCase):
             directory.path, [], dest_folder=directory.path
         )
         fake_version_map.return_value = {}
-        fake_string.return_value = self.xml_string
+        fake_string.return_value = self.retraction_xml_string
         expected = "retraction_of_preprint"
 
         result = activity_module.get_article_profile_type(
@@ -173,7 +181,7 @@ class TestGetArticleProfileType(unittest.TestCase):
             directory.path, [], dest_folder=directory.path
         )
         fake_version_map.return_value = {"vor": [1]}
-        fake_string.return_value = self.xml_string
+        fake_string.return_value = self.retraction_xml_string
         expected = None
 
         result = activity_module.get_article_profile_type(
@@ -195,6 +203,29 @@ class TestGetArticleProfileType(unittest.TestCase):
         )
         fake_string.return_value = '<article article=type="research-article" />'
         expected = None
+
+        result = activity_module.get_article_profile_type(
+            settings_mock, self.expanded_folder_bucket, self.xml_key_name
+        )
+        self.assertEqual(result, expected)
+
+    @patch.object(lax_provider, "article_status_version_map")
+    @patch.object(FakeStorageContext, "get_resource_as_string")
+    @patch.object(activity_module, "storage_context")
+    def test_expression_of_concern_profile_type(
+        self,
+        fake_storage_context,
+        fake_string,
+        fake_version_map,
+    ):
+        "test where an expression-of-concern related article is status preprint"
+        directory = TempDirectory()
+        fake_storage_context.return_value = FakeStorageContext(
+            directory.path, [], dest_folder=directory.path
+        )
+        fake_version_map.return_value = {}
+        fake_string.return_value = self.expression_of_concern_xml_string
+        expected = "expression_of_concern_of_preprint"
 
         result = activity_module.get_article_profile_type(
             settings_mock, self.expanded_folder_bucket, self.xml_key_name
