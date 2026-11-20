@@ -195,7 +195,7 @@ def get_article_profile_type(settings, expanded_bucket_name, xml_key_name):
     article_type = parser.article_type(soup)
 
     # return retraction_of_preprint if applicable
-    if article_type != "retraction":
+    if article_type not in ["expression-of-concern", "retraction"]:
         return None
     # parse related articles
     related_articles = parser.related_article(soup)
@@ -206,7 +206,10 @@ def get_article_profile_type(settings, expanded_bucket_name, xml_key_name):
             status_version_map = lax_provider.article_status_version_map(msid, settings)
             if len(status_version_map.keys()) <= 0:
                 # if no vor or poa versions then assume it is preprint status
-                return "retraction_of_preprint"
+                if article_type == "retraction":
+                    return "retraction_of_preprint"
+                if article_type == "expression-of-concern":
+                    return "expression_of_concern_of_preprint"
     return None
 
 
