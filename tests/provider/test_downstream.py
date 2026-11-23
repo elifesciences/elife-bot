@@ -238,6 +238,39 @@ class TestChooseOutboxes(unittest.TestCase):
                 "unexpectedly found %s folder" % folder_name,
             )
 
+    def test_do_not_schedule_expression_of_concern(self):
+        "test rules for do_not_schedule of expression-of-concern of preprint"
+        article_profile_type = "expression_of_concern_of_preprint"
+        outbox_list = downstream.choose_outboxes(
+            "vor", True, self.rules, article_profile_type=article_profile_type
+        )
+        # schedule the following
+        for folder_name in [
+            "clockss",
+        ]:
+            self.assertTrue(
+                "%s/outbox/" % folder_name in outbox_list,
+                "did not find %s folder" % folder_name,
+            )
+        # do not schedule the following
+        for folder_name in [
+            "cengage",
+            "cnki",
+            "cnpiec",
+            "gooa",
+            "oaswitchboard",
+            "publication_email",
+            "pubmed",
+            "pmc",
+            "ovid",
+            "wos",
+            "zendy",
+        ]:
+            self.assertFalse(
+                "%s/outbox/" % folder_name in outbox_list,
+                "unexpectedly found %s folder" % folder_name,
+            )
+
     def test_do_not_schedule_by_assessment_keywords(self):
         "test rules for do_not_schedule_assessment_keywords"
         assessment_keywords = ["solid", "incomplete"]
