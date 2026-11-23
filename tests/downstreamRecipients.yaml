@@ -48,6 +48,7 @@ PMC:
     - vor
   do_not_schedule:
     - retraction_of_preprint
+    - expression_of_concern_of_preprint
   send_once_only: false
   send_article_types:
     - vor
@@ -63,6 +64,7 @@ PublicationEmail:
     - vor
   do_not_schedule:
     - retraction_of_preprint
+    - expression_of_concern_of_preprint
 
 PreprintPublicationEmail:
   activity_name: PublicationEmail
@@ -82,6 +84,7 @@ Pubmed:
     - vor
   do_not_schedule:
     - retraction_of_preprint
+    - expression_of_concern_of_preprint
 
 # FTPArticle workflows
 Cengage:
@@ -93,6 +96,7 @@ Cengage:
     - vor
   do_not_schedule:
     - retraction_of_preprint
+    - expression_of_concern_of_preprint
   send_by_protocol: ftp
   send_once_only: true
   send_article_types:
@@ -150,6 +154,7 @@ CNKI:
     - vor
   do_not_schedule:
     - retraction_of_preprint
+    - expression_of_concern_of_preprint
   send_by_protocol: ftp
   send_once_only: true
   send_article_types:
@@ -171,6 +176,7 @@ CNPIEC:
     - vor
   do_not_schedule:
     - retraction_of_preprint
+    - expression_of_concern_of_preprint
   send_by_protocol: ftp
   send_once_only: true
   send_article_types:
@@ -190,6 +196,7 @@ GoOA:
     - vor
   do_not_schedule:
     - retraction_of_preprint
+    - expression_of_concern_of_preprint
   send_by_protocol: ftp
   send_once_only: true
   send_article_types:
@@ -209,6 +216,7 @@ OASwitchboard:
     - vor
   do_not_schedule:
     - retraction_of_preprint
+    - expression_of_concern_of_preprint
   send_by_protocol: sftp
   send_once_only: true
   send_article_types:
@@ -252,6 +260,7 @@ OVID:
     - vor
   do_not_schedule:
     - retraction_of_preprint
+    - expression_of_concern_of_preprint
   send_by_protocol: ftp
   send_once_only: false
   send_article_types:
@@ -273,6 +282,7 @@ Scilit:
     - vor
   do_not_schedule:
     - retraction_of_preprint
+    - expression_of_concern_of_preprint
   send_by_protocol: sftp
   send_once_only: false
   send_article_types:
@@ -298,6 +308,7 @@ WoS:
     - vor
   do_not_schedule:
     - retraction_of_preprint
+    - expression_of_concern_of_preprint
   do_not_schedule_assessment_keywords:
     - incomplete
     - inadequate
@@ -325,6 +336,7 @@ Zendy:
     - vor
   do_not_schedule:
     - retraction_of_preprint
+    - expression_of_concern_of_preprint
   send_by_protocol: sftp
   send_once_only: false
   send_article_types:
